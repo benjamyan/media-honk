@@ -1,0 +1,32 @@
+.cast {
+    &__button {
+        background-image: url('../../../public/media/cast-white.png');
+        background-size: contain;
+        background-repeat: no-repeat;
+        background-position: center center;
+    }
+    &__modal {
+        display: block;
+        position: absolute;
+        width: 400px;
+        height: 250px;
+        background: white;
+        top: calc(25% - 125px);
+        left: calc(50% - 210px);
+        border: 2px solid black;
+        // border-radius: 10px;
+        padding: 15px;
+        z-index: 1000;
+        &--bg {
+            position: absolute;
+            display: block;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            content: ' ';
+            z-index: 999;
+            background: rgba(0,0,0,0.25);
+        }
+    }
+}
