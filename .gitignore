@@ -12,6 +12,9 @@ dist/
 **/**/dist
 **/**/dist/
 
+docker-dump/mysql-data
+docker-dump/mysql-data/
+
 
 *.zip
 *.7z
