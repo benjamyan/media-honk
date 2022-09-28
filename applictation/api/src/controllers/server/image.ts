@@ -11,24 +11,17 @@ export async function getImage(req: Honk.Request, res: Honk.Response) {
             // TODO sanitize the input
             const imagePath: string = Path.resolve('', req.query.file);
             if (Fs.existsSync(imagePath)) {
-                // const fileStream = Fs.createReadStream(imagePath);
+                const todayDate = new Date()
+                const expireDate = new Date(new Date(todayDate).setDate(todayDate.getDate() + 1)).toUTCString();
                 res.status(200)
                 res.set({
                     "Access-Control-Allow-Origin": "http://192.168.0.11",
-                    "Content-Type": "image/jpeg" 
+                    "Content-Type": "image/jpeg",
+                    "Cache-Control": "max-age",
+                    // "Cache-Control": "private, max-age=3600000",
+                    // "Expires": JSON.stringify(expireDate)
                 })
                 res.sendFile(imagePath)
-                // fileStream.pipe(res);
-                // fileStream.on('open', ()=> {
-                //     console.log('open')
-                // })
-                // fileStream.on('error', ()=> {
-                //     console.log('err')
-                // })
-                // fileStream.on('close', ()=> {
-                //     console.log('closed')
-                // })
-                return
             } else {
                 console.log('image not found')
                 res.sendStatus(404)

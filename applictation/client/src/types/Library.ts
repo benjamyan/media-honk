@@ -1,4 +1,4 @@
-export interface BaselineLibraryEntry {
+export interface MediaLibraryEntry {
     uuid: string;
     mediaSource: string | undefined;
     mediaType: string | undefined;

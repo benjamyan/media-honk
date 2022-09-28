@@ -14,8 +14,8 @@ userMediaPaths:
     # external: '/media/benjamyan/media_external/videos'
 # Standard users to load into the DB -- "Username__Password"
 users:
-    - 'BigTony__G00seGame'
-    - 'JoeyJabroni__doodoo'
+    # - 'BigTony__G00seGame'
+    # - 'JoeyJabroni__doodoo'
     - 'mediahonk__pringle'
 # Admin credentials
 admins:

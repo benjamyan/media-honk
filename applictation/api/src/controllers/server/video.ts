@@ -41,6 +41,28 @@ export async function getVideoFilePipe(req: Honk.Request, res: Honk.Response) {
                 'Content-Length': videoBuffer
             })
             res.sendFile(videoPath)
+            res.on('error', (err)=> {
+                // console.log(err)
+                res.end()
+            })
+            res.on('pipe', ()=> {
+                // console.log('pipe')
+            })
+            res.on('close', ()=> {
+                // console.log('close')
+                res.end()
+            })
+            res.on('unpipe', ()=> {
+                // console.log('unpipe')
+                res.end()
+            })
+            res.on('drain', ()=> {
+                // console.log('drain')
+            })
+            res.on('finish', ()=> {
+                // console.log('finish')
+            })
+            
             // let readStream = Fs.createReadStream(videoPath),
             //     streamOpen: boolean = false;
             // readStream.pipe(res);

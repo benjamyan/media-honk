@@ -1,13 +1,14 @@
 import express from "express";
-import * as Fs from 'node:fs'
-import * as Path from 'node:path'
+// import * as Fs from 'node:fs'
+// import * as Path from 'node:path'
 
+import { Honk } from '../types';
 import { validateFile } from "../utils";
 
 export const staticRoutes = ()=> {
     const router = express.Router();
     
-    router.get(['/', '*'], function(req, res, next) {
+    router.get(['/', '*'], function(req: Honk.Request, res: Honk.Response, next: Honk.NextFunction) {
         try {
             if (req.originalUrl.split('/').length > 2) {
                 next()

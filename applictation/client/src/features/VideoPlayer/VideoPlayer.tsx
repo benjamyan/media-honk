@@ -1,8 +1,8 @@
 import React from 'react';
 
 // import { CloseButton } from '../../components';
-import { BaselineLibraryEntry } from '../../types';
-import { VrZoom, CustomMenu, CustomCloseButton, CastVideoButton } from '../../libs';
+import { MediaLibraryEntry } from '../../types';
+import { VrZoom, CustomMenu, CustomCloseButton, CastVideoButton, vjsConfig } from '../../libs/video-js';
 // import { CastMedia } from '../';
 
 // https://www.npmjs.com/package/chromecast-api
@@ -15,14 +15,14 @@ import '@videojs/themes/dist/city/index.css';
 import 'videojs-vr/dist/videojs-vr.min.js';
 import 'videojs-vr/dist/videojs-vr.css';
 // Thumbnails
-import 'videojs-sprite-thumbnails/dist/videojs-sprite-thumbnails.min.js'
+// import 'videojs-sprite-thumbnails/dist/videojs-sprite-thumbnails.min.js'
 // Custom
 import './_VideoPlayer.scss';
 import '../../components/Buttons/_Buttons.scss';
 import '../CastMedia/_CastMedia.scss';
 
 interface VideoPlayerProps {
-	activeVideo: BaselineLibraryEntry;
+	activeVideo: MediaLibraryEntry;
 	closeVideo: () => void;
 }
 
@@ -41,7 +41,7 @@ export const VideoPlayer = (playerProps: VideoPlayerProps) => {
 			videojs.registerComponent('CustomCloseButton', CustomCloseButton);
 			videojs.registerComponent('CastVideoButton', CastVideoButton);
 		}
-		if (isVR) {
+		if (isVR && videojs.getComponent('vrZoom') === undefined) {
 			videojs.registerPlugin('vrZoom', VrZoom);
 		}
 		setPlayerLoaded(true)
@@ -51,20 +51,7 @@ export const VideoPlayer = (playerProps: VideoPlayerProps) => {
 		if (videoRef.current !== null && playerLoaded) {
 			playerRef.current = (
 				videojs(videoRef.current, {
-					autoplay: false,
-					controls: true,	
-					fluid: false,
-					liveui: false,
-					controlBar: {
-						volumePanel: {
-							inline: false
-						},
-						/// @ts-expect-error
-						pictureInPictureToggle: false
-					},
-					loop: false,
-					preload: "metadata",
-					nativeControlsForTouch: false,
+					...vjsConfig,
 					poster: `/server/image?file=${activeVideo.coverImageUrl}`,
 					sources: [
 						{
@@ -82,7 +69,7 @@ export const VideoPlayer = (playerProps: VideoPlayerProps) => {
 								projection: '180',
 								debug: true,
 								forceCardboard: false,
-								motionControls: true,
+								motionControls: false,
 								disableTogglePlay: false
 							})
 							/// @ts-expect-error

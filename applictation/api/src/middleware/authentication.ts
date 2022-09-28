@@ -1,17 +1,22 @@
 import { Request, Response, NextFunction } from 'express';
 import { default as TSSCMP } from 'tsscmp'
 import { default as Auth } from 'basic-auth'
+import * as Path from 'node:path'
 
 const validateRequest = (req: Request): Auth.BasicAuthResult | undefined | Error => {
     try {
         // const filterDangerousChar = ()=> {}
-        const authReq = Auth(req);
-        if (authReq === undefined) {
-            return undefined
-        } else if (authReq.name.length === 0 || authReq.pass.length === 0) {
-            return undefined
-        }
-        return authReq
+        // if (!!req.body.name && !!req.body.pass) {
+            const authReq = Auth(req);
+            console.log(authReq)
+            if (authReq === undefined) {
+                return undefined
+            } else if (authReq.name.length === 0 || authReq.pass.length === 0) {
+                return undefined
+            }
+            return authReq
+        // } else throw new Error('Missing fields')
+        
     } catch (err) {
         console.log(err)
         return new Error('Unhandled exception')
@@ -38,9 +43,8 @@ const validateAuth = (name: string, pass: string, users: string[]): boolean | Er
     }
 }
 
-export function authenticateCredentials(req: Request, res: Response, next: NextFunction): void {
+export function authenticationMiddleware(req: Request, res: Response, next: NextFunction): void {
     try {
-        const authFields = validateRequest(req);
         const promptLogin = ()=> {
             res.statusCode = 401;
             res.set({
@@ -48,6 +52,7 @@ export function authenticateCredentials(req: Request, res: Response, next: NextF
             })
             res.send()
         };
+        const authFields = validateRequest(req);
         if (authFields instanceof Error) {
             throw authFields as Error
         } else if (authFields === undefined) {

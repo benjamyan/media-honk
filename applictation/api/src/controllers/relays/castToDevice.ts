@@ -1,5 +1,8 @@
 import { default as Chromecast } from 'chromecast-api';
+import Device from 'chromecast-api/lib/device';
 
-export function castToDevice() {
+import { Honk } from '../../types'
+
+export function castToDevice(req: Honk.Request, res: Honk.Response) {
 
 }

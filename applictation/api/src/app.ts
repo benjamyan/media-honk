@@ -1,16 +1,17 @@
 // import CONFIG from  
 
-import * as Process from 'node:process';
+// import * as Process from 'node:process';
 import * as Fs from 'node:fs';
 import * as Path from 'node:path';
-import * as Http from 'node:http'
+// import * as Http from 'node:http';
+// import * as Https from 'node:https';
 import express from 'express';
 import cors from 'cors';
 import * as Yaml from 'yaml';
 
 import * as Routes from './routes'
-import { Honk } from './types'
-import { authenticateCredentials } from './middleware'
+import { Honk } from './types';
+import { logger, authenticationMiddleware } from './middleware'
 
 class App {
     public process: NodeJS.Process;
@@ -63,12 +64,20 @@ class App {
         // this.app.use(express.static(Path.join(__dirname, '../static')));
         // this.app.response.locals = this.locals;
 
+        this.app.use(express.json());
+        this.app.use(express.urlencoded());
+
+        // basic logger
+        this.app.use('*', logger.bind(this))
+
         // auth middleware for all connections
-        this.app.use('*', authenticateCredentials.bind(this))
+        this.app.use('*', authenticationMiddleware.bind(this))
+        
     }
 
     private mountRoutes(): void {
-        this.app.use('/', Routes.staticRoutes())
+        this.app.use('/', Routes.staticRoutes());
+        // this.app.use('/auth', Routes.authRoutes());
         this.app.use('/server', Routes.serverRoutes());
         this.app.use('/relay', Routes.relayRoutes());
     }

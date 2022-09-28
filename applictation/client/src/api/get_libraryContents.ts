@@ -1,8 +1,8 @@
 import { wrapPromise } from "./utils";
-import { BaselineLibraryEntry } from "../types";
+import { MediaLibraryEntry } from "../types";
 import axios, { AxiosResponse } from "axios";
 
-export const get_libraryContents = async (): Promise<BaselineLibraryEntry[]> => {
+export const get_libraryContents = async (): Promise<MediaLibraryEntry[]> => {
     const abortController = new AbortController();
     
     const libraryRequest = (
@@ -22,7 +22,7 @@ export const get_libraryContents = async (): Promise<BaselineLibraryEntry[]> => 
                 }
                 return res.data
             })
-            .then((json: BaselineLibraryEntry[])=>{
+            .then((json: MediaLibraryEntry[])=>{
                 return json
             })
             .catch((err: any)=> {

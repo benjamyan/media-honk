@@ -192,17 +192,31 @@ export class VrZoom extends Plugin {
     private setup() {
         const $video = this.player.el();
         if (!videojs.browser.TOUCH_ENABLED) {
-            $video.addEventListener('wheel', this.zoomHandlerWeb.bind(this));
+            $video.addEventListener('wheel', this.zoomHandlerWeb.bind(this), {
+                passive: true
+            });
         } else {
             // $video.addEventListener('click', this.pointerdownHandler.bind(this))
 
-            $video.addEventListener('pointerdown', this.pointerdownHandler.bind(this))
-            $video.addEventListener('pointermove', this.pointermoveHandler.bind(this))
+            $video.addEventListener('pointerdown', this.pointerdownHandler.bind(this), {
+                passive: true
+            })
+            $video.addEventListener('pointermove', this.pointermoveHandler.bind(this), {
+                passive: true
+            })
 
-            $video.addEventListener('pointerup', this.resetPointerHandler.bind(this))
-            $video.addEventListener('pointercancel', this.resetPointerHandler.bind(this))
-            $video.addEventListener('pointerleave', this.resetPointerHandler.bind(this))
-            $video.addEventListener('pointerout', this.resetPointerHandler.bind(this))
+            $video.addEventListener('pointerup', this.resetPointerHandler.bind(this), {
+                passive: true
+            })
+            $video.addEventListener('pointercancel', this.resetPointerHandler.bind(this), {
+                passive: true
+            })
+            $video.addEventListener('pointerleave', this.resetPointerHandler.bind(this), {
+                passive: true
+            })
+            $video.addEventListener('pointerout', this.resetPointerHandler.bind(this), {
+                passive: true
+            })
         }
         /// @ts-expect-error
         this.vr = this.player.vr()

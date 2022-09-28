@@ -1,5 +1,7 @@
 import { VideoHTMLAttributes } from 'react';
 import { default as videojs } from 'video.js';
+import { CastMedia } from '../../features';
+// import { CastOptionsModal } from '../../features/CastMedia/components/CastOptionsModal';
 
 const Component = videojs.getComponent('Component');
 const ClickableComponent = videojs.getComponent('ClickableComponent');
@@ -21,12 +23,6 @@ export class CustomMenu extends Component {
         player.on('pause', toggleActiveClass.bind(null, true))
         player.on('useractive', toggleActiveClass.bind(null, true))
         player.on('userinactive', toggleActiveClass.bind(null, false))
-
-        // player.on('play', ()=> console.log('play'))
-        // player.on('pause', ()=> console.log('pause'))
-        // player.on('useractive', ()=> console.log('useractive'))
-        // player.on('userinactive', ()=> console.log('userinactive'))
-        // this.addClass('video__player--controls')
     }
     createEl() {
         return videojs.dom.createEl('div', {
@@ -50,6 +46,7 @@ export class CustomCloseButton extends ClickableComponent {
     handleClick(_event: videojs.EventTarget.Event): void {
         // videojs(videoRef.current).dispose()
         // playerRef.current?.dispose()
+        console.log('dispose')
         this.playerInstance.dispose()
     }
 }
@@ -65,5 +62,7 @@ export class CastVideoButton extends ClickableComponent {
     }
     handleClick(_event: videojs.EventTarget.Event): void {
         console.log('CAST');
+        CastMedia({ isOpen: true })
+        // return CastMedia
     }
 }

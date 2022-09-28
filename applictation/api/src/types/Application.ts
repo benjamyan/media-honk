@@ -26,6 +26,9 @@ export namespace Honk {
     export interface Response extends Express.Response {
         locals: Configuration 
     }
+    export interface NextFunction extends Express.NextFunction {
+        
+    }
     // export interface Application extends Express.Application {
     //     request: Request;
     //     response: Response;
