@@ -48,14 +48,14 @@ export const VideoPlayer = (playerProps: VideoPlayerProps) => {
 	}, []);
 
 	React.useEffect(() => {
-		if (videoRef.current !== null && playerLoaded) {
+		if (activeVideo.mediaType === 'movie' && videoRef.current !== null && playerLoaded) {
 			playerRef.current = (
 				videojs(videoRef.current, {
 					...vjsConfig,
-					poster: `/server/image?file=${activeVideo.coverImageUrl}`,
+					poster: `/server/image?file=${activeVideo.coverUrl}`,
 					sources: [
 						{
-							src: `/server/video?file=${activeVideo.videoUrl}`,
+							src: `/server/video?file=${activeVideo.mediaUrl}`,
 							type: 'video/mp4'
 			
 						}

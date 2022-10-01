@@ -71,7 +71,7 @@ class App {
         this.app.use('*', logger.bind(this))
 
         // auth middleware for all connections
-        this.app.use('*', authenticationMiddleware.bind(this))
+        // this.app.use('*', authenticationMiddleware.bind(this))
         
     }
 

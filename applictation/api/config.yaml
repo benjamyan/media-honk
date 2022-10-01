@@ -5,13 +5,17 @@ dev_http_port: 8081
 dev_https_port: 8443
 use_https: false
 allowedOrigins:
-    - 'http://localhost:8080'
-    - 'http://192.168.0.11'
+  - 'http://localhost:8080'
+  - 'http://192.168.0.11'
 # Paths for file directories containing media
 # Should point to the parent directory of the media directories (see structure in README)
+# userMediaPaths:
+#   name1: './media'
 userMediaPaths:
-    name1: './media'
-    # external: '/media/benjamyan/media_external/videos'
+  video1: './media/video'
+  # external: '/media/benjamyan/media_external/videos'
+  audio1: './media/audio'
+  image1: './media/image'
 # Standard users to load into the DB -- "Username__Password"
 users:
     # - 'BigTony__G00seGame'

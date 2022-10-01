@@ -1,11 +1,12 @@
 export interface MediaLibraryEntry {
     uuid: string;
+    baseUrl: string;
     mediaSource: string | undefined;
     mediaType: string | undefined;
     title: string;
-    videoUrl: string;
+    mediaUrl: string | Record<string, string>;
     galleryUrl: string | undefined,
-    coverImageUrl: string | undefined,
+    coverUrl: string | undefined,
     actors: string[],
     categories: string[]
 }

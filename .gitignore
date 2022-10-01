@@ -15,6 +15,10 @@ dist/
 docker-dump/mysql-data
 docker-dump/mysql-data/
 
+media
+media/
+application/api/media
+application/api/media/
 
 *.zip
 *.7z
@@ -23,3 +27,8 @@ docker-dump/mysql-data/
 
 *.txt
 *.mp4
+*.jpg
+*.jpeg
+*.avi
+*.mp3
+*.wma

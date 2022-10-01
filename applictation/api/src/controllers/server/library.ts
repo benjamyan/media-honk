@@ -1,90 +1,111 @@
 import { Request, Response } from 'express';
-import { promises as Fsp } from 'node:fs';
+import { default as Fs, Dirent, promises as Fsp } from 'node:fs';
 import * as Path from 'node:path';
 import * as Yaml from 'yaml';
 
 import { Honk, Media } from '../../types';
+import { Constants } from '../../utils';
 
 type LibEntryReturnType = Omit<Media.BasicLibraryEntry, 'uuid' | 'mediaSource'>;
 
-const factory_fileEntry = async (entry: string): Promise<LibEntryReturnType| undefined> => {
-	try {
-		const entryChild = entry.split('/');
-		const entryName = entryChild[entryChild.length - 1];
-		const libEntry: LibEntryReturnType = {
-			mediaType: undefined,
-			title: entryName.split('.')[0],
-			videoUrl: entry,
-			galleryUrl: undefined,
-			coverImageUrl: undefined,
-			actors: [],
-			categories: []
-		};
-		if (libEntry.title.length === 0) {
-			libEntry.title = entry
-		}
-		return libEntry
-	} catch (err) {
-		console.log(err)
-		return undefined
-	}
-};
-const factory_directoryEntry = async (entry: string): Promise<LibEntryReturnType| undefined> => {
-	const entryChild: any = (
+const factory_multiEntryDirectory = async ()=> {
+
+}
+const factory_singleEntryDirectory = async ()=> {
+
+}
+const factory_libEntryDefinition = (propsContent: Media.BaselineMediaProperties)=> ({
+
+})
+const processDirectoryEntry = async (entry: string): Promise<LibEntryReturnType| undefined> => {
+	const directoryContent: string[] | void = (
 		await Fsp.readdir(entry)
 			.then(children=> children)
 			.catch(err=> console.log(err))
 	);
-	if (Array.isArray(entryChild)) {
-		const libEntry: LibEntryReturnType = {
-			mediaType: undefined,
-			title: '',
-			videoUrl: '',
-			galleryUrl: undefined,
-			coverImageUrl: undefined,
-			actors: [],
-			categories: []
-		};
+	let exitMediaProcess: boolean = false;
 	
-		await Promise.all(entryChild.map(async (child: string): Promise<void> => {
-			if (child === 'image') {
-				libEntry.galleryUrl = Path.resolve(entry, child) as string;
-				return
+	processProperties:
+	if (Array.isArray(directoryContent) && directoryContent.length > 0) {
+		const yamlFileIndex = directoryContent.findIndex( (file)=>file.endsWith('yaml') );
+		
+		if (yamlFileIndex === -1) {
+			exitMediaProcess = true;
+			break processProperties;
+		}
+
+		const file = await Fsp.readFile(Path.resolve(entry, directoryContent[yamlFileIndex]), 'utf8');
+		const { title, subtitle, type, actors, categories } = Yaml.parse(file);
+		const libEntry: LibEntryReturnType = {
+			mediaUrl: type === 'movie' ? '' : {},
+			baseUrl: entry + '/',
+			audioUrl: undefined,
+			galleryUrl: undefined,
+			coverUrl: undefined,
+			mediaType: type,
+			title,
+			subtitle,
+			actors,
+			categories
+		};
+		directoryContent.splice(yamlFileIndex, 1);
+		
+		await Promise.all(directoryContent.map( async (child: string): Promise<void> => {
+			const fileExt = child.split('.').slice(-1)[0];
+			
+			if (libEntry.coverUrl === undefined && Constants.imageExtensions.includes(fileExt)) {
+				libEntry.coverUrl = child;
 			}
-			if (child === 'properties.yaml') {
-				const file = await Fsp.readFile(Path.resolve(entry, child), 'utf8');
-				const props = Yaml.parse(file)
-				if (!!props) {
-					if (props.title !== undefined) {
-						libEntry.title = props.title
+
+			switch(libEntry.mediaType) {
+				case 'movie': {
+					if (Constants.videoExtensions.includes(fileExt)) {
+						libEntry.mediaUrl = child;
 					}
-					if (props.actors !== undefined && Array.isArray(props.actors)) {
-						libEntry.actors = [...props.actors]
+					if (Constants.audioExtensions.includes(fileExt)) {
+						libEntry.audioUrl = child;
 					}
-					if (props.categories !== undefined && Array.isArray(props.categories)) {
-						libEntry.categories = [...props.categories]
-					}
+					break
 				}
-				return 
-			}
-			if (child.endsWith('.jpg') || child.endsWith('.png')) {
-				libEntry.coverImageUrl = Path.resolve(entry, child)
-				return 
-			}
-			if (child.indexOf('.mp4') > -1) {
-				libEntry.videoUrl = Path.resolve(entry, child)
-				if (child.split('.mp4')[0].endsWith('LR')) {
-					libEntry.mediaType = 'VR_180_LR'
+				case 'series': {
+					let newFileName = child;
+					if (Constants.videoExtensions.includes(fileExt)) {
+						// if (child.indexOf(libEntry.title.toLowerCase()) > -1) {
+						// 	newFileName = newFileName.split(libEntry.title.toLowerCase())[1]
+						// }
+						/// @ts-ignore-error
+						libEntry.mediaUrl[child.split('.')[0]] = child;
+					}
+					break
 				}
-				return 
+				case 'album': {
+					if (Constants.audioExtensions.includes(fileExt)) {
+						/// @ts-ignore-error
+						libEntry.mediaUrl[child.split('.')[0]] = child;
+					}
+					break
+				}
+				case 'singles': {
+					if (Constants.audioExtensions.includes(fileExt)) {
+						/// @ts-ignore-error
+						libEntry.mediaUrl[child.split('.')[0]] = child;
+					}
+					break
+				}
+				case 'gallery': {
+					if (Constants.imageExtensions.includes(fileExt)) {
+						/// @ts-ignore-error
+						libEntry.mediaUrl[child.split('.')[0]] = child;
+					}
+					break
+				}
+				default: {
+					//
+				}
 			}
 		}));
-
-		if (libEntry.title.length === 0) {
-			libEntry.title = entry
-		}
-	
-		return libEntry
+		
+		return !exitMediaProcess ? libEntry : undefined
 	} else {
 		return undefined
 	}
@@ -93,24 +114,29 @@ const factory_directoryEntry = async (entry: string): Promise<LibEntryReturnType
 
 const parseFilesForLibrary = async (source: string, dir: string): Promise<Media.BasicLibraryEntry[]> => {
 	const dirents = await Fsp.readdir(dir, { withFileTypes: true });
-	const accumulator: Media.BasicLibraryEntry[] = [];
-	await Promise.all(dirents.map(async (dirent, index) => {
+	let accumulator: Media.BasicLibraryEntry[] = [];
+
+	await Promise.all(dirents.map(async (dirent, index, dirents) => {
 		try {
 			const res = Path.resolve(dir, dirent.name);
-			let newEntry;
-			if (res.endsWith('.mp4')) {
-				newEntry = await factory_fileEntry(res);
-			} else {
-				newEntry = await factory_directoryEntry(res);
+			let childEntries: any,
+				entryAttempt: LibEntryReturnType | undefined;
+
+			if (Fs.existsSync(Path.join(res, 'properties.yaml'))) {
+				entryAttempt = await processDirectoryEntry(res);
+				if (entryAttempt !== undefined) {
+					accumulator.push({
+						mediaSource: source,
+						uuid: `0000-0000-000${index}`,
+						...entryAttempt
+					})
+				} else throw new Error('Failure to compile on ' + dirent.name)
+			} else if (dirents.length > 0) {
+				childEntries = await parseFilesForLibrary(source, res);
+				if (Array.isArray(childEntries)) {
+					accumulator = [ ...accumulator, ...childEntries ]
+				}
 			}
-			if (newEntry === undefined || newEntry.title === undefined || newEntry.videoUrl === undefined) {
-				throw new Error('Failure to compile on ' + dirent.name)
-			}
-			accumulator.push({
-				mediaSource: source,
-				uuid: `0000-0000-000${index}`,
-				...newEntry
-			})
 			return 0
 		} catch (err) {
 			console.log(err)
@@ -129,6 +155,7 @@ export async function getLibrary(_req: Honk.Request, res: Honk.Response): Promis
 						const entriesFromPath = await parseFilesForLibrary(path[0], path[1]);
 						return entriesFromPath
 					})
+					.filter(Boolean)
 			);
 			if (Object.entries(mediaLibraryEntries).length > 0) {
 				res.statusCode = 200;

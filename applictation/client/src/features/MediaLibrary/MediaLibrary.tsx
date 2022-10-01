@@ -86,7 +86,7 @@ export const MediaLibrary = (props: MediaLibraryProps) => {
                 return (
                     <div key={`entry${index}`} className='video__library--entry'>
                         <img 
-                            src={`/server/image?file=${entry.coverImageUrl}`} 
+                            src={`/server/image?file=${entry.coverUrl}`} 
                             loading="lazy" 
                             onClick={() => setActiveMedia(entry)} 
                         />
