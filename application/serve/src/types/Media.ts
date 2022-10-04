@@ -1,7 +1,7 @@
 // type uuidChar = '0'|'1'|'2'|'3'|'4'|'5'|'6'|'7'|'8'|'9';
 // type uuidSection = `${uuidChar}${uuidChar}${uuidChar}${uuidChar}`
 
-import { Honk } from '../../../@types/src'
+import { Honk } from 'mediahonk';
 export type { Honk }
 // export namespace Media {
 //     export type MediaTypes = 'series' | 'movie' | 'gallery' | 'singles' | 'podcast' | 'album';

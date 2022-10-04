@@ -1,4 +1,4 @@
-import { constants } from '../../../@types/src'
+import { constants } from 'mediahonk'
 
 export * from './validateFile'
 export { constants }

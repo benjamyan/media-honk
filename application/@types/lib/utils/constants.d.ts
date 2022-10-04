@@ -1,0 +1,10 @@
+export declare const reGlyphs: RegExp;
+export declare const reTrailing: RegExp;
+export declare const reSpacers: RegExp;
+export declare const includeName: string[];
+export declare const excludeName: string[];
+export declare const audioExtensions: string[];
+export declare const imageExtensions: string[];
+export declare const videoExtensions: string[];
+export declare const excludeExtensions: string[];
+export declare const includeExtensions: string[];

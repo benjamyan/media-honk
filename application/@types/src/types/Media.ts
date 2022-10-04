@@ -7,11 +7,12 @@ export namespace Honk {
         artists?: string[];
         categories?: string[] 
     }
-    
+    // export type LibraryEntryMedia = {}
     export interface BasicLibraryEntry {
         uuid: string;
-
+        /** The absolute URL relative to our API */
         baseUrl: string;
+        /** Object where `key` is the media title to be displayed and `value` is its relative URL */
         mediaUrl: Record<string, string>;
         audioUrl: Record<string, string> | undefined;
         // galleryUrl: string | undefined;

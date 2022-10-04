@@ -2,7 +2,8 @@
     "compilerOptions": {
         "target": "es6",
         "module": "commonjs",
-        "outDir": "dist",
+        "outDir": "lib",
+        "declaration": true,
         "sourceMap": true,
         "lib": [
             "dom",
@@ -26,11 +27,6 @@
         "src"
     ],
     "exclude": [
-        "node_modules",
-        "@types",
-        "@types/*",
-        "@types/**/*",
-        "../@types",
-        "../@types/*"
+        "node_modules"
     ]
 }

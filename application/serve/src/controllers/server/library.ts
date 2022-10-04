@@ -3,6 +3,7 @@ import { default as Fs, Dirent, promises as Fsp } from 'node:fs';
 import * as Path from 'node:path';
 import * as Yaml from 'yaml';
 
+// import { Honk } from 'mediahonk/src';
 import { Serve, Honk } from '../../types';
 import { constants } from '../../utils';
 
@@ -92,7 +93,6 @@ const processDirectoryEntry = async (entry: string): Promise<LibEntryReturnType|
 		}
 
 		const file = await Fsp.readFile(Path.resolve(entry, directoryContent[yamlFileIndex]), 'utf8');
-		// const { title, subtitle, type, artists, categories } = Yaml.parse(file);
 		const propertiesContent = Yaml.parse(file);
 		const libEntry: LibEntryReturnType = {
 			baseUrl: entry + '/',
@@ -147,7 +147,7 @@ const parseFilesForLibrary = async (source: string, dir: string): Promise<Omit<H
 	const dirents = await Fsp.readdir(dir, { withFileTypes: true });
 	let accumulator: Omit<Honk.BasicLibraryEntry, 'uuid'>[] = [];
 
-	await Promise.all(dirents.map(async (dirent, index, dirents) => {
+	await Promise.all(dirents.map(async (dirent, _index, dirents) => {
 		try {
 			const res = Path.resolve(dir, dirent.name);
 			let childEntries: any,
@@ -158,7 +158,6 @@ const parseFilesForLibrary = async (source: string, dir: string): Promise<Omit<H
 				if (entryAttempt !== undefined) {
 					accumulator.push({
 						mediaSource: source,
-						// uuid: `0000-0000-000${index}`,
 						...entryAttempt
 					})
 				} else throw new Error('Failure to compile on ' + dirent.name)
@@ -180,24 +179,32 @@ const parseFilesForLibrary = async (source: string, dir: string): Promise<Omit<H
 export async function getLibrary(_req: Serve.Request, res: Serve.Response): Promise<void> {
 	try {
 		if (!!res.locals.userMediaPaths) {
-			let mediaLibraryEntries = await Promise.all(
+			const mediaLibraryEntries = await Promise.all(
 				Object.entries(res.locals.userMediaPaths as Record<string, string>)
 					.map( async (path: [string, string])=> {
 						const entriesFromPath = await parseFilesForLibrary(path[0], path[1]);
 						return entriesFromPath
 					})
 					.filter(Boolean)
+					.flat(1)
 			);
 			if (Object.entries(mediaLibraryEntries).length > 0) {
-				mediaLibraryEntries = mediaLibraryEntries.map((entry, index)=>({
-					...entry,
-					uuid: `0000-000${index}`
-				}))
+				const temp = (
+					mediaLibraryEntries
+						.flat(1)
+						.map(
+							(entry, index)=>({
+								...entry,
+								uuid: `0000-000${index}`
+							})
+						)
+				);
 				res.statusCode = 200;
 				res.set({
 					'Access-Control-Allow-Origin': 'http://192.168.0.11'
 				})
-				res.send(mediaLibraryEntries.flat(1))
+				console.log(temp)
+				res.send(temp)
 			} else {
 				res.statusCode = 204;
 				res.send('Did not return any entries')

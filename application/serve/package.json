@@ -36,6 +36,7 @@
     "@types/tsscmp": "^1.0.0",
     "@types/xml2json": "^0.11.4",
     "concurrently": "^7.4.0",
+    "mediahonk": "file:../@types/mediahonk-type-1.0.0.tgz",
     "nodemon": "^2.0.19",
     "typescript": "^4.8.2"
   }
