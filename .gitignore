@@ -1,34 +1,23 @@
-node_modules
 node_modules/
-**/**/node_modules
+**/node_modules/
 **/**/node_modules/
 
-_old
 _old/
-_old/*
 
-dist
-dist/
-**/**/dist
-**/**/dist/
-cert
-cert/
-**/**/cert
-**/**/cert/
+application/**/dist/
+application/**/cert/
 
-docker-dump/mysql-data
-docker-dump/mysql-data/
-
-media
+docker-dump/
 media/
-application/api/media
-application/api/media/
 
 *.zip
 *.7z
 *.tar
 *.tar.gz
 *.pem
+*.pfx
+*.cer
+*.crt
 *.yaml
 *.txt
 *.mp4
