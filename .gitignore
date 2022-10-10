@@ -25,6 +25,8 @@ application/api/media/
 *.tar
 *.tar.gz
 
+*.yaml
+*.yml
 *.txt
 *.mp4
 *.jpg

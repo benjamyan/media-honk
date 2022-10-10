@@ -9,18 +9,15 @@ allowedOrigins:
   - 'http://192.168.0.11'
 # Paths for file directories containing media
 # Should point to the parent directory of the media directories (see structure in README)
-# userMediaPaths:
-#   name1: './media'
 userMediaPaths:
-  video1: './media/video'
-  # external: '/media/benjamyan/media_external/videos'
-  audio1: './media/audio'
-  image1: './media/image'
+  video: '/home/benjamyan/Working/media-server/media/video'
+  audio: '/home/benjamyan/Working/media-server/media/audio'
+  image: '/home/benjamyan/Working/media-server/media/image'
 # Standard users to load into the DB -- "Username__Password"
 users:
-    # - 'BigTony__G00seGame'
-    # - 'JoeyJabroni__doodoo'
-    - 'mediahonk__pringle'
+    - 'user__pass'
+    - 'BigTony__G00seGame'
+    - 'JoeyJabroni__doodoo'
 # Admin credentials
 admins:
     - 'mediahonk__pringle'
