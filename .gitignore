@@ -4,8 +4,9 @@ node_modules/
 
 _old/
 
-application/**/dist/
-application/**/cert/
+**/**/lib/
+**/**/dist/
+**/**/cert/
 
 docker-dump/
 media/
