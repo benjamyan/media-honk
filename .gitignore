@@ -11,6 +11,10 @@ dist
 dist/
 **/**/dist
 **/**/dist/
+cert
+cert/
+**/**/cert
+**/**/cert/
 
 docker-dump/mysql-data
 docker-dump/mysql-data/
@@ -24,9 +28,8 @@ application/api/media/
 *.7z
 *.tar
 *.tar.gz
-
+*.pem
 *.yaml
-*.yml
 *.txt
 *.mp4
 *.jpg
@@ -34,3 +37,5 @@ application/api/media/
 *.avi
 *.mp3
 *.wma
+
+docker-compose.yml
