@@ -1,9 +1,6 @@
-DROP PROCEDURE IF EXISTS entry_point;
-DROP FUNCTION IF EXISTS new_media_entry;
-DROP PROCEDURE IF EXISTS conditional_relation_insert;
-
+DROP PROCEDURE IF EXISTS create_media_relation;
 DELIMITER //
-CREATE PROCEDURE conditional_relation_insert (
+CREATE PROCEDURE create_media_relation (
     mediaItemId INT,
     categoryName TEXT,
     sourceTitle TEXT
@@ -24,32 +21,90 @@ BEGIN
             VALUES (mediaItemId, @CategoryID, @SourceID);
     END IF;
 END//
-CREATE PROCEDURE entry_point 
+DELIMITER ;
+
+
+
+DROP PROCEDURE IF EXISTS conditional_category_insert;
+DELIMITER //
+CREATE PROCEDURE conditional_category_insert (
+    IN mediaMeta TEXT,
+    IN tableName TEXT,
+    IN tableCol TEXT
+)
+BEGIN
+    SET @Meta = mediaMeta;
+    SET @Exists = NULL;
+    SET @Current = 's';
+
+    SET @Statement1 = CONCAT('SELECT id INTO @Exists FROM ', tableName, ' WHERE ', tableCol, ' = @Current');
+    SET @Statement2 = CONCAT('INSERT INTO ', tableName, ' (', tableCol, ') VALUES (@Current)');
+
+    WHILE @Current != '' DO
+        SET @Current = SUBSTRING_INDEX(@Meta, ',', 1);
+        
+        PREPARE stmt1 FROM @Statement1;
+        EXECUTE stmt1;
+        DEALLOCATE PREPARE stmt1;
+        
+        IF @Exists IS NULL THEN
+            PREPARE stmt2 FROM @Statement2;
+            EXECUTE stmt2;
+            DEALLOCATE PREPARE stmt2;
+        ELSE
+            SET @Exists = NULL;
+        END IF;
+
+        IF LOCATE(',', @Meta) > 0 THEN
+            SELECT 'next' ;
+            SET @Meta = SUBSTRING(@Meta, LOCATE(',', @Meta) + 1);
+        ELSE
+            SELECT 'bye' ;
+            SET @Current = '';
+        END IF;
+    END WHILE;
+END//
+/* CALL conditional_category_insert('comedy,action,violence,drama,poopoo', 'artist', 'name'); */
+DELIMITER ;
+
+
+
+DROP PROCEDURE IF EXISTS new_media_entry;
+DELIMITER //
+CREATE PROCEDURE new_media_entry 
 (
     mainTitle TEXT,
     subTitle TEXT,
     assetPath TEXT,
-    totalEntries INT unsigned   
+    totalEntries INT unsigned,
+    mediaCategories TEXT,
+    mediaArtists TEXT
 )
 BEGIN
     SET @NewEntry = (
-        SELECT * FROM media
+        SELECT id FROM media
         WHERE main_title = mainTitle
         AND sub_title = subTitle
         AND asset_path = assetPath
-        AND entries = totalEntries
     );
-    IF @NewEntry IS NOT NULL THEN
-        SELECT 'yep'
-    ELSE
+
+    IF @NewEntry IS NULL THEN
+    
         INSERT IGNORE INTO media (main_title, sub_title, asset_path, entries)
             VALUES(mainTitle, subTitle, assetPath, totalEntries);
+        SET @NewMediaEntryId = LAST_INSERT_ID();
+        CALL create_media_relation(@NewMediaEntryId, 'comedy', 'TV Series');
+
     END IF;
-    
-    SET @NewMediaEntryId = LAST_INSERT_ID();
-    CALL conditional_relation_insert(@NewMediaEntryId, 'comedy', 'TV Series');
+
 END//
 DELIMITER ;
 
-CALL entry_point('Spongebob Poopants', 's3', 'spongebob/s3', 15)
-/* CALL conditional_relation_insert(@newEntry, 'comedy', 'TV Series'); */
+/* CALL new_media_entry(
+    'Spongebob Poopants', 
+    NULL, 
+    'spongebob/season3', 
+    15,
+    'comedy,action,violence',
+    NULL
+); */
