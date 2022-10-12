@@ -35,8 +35,12 @@ CHANGE `id` `id` int unsigned NOT NULL AUTO_INCREMENT PRIMARY KEY FIRST,
 AUTO_INCREMENT=1;
 
 CREATE TABLE media_relation (
-    media_id SMALLINT unsigned NOT NULL,
-    artist_id SMALLINT unsigned,
-    category_id SMALLINT unsigned,
-    source_id SMALLINT unsigned
+    media_id INT unsigned NOT NULL,
+    artist_id INT unsigned,
+    category_id INT unsigned,
+    source_id INT unsigned,
+    FOREIGN KEY (media_id) REFERENCES media(id),
+    FOREIGN KEY (artist_id) REFERENCES artist(id),
+    FOREIGN KEY (category_id) REFERENCES category(id),
+    FOREIGN KEY (source_id) REFERENCES source(id)
 );

@@ -1,28 +1,28 @@
 # media items
-INSERT INTO media (main_title, asset_path, entries) 
+INSERT IGNORE INTO media (main_title, asset_path, entries) 
 VALUES ('Die Hard', 'example', 1); #1
-INSERT INTO media (main_title, sub_title, asset_path, entries) 
+INSERT IGNORE INTO media (main_title, sub_title, asset_path, entries) 
 VALUES ('Futurama', 'Season 1', 'futurama/season1', 2); #2
-INSERT INTO media (main_title, sub_title, asset_path, entries) 
+INSERT IGNORE INTO media (main_title, sub_title, asset_path, entries) 
 VALUES ('Futurama', 'Season 2', 'futurama/season2', 2); #3
-INSERT INTO media (main_title, asset_path, entries) 
+INSERT IGNORE INTO media (main_title, asset_path, entries) 
 VALUES ('Tucker and Dale vs Evil', 'title', 1); #4
 
 # categories
-INSERT INTO category (name) VALUES ('action'); #1
-INSERT INTO category (name) VALUES ('adventure'); #2
-INSERT INTO category (name) VALUES ('comedy'); #3
-INSERT INTO category (name) VALUES ('drama'); #4
+INSERT IGNORE INTO category (name) VALUES ('action'); #1
+INSERT IGNORE INTO category (name) VALUES ('adventure'); #2
+INSERT IGNORE INTO category (name) VALUES ('comedy'); #3
+INSERT IGNORE INTO category (name) VALUES ('drama'); #4
 
 # artists
-INSERT INTO artist (name) VALUES ('Bruce Willis'); #1
-INSERT INTO artist (name) VALUES ('Tucker Bojangles'); #2
-INSERT INTO artist (name) VALUES ('Dale Sale'); #3
+INSERT IGNORE INTO artist (name) VALUES ('Bruce Willis'); #1
+INSERT IGNORE INTO artist (name) VALUES ('Tucker Bojangles'); #2
+INSERT IGNORE INTO artist (name) VALUES ('Dale Sale'); #3
 
 # sources
-INSERT INTO source (title, asset_path) 
+INSERT IGNORE INTO source (title, asset_path) 
 VALUES ('Movies', '/path/to/movies'); #1
-INSERT INTO source (title, asset_path)
+INSERT IGNORE INTO source (title, asset_path)
 VALUES ('TV Series', '/path/to/tvshows'); #2
 
 ## baseline relationships
