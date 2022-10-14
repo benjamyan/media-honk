@@ -23,7 +23,6 @@
     "@types/node": "^18.7.14",
     "@types/react": "^18.0.12",
     "@types/react-dom": "^18.0.5",
-    "@types/three": "^0.144.0",
     "@types/video.js": "7.3.3",
     "babel-loader": "^8.2.5",
     "concurrently": "^7.4.0",
@@ -48,14 +47,11 @@
     "webpack-dev-server": "^4.9.2"
   },
   "dependencies": {
-    "@types/chromecast-api": "^0.4.1",
     "@videojs/themes": "^1.0.1",
     "axios": "^0.27.2",
-    "chromecast-api": "^0.4.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "video.js": "^7.20.2",
-    "videojs-vr": "1.7.2"
+    "video.js": "^7.20.2"
   },
   "eslintConfig": {
     "extends": [
