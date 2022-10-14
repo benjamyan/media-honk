@@ -14,5 +14,6 @@ docker run --name media-lan-docker -v /home/benjamyan/Working/media-server/docke
 # enable bash cmd for mysql
 # docker exec -it media-lan bash
 
+
 # access bash log
 # docker logs some-mysql
