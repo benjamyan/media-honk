@@ -24,7 +24,6 @@ BEGIN
     );
 
     WHILE @Current != '' DO
-        SELECT '1';
         SET @Current = SUBSTRING_INDEX(@Meta, ',', 1);
         
         PREPARE stmt1 FROM @stmt_Select;
@@ -32,13 +31,11 @@ BEGIN
         DEALLOCATE PREPARE stmt1;
         
         IF @Exists IS NULL THEN
-            SELECT 'insert';
             PREPARE stmt2 FROM @stmt_Insert;
             EXECUTE stmt2;
             DEALLOCATE PREPARE stmt2;
         ELSE
             IF shouldOverwrite <=> 1 THEN
-                SELECT 'replace';
                 PREPARE stmt3 FROM @stmt_Update;
                 EXECUTE stmt3;
                 DEALLOCATE PREPARE stmt3;
@@ -57,4 +54,4 @@ BEGIN
 END//
 DELIMITER ;
 
-CALL dynamic_multi_insert('comedy,action,violence,drama,poopoo', 'category', 'id', 'name', 1);
+/* CALL dynamic_multi_insert('comedy,action,violence,drama,poopoo', 'category', 'id', 'name', 1); */
