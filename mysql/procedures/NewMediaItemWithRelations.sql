@@ -37,9 +37,7 @@ BEGIN
 
             SET @NewEntry = LAST_INSERT_ID();
             SET @SourceID = (
-                SELECT src.id 
-                FROM source AS src
-                WHERE src.title = mediaSource
+                SELECT src.id FROM source AS src WHERE src.title = mediaSource
             );
 
             IF mediaCategories IS NOT NULL THEN
