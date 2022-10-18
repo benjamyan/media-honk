@@ -1,11 +1,23 @@
 export namespace Honk {
     export type MediaTypes = 'series' | 'movie' | 'gallery' | 'singles' | 'podcast' | 'album';
+    export interface Configuration {
+        dns: string;
+        server: string;
+        domain: string;
+        dev_http_port: number;
+        dev_https_port: number;
+        use_https: boolean;
+        allowedOrigins: string[];
+        userMediaPaths: Record<string | number, string>;
+        users: string[];
+        admins: string[];
+    }
     export interface BaselineMediaProperties {
         type: MediaTypes;
         title: string;
         subtitle?: string;
         artists?: string[];
-        categories?: string[] 
+        categories?: string[];
     }
     // export type LibraryEntryMedia = {}
     export interface BasicLibraryEntry {
