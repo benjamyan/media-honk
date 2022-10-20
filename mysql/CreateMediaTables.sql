@@ -3,6 +3,7 @@ CREATE TABLE media (
     main_title TEXT NOT NULL,
     sub_title TEXT,
     asset_path TEXT NOT NULL,
+    media_cover TEXT,
     entries INT unsigned NOT NULL
 ) CHARACTER SET utf16 COLLATE utf16_unicode_ci;
 ALTER TABLE `media`

@@ -4,14 +4,14 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "dev": "ts-node src/index.ts",
+    "dev": "CONFIG_FILE='../config.yaml' ts-node src/index.ts",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "benjamyan",
   "license": "ISC",
   "dependencies": {
     "express": "^4.16.4",
-    "mediahonk": "file:mediahonk-1.0.0.tgz",
+    "mediahonk": "file:../@common/mediahonk-1.0.0.tgz",
     "mysql": "^2.18.1",
     "mysql2": "^2.3.3",
     "yaml": "^2.1.3"

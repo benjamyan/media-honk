@@ -4,7 +4,7 @@ import * as Yaml from 'yaml';
 
 import { Honk, constants } from 'mediahonk';
 
-type LibEntryReturnType = Omit<Honk.BasicLibraryEntry, 'uuid' | 'mediaSource'>;
+type LibEntryReturnType = Omit<Honk.BasicLibraryEntry, 'mediaSource'>;
 
 const processDirectoryEntry = async (entry: string): Promise<LibEntryReturnType| undefined> => {
 	const directoryContent: string[] | void = (
@@ -28,7 +28,7 @@ const processDirectoryEntry = async (entry: string): Promise<LibEntryReturnType|
 		const libEntry: LibEntryReturnType = {
 			baseUrl: entry + '/',
 			mediaUrl: {},
-			audioUrl: undefined,
+			// audioUrl: undefined,
 			coverUrl: undefined,
 			...propertiesContent
 		};
@@ -42,23 +42,23 @@ const processDirectoryEntry = async (entry: string): Promise<LibEntryReturnType|
 				if (libEntry.coverUrl === undefined || libEntry.coverUrl.length === 0) {
 					libEntry.coverUrl = dirFile;
 				}
-				if (libEntry.type === 'gallery') {
+				// if (libEntry.type === 'gallery') {
 					libEntry.mediaUrl[fileName] = dirFile;
-				}
+				// }
 			}
 
 			if (constants.videoExtensions.includes(fileExt)) {
-				if (libEntry.type === 'series') {
+				// if (libEntry.type === 'series') {
+				// 	libEntry.mediaUrl[fileName] = dirFile;
+				// } else {
 					libEntry.mediaUrl[fileName] = dirFile;
-				} else {
-					libEntry.mediaUrl[fileName] = dirFile;
-				}
+				// }
 			}
 
 			if (constants.audioExtensions.includes(fileExt)) {
-				if (libEntry.type === 'album' || libEntry.type === 'singles') {
+				// if (libEntry.type === 'album' || libEntry.type === 'singles') {
 					libEntry.mediaUrl[fileName] = dirFile;
-				}
+				// }
 			}
 			
 		}));
@@ -70,7 +70,7 @@ const processDirectoryEntry = async (entry: string): Promise<LibEntryReturnType|
 	
 };
 
-const parseFilesForLibrary = async (source: string, dir: string): Promise<Omit<Honk.BasicLibraryEntry, 'uuid'>[]> => {
+const parseFilesForLibrary = async (source: string, dir: string): Promise<Honk.BasicLibraryEntry[]> => {
 	const dirents = await Fsp.readdir(dir, { withFileTypes: true });
 	let accumulator: Omit<Honk.BasicLibraryEntry, 'uuid'>[] = [];
 
@@ -84,8 +84,9 @@ const parseFilesForLibrary = async (source: string, dir: string): Promise<Omit<H
 				entryAttempt = await processDirectoryEntry(res);
 				if (entryAttempt !== undefined) {
 					accumulator.push({
+						...entryAttempt,
 						mediaSource: source,
-						...entryAttempt
+						baseUrl: entryAttempt.baseUrl.split(source)[1]
 					})
 				} else throw new Error('Failure to compile on ' + dirent.name)
 			} else if (dirents.length > 0) {
@@ -103,19 +104,12 @@ const parseFilesForLibrary = async (source: string, dir: string): Promise<Omit<H
 	return accumulator
 };
 
-export async function getMediaEntries(): Promise<any> {
+export async function getMediaEntries(localConfig: Honk.Configuration): Promise<Omit<Honk.BasicLibraryEntry, 'uuid'>[]> {
 	try {
-		const configFile = Path.resolve(__dirname, '../../config.yaml');
-		if (Fs.existsSync(configFile)) {
-			throw new Error('Failed to locate required configurations')
-		}
-
-		const localConfig: Honk.Configuration = (
-			Yaml.parse(Fs.readFileSync(configFile, 'utf-8'))
-		);
-		if (!!localConfig.userMediaPaths) {
+		const userMediaPaths = localConfig.serve.media_paths;
+		if (!!userMediaPaths) {
 			const mediaLibraryEntries = await Promise.all(
-				Object.entries(localConfig.userMediaPaths as Record<string, string>)
+				Object.entries(userMediaPaths as Record<string, string>)
 					.map( async (path: [string, string])=> {
 						const entriesFromPath = await parseFilesForLibrary(path[0], path[1]);
 						return entriesFromPath
@@ -124,18 +118,7 @@ export async function getMediaEntries(): Promise<any> {
 					.flat(1)
 			);
 			if (Object.entries(mediaLibraryEntries).length > 0) {
-				const temp = (
-					mediaLibraryEntries
-						.flat(1)
-						.map(
-							(entry, index)=>({
-								...entry,
-								uuid: `0000-000${index}`
-							})
-						)
-				);
-				console.log(temp)
-				return temp;
+				return mediaLibraryEntries.flat(1)
 			} else {
 				throw new Error('No entries')
 			}
@@ -148,6 +131,6 @@ export async function getMediaEntries(): Promise<any> {
 		} else {
 			console.log('Unhandled exception')
 		}
-		return undefined
+		return []
 	}
 }
