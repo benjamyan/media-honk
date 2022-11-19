@@ -8,6 +8,8 @@ export const reSpacers = /([\_]{2,})/gim;
 export const includeName: string[] = [];
 export const excludeName: string[] = [];
 
+export const coverUrlKeyName: string = '__COVER__';
+
 export const audioExtensions: string[] = ['mp3', 'wma'];
 export const imageExtensions: string[] = ['jpg','png','jpeg','bmp'];
 export const videoExtensions: string[] = ['mov','avi','mp4'];

@@ -4,6 +4,9 @@ node_modules/
 
 _old/
 
+**/*.yaml
+**/**/*.yaml
+
 **/**/lib/
 **/**/dist/
 **/**/cert/

@@ -29,7 +29,7 @@ const processDirectoryEntry = async (entry: string): Promise<LibEntryReturnType|
 			baseUrl: entry + '/',
 			mediaUrl: {},
 			// audioUrl: undefined,
-			coverUrl: undefined,
+			// coverUrl: undefined,
 			...propertiesContent
 		};
 		directoryContent.splice(yamlFileIndex, 1);
@@ -39,11 +39,15 @@ const processDirectoryEntry = async (entry: string): Promise<LibEntryReturnType|
 			const fileName = dirFile.split('.')[0];
 			
 			if (constants.imageExtensions.includes(fileExt)) {
-				if (libEntry.coverUrl === undefined || libEntry.coverUrl.length === 0) {
-					libEntry.coverUrl = dirFile;
+				if (libEntry.mediaUrl[constants.coverUrlKeyName] === undefined || libEntry.mediaUrl[constants.coverUrlKeyName].length === 0) {
+					libEntry.mediaUrl[constants.coverUrlKeyName] = dirFile;
 				}
+				libEntry.mediaUrl[fileName] = dirFile;
+				// if (libEntry.coverUrl === undefined || libEntry.coverUrl.length === 0) {
+					// libEntry.coverUrl = dirFile;
+				// }
 				// if (libEntry.type === 'gallery') {
-					libEntry.mediaUrl[fileName] = dirFile;
+					// libEntry.mediaUrl[fileName] = dirFile;
 				// }
 			}
 
@@ -51,13 +55,13 @@ const processDirectoryEntry = async (entry: string): Promise<LibEntryReturnType|
 				// if (libEntry.type === 'series') {
 				// 	libEntry.mediaUrl[fileName] = dirFile;
 				// } else {
-					libEntry.mediaUrl[fileName] = dirFile;
+				libEntry.mediaUrl[fileName] = dirFile;
 				// }
 			}
 
 			if (constants.audioExtensions.includes(fileExt)) {
 				// if (libEntry.type === 'album' || libEntry.type === 'singles') {
-					libEntry.mediaUrl[fileName] = dirFile;
+				libEntry.mediaUrl[fileName] = dirFile;
 				// }
 			}
 			

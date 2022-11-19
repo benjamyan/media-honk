@@ -6,10 +6,8 @@ import { Honk } from 'mediahonk';
 
 export const parseLocalConfigFile = async (): Promise<Honk.Configuration | Error> => {
     try {
-        // console.log(process.env.CONFIG_FILE)
-        // console.log(process.env.PWD)
         const configFile = Path.resolve(process.env.PWD as string, process.env.CONFIG_FILE as string);
-        // const configFile = Path.resolve(__dirname, '../../../config.yaml');
+        
         if (!Fs.existsSync(configFile)) {
             throw new Error('Failed to locate required configurations')
         }

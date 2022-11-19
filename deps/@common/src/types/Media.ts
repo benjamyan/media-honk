@@ -35,9 +35,37 @@ export namespace Honk {
             allow_insecure: boolean
         }
     }
-
-    // export interface 
-
+    export namespace DB {
+        export interface media {
+            id: number;
+            main_title: string;
+            sub_title?: string;
+            rel_path: string;
+            cover_img?: string;
+            entries: Record<string | number, string>;
+        }
+        export interface source {
+            id: number;
+            title: string;
+            abs_path: string;
+        }
+        export interface artist {
+            id: number;
+            name: string;
+            source_id: number;
+        }
+        export interface category {
+            id: number;
+            name: string;
+            source_id: number;
+        }
+        export interface media_relation {
+            media_id: number;
+            artist_id?: number;
+            category_id?: number;
+            source_id: number;
+        }
+    }
     export interface BaselineMediaProperties {
         // type: MediaTypes;
         title: string;
@@ -45,7 +73,6 @@ export namespace Honk {
         artists?: string[];
         categories?: string[];
     }
-    // export type LibraryEntryMedia = {}
     export interface BasicLibraryEntry {
         // uuid: string;
         /** The relative URL relative to our API */
