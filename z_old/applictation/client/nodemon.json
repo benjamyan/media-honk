@@ -1,0 +1,22 @@
+{
+  "execMap": {
+    "ts": "ts-node"
+  },
+  "events": {
+    "restart": "npm run build && rsync -a -vh --delete dist/ ../api/static/"
+  },
+  "watch": [
+    "src/*"
+  ],
+  "ext": "json, ts, tsx, scss, css",
+  "ignore": [
+      "**/node_modules/",
+      "**/node_modules/*",
+      "**/node_modules/**/*.js",
+      "**/node_modules/**/**/*.js",
+      "**/node_modules/**/**/**/*.js",
+      "dist/",
+      "*.js"
+  ],
+  "exec": "ts-node ./src/index.ts"
+}

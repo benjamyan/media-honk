@@ -1,0 +1,9 @@
+.button {
+    &__close {
+        font-size: 20px;
+        &::before {
+            content: '\2715';
+            color: white;
+        }
+    }
+}
