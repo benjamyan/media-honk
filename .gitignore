@@ -19,6 +19,7 @@ media/
 *.7z
 *.tar
 *.tar.gz
+*.tgz
 *.pem
 *.pfx
 *.cer

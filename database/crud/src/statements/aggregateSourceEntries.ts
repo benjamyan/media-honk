@@ -20,7 +20,7 @@ export const aggregateSourceEntries = async (): Promise<Honk.DB.source[] | Error
         if (remoteSources === undefined || !Array.isArray(remoteSources)) {
             throw new Error('Failed to get remote db sources')
         }
-
+        
         return [ ...remoteSources ];
     } catch (err) {
         console.error(err)

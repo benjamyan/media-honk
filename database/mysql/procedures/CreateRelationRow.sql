@@ -2,17 +2,20 @@ DROP PROCEDURE IF EXISTS create_media_relation;
 
 DELIMITER //
 CREATE PROCEDURE create_media_relation (
-    mediaId INT,
-    mediaCategories TEXT,
-    mediaArtists TEXT,
-    sourceId INT
+    IN mediaId INT,
+    IN mediaCategories TEXT,
+    IN mediaArtists TEXT
 )
 BEGIN
-    IF mediaId IS NOT NULL AND sourceId IS NOT NULL THEN
+    /* IF mediaCategories IS NULL AND mediaArtists IS NULL THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'mediaId cannot be NULL'; */
+    IF mediaId IS NULL THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'mediaId cannot be NULL';
+    ELSE
         SET @Cat = mediaCategories;
         SET @Art = mediaArtists;
         WHILE @Cat IS NOT NULL OR @Art IS NOT NULL DO
-            INSERT INTO media_relation (media_id, category_id, artist_id, source_id)
+            INSERT INTO media_relation (media_id, category_id, artist_id)
                 VALUES (
                     mediaId, 
                     (
@@ -23,7 +26,7 @@ BEGIN
                             SUBSTRING_INDEX(@Cat, ',', 1), 
                             @Cat
                         )
-                    ), 
+                    ),
                     (
                         SELECT id 
                         FROM artist 
@@ -32,8 +35,7 @@ BEGIN
                             SUBSTRING_INDEX(@Art, ',', 1), 
                             @Art
                         )
-                    ),
-                    sourceId
+                    )
                 );
             SET @Cat = IF(
                 LOCATE(',', @Cat) > 0,
@@ -46,8 +48,6 @@ BEGIN
                     NULL
             );
         END WHILE;
-    ELSE
-        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'mediaId and sourceId cannot be NULL';
     END IF;
 
 END//

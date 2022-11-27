@@ -4,14 +4,21 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "CONFIG_FILE='config.yaml' ts-node src/index.ts",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "source": "CONFIG_FILE='config.yaml' ts-node src/index.ts source",
+    "media": "CONFIG_FILE='config.yaml' ts-node src/index.ts media",
+    "media-audio": "CONFIG_FILE='config.yaml' ts-node src/index.ts media --media-type audio",
+    "media-image": "CONFIG_FILE='config.yaml' ts-node src/index.ts media --media-type image",
+    "media-video": "CONFIG_FILE='config.yaml' ts-node src/index.ts media --media-type video",
+    "backup": "CONFIG_FILE='config.yaml' ts-node src/index.ts backup",
+    "all": "CONFIG_FILE='config.yaml' ts-node src/index.ts source media"
   },
   "author": "benjamyan",
   "license": "ISC",
   "dependencies": {
     "express": "^4.16.4",
-    "mediahonk": "file:../../deps/@common/mediahonk-1.0.0.tgz",
+    "mediahonk": "file:../../deps/@common/mediahonk-1.1.0.tgz",
     "mysql": "^2.18.1",
     "mysql2": "^2.3.3",
     "yaml": "^2.1.3"

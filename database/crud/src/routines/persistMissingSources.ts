@@ -1,5 +1,5 @@
 import * as Mysql from 'mysql2/promise';
-import { default as Fs } from 'node:fs';
+import { default as Fs, PathLike } from 'node:fs';
 import * as Path from 'node:path';
 import { Honk } from 'mediahonk';
 
@@ -12,15 +12,20 @@ import { aggregateSourceEntries } from '../statements/aggregateSourceEntries';
  */
 const factory_mediaSources = (): Omit<Honk.DB.source, 'id'>[] | void => {
     try {
-        const mediaSources: Omit<Honk.DB.source, 'id'>[] = [];
-        let currentPath!: string;
+        const configMediaPaths = LocalConfig.api.media_paths;
+        if (configMediaPaths === undefined || Object.entries(configMediaPaths).length === 0) {
+            throw new Error(`Local config file does not have media source paths set`)
+        }
 
-        for (const source in LocalConfig.serve.media_paths) {
-            currentPath = LocalConfig.serve.media_paths[source];
-            if (Fs.existsSync(Path.resolve(__dirname, currentPath))) {
+        const mediaSources: Omit<Honk.DB.source, 'id'>[] = [];
+        let currentPath!: PathLike;
+
+        for (const source in configMediaPaths) {
+            currentPath = configMediaPaths[source];
+            if (Fs.existsSync(Path.resolve(__dirname, currentPath as string))) {
                 mediaSources.push({
                     title: source,
-                    abs_path: currentPath
+                    abs_url: currentPath
                 })
             } else {
                 throw new Error('Given path does not exist')
@@ -43,7 +48,7 @@ const factory_mediaSources = (): Omit<Honk.DB.source, 'id'>[] | void => {
  *
  * @returns void
  */
-export const persistMissingSources = async (): Promise<void> => {
+export const persistMissingSources = async (): ReturnType<typeof aggregateSourceEntries> => {
     try {
         
         const remoteSources = await aggregateSourceEntries();
@@ -62,7 +67,7 @@ export const persistMissingSources = async (): Promise<void> => {
         for await (const source of localSources) {
             if (remoteSources.length > 0) {
                 currentRemote = remoteSources.find((remoteSource)=> {
-                    if (remoteSource.title === source.title || remoteSource.abs_path === source.abs_path) {
+                    if (remoteSource.title === source.title || remoteSource.abs_url === source.abs_url) {
                         return remoteSource
                     }
                 });
@@ -72,7 +77,7 @@ export const persistMissingSources = async (): Promise<void> => {
                 if (source.title !== currentRemote.title) {
                     console.warn(`Oveerwriting title for "${currentRemote.title}" to "${source.title}"`)
                     //
-                } else if (source.abs_path !== currentRemote.abs_path) {
+                } else if (source.abs_url !== currentRemote.abs_url) {
                     console.warn(`Paths for "${currentRemote.title}" and "${source.title}" do not match and will be checked`)
                     //
                 } else {
@@ -92,8 +97,11 @@ export const persistMissingSources = async (): Promise<void> => {
                 )
             }
         }
+
+        return await aggregateSourceEntries();
     } catch (err) {
         console.log(err)
         //todo
+        return err instanceof Error ? err : new Error(`Unhandled exception`)
     }
 }
