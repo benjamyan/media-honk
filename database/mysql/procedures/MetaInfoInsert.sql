@@ -5,6 +5,12 @@ DROP PROCEDURE IF EXISTS meta_info_insert;
 - If first param is empty, set the @state to 2 and the @meta var to second param
 - If second param is empty, exit whole tghing with error
 
+        Set our initial check for given params - check against empty params 
+        0 = no usable data
+        1 = artists data present only
+        2 = category data present only
+        3 = both category and artist data present
+
 Proceedure for both datasets present:
 1. Create temp table containing the same col as our `meta` table in db
 2. Add our given items into temp table from a LOCATE statement against ',' seperators
@@ -26,85 +32,112 @@ CREATE PROCEDURE meta_info_insert (
     IN metaCategories TEXT
 )
 BEGIN
-    
-    /* 
-        Set our initial check for given params - check against empty params 
-        0 = no usable data
-        1 = artists data present only
-        2 = category data present only
-        3 = both category and artist data present
-    */
+
     SET @Given = 0;
     IF LENGTH(metaArtists) > 0 THEN
-        @Given = @Given + 1;
+        SET @Given = @Given + 1;
     END IF;
     IF LENGTH(metaCategories) > 0 THEN
-        @Given = @Given + 2;
+        SET @Given = @Given + 2;
     END IF;
-
+    
     IF @Given != 0 THEN
-
-        /* #1 */
-        CREATE TEMPORARY TABLE IF NOT EXISTS `given_meta` LIKE `medialan.meta` LIMIT 1;
+    
+        CREATE TEMPORARY TABLE IF NOT EXISTS given_meta LIKE meta;
         
-        /* #2 */
-        INSERT INTO given_meta (artist, category)
-            VALUES(
-                IF(
-                    LOCATE(',', metaArtists) > 0, 
-                        SUBSTRING_INDEX(metaArtists, ',', 1), 
-                        metaArtists
-                ),
-                IF(
-                    LOCATE(',', metaCategories) > 0, 
-                        SUBSTRING_INDEX(metaCategories, ',', 1), 
-                        metaCategories 
-                )
+        SET @GivenArtists = metaArtists;
+        SET @GivenCategories = metaCategories;
+
+        WHILE @GivenArtists IS NOT NULL OR @GivenCategories IS NOT NULL DO
+
+            SET @CurrentArtist = IF(
+                LOCATE(',', @GivenArtists) > 0, 
+                    SUBSTRING_INDEX(@GivenArtists, ',', 1), 
+                    @GivenArtists
             );
-        SET @NewMetaId = LAST_INSERT_ID();
-        SET @NewMeta = (
-            SELECT * FROM given_meta WHERE id = @NewMetaId
-        );
+            SET @CurrentCategory = IF(
+                LOCATE(',', @GivenCategories) > 0, 
+                    SUBSTRING_INDEX(@GivenCategories, ',', 1), 
+                    @GivenCategories
+            );
 
-        /* #3 */
-        UPDATE given_meta
-            SET 
-                artist_id = SELECT id FROM medialan.meta WHERE arist = @NewMeta(artist),
-                category_id = SELECT id FROM medialan.meta WHERE category = @NewMeta(category)
-            WHERE
-                id = @NewMetaId;
-        UPDATE given_meta
-            SET 
-                artist = IF(@NewMeta(artist_id) IS NOT NULL, NULL, artist),
-                category = IF(@NewMeta(category_id) IS NOT NULL, NULL, category)
+            INSERT INTO 
+                given_meta
+            SET
+                artist_id = (
+                    SELECT meta.id FROM meta WHERE meta.artist_name = @CurrentArtist
+                ),
+                category_id = (
+                    SELECT meta.id FROM meta WHERE meta.category_name = @CurrentCategory
+                ),
+                artist_name = IF(artist_id IS NOT NULL, NULL, @CurrentArtist),
+                category_name = IF(category_id IS NOT NULL, NULL, @CurrentCategory);
+                
+            INSERT INTO 
+                meta(artist_name, artist_id, category_name, category_id)
+            SELECT
+                artist_name,
+                artist_id,
+                category_name,
+                category_id
+            FROM
+                given_meta
             WHERE 
-                id = @NewMetaId;
+                given_meta.id = LAST_INSERT_ID();
+                
+            TRUNCATE given_meta;
+            SET @GivenArtists = IF(
+                LOCATE(',', @GivenArtists) > 0, 
+                    SUBSTRING(@GivenArtists, LOCATE(',', @GivenArtists) + 1), 
+                    NULL
+            );
+            SET @GivenCategories = IF(
+                LOCATE(',', @GivenCategories) > 0, 
+                    SUBSTRING(@GivenCategories, LOCATE(',', @GivenCategories) + 1),
+                    NULL
+            );
 
-        /* SET @Artist = IF( 
+        END WHILE; 
+
+        DROP TEMPORARY TABLE given_meta;
+
+        /* 
+        SET @CurrentArtist = IF(
             LOCATE(',', metaArtists) > 0, 
                 SUBSTRING_INDEX(metaArtists, ',', 1), 
                 metaArtists
         );
-        SET @Category = IF( 
+        SET @CurrentCategory = IF(
             LOCATE(',', metaCategories) > 0, 
                 SUBSTRING_INDEX(metaCategories, ',', 1), 
-                metaCategories
+                metaCategories 
         );
-        SET @ArtistId = (
-            SELECT id FROM medialan.meta WHERE arist = @Artist
-        );
-        SET @CategoryId = (
-            SELECT id FROM medialan.meta WHERE category = @Category
-        );
-        INSERT INTO given_meta (artist, artist_id, category, category_id)
-            VALUES(
-                IF(@ArtistId IS NOT NULL, NULL, artist),
-                @ArtistId,
-                IF(@CategoryId IS NOT NULL, NULL, category),
-                @CategoryId
-            ); */
-        
-        DROP TEMPORARY TABLE given_meta;
+            
+        INSERT INTO 
+            given_meta
+        SET
+            artist_id = (
+                SELECT meta.id FROM meta WHERE meta.artist_name = @CurrentArtist
+            ),
+            category_id = (
+                SELECT meta.id FROM meta WHERE meta.category_name = @CurrentCategory
+            ),
+            artist_name = IF(artist_id IS NOT NULL, NULL, @CurrentArtist),
+            category_name = IF(category_id IS NOT NULL, NULL, @CurrentCategory);
+            
+        INSERT INTO 
+            meta(artist_name, artist_id, category_name, category_id)
+        SELECT
+            artist_name,
+            artist_id,
+            category_name,
+            category_id
+        FROM
+            given_meta
+        WHERE 
+            given_meta.id = LAST_INSERT_ID();
+            
+        DELETE * FROM given_meta;
         CALL meta_info_insert(
             IF(
                 LOCATE(',', metaArtists) > 0, 
@@ -116,13 +149,15 @@ BEGIN
                     SUBSTRING(metaCategories, LOCATE(',', metaCategories) + 1),
                     NULL
             )
-        );
-                
-    ELSE IF @Given < 0 OR @Given > 3 THEN
-        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'An unhandled exception occured inside stored proceedure `meta_info_insert`';
+        ); 
+        */
+        
     END IF;
-
+    
 END//
 DELIMITER ;
 
-/* CALL dynamic_multi_insert('comedy,action,violence,drama,poopoo', 'category', 'id', 'name', 1); */
+CALL meta_info_insert(
+    'lorem,ipsum,dolor sit,lorem,consectetor',
+    'domas,lamprey,lamprey,kins met,tempo'
+);
