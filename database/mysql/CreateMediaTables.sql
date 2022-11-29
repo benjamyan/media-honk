@@ -2,7 +2,7 @@ CREATE TABLE sources (
     id INT unsigned NOT NULL,
     title TEXT NOT NULL,
     abs_url TEXT NOT NULL,
-    entries_len INT
+    entries_len INT NOT NULL
 ) CHARACTER SET utf16 COLLATE utf16_unicode_ci;
 ALTER TABLE `sources`
 CHANGE `id` `id` int unsigned NOT NULL AUTO_INCREMENT PRIMARY KEY FIRST,
@@ -14,7 +14,7 @@ CREATE TABLE bundles (
     sub_title TEXT,
     rel_url TEXT NOT NULL,
     poster_img_uri TEXT,
-    entries JSON NOT NULL
+    entries INT NOT NULL
 ) CHARACTER SET utf16 COLLATE utf16_unicode_ci;
 ALTER TABLE `bundles`
 CHANGE `id` `id` int unsigned NOT NULL AUTO_INCREMENT PRIMARY KEY FIRST,
@@ -64,10 +64,12 @@ CHANGE `id` `id` int unsigned NOT NULL AUTO_INCREMENT PRIMARY KEY FIRST,
 AUTO_INCREMENT=1; */
 
 CREATE TABLE media_relationships (
+    source_id INT unsigned NOT NULL,
+    bundle_id INT unsigned,
     media_id INT unsigned NOT NULL,
     meta_id INT unsigned,
-    source_id INT unsigned NOT NULL,
+    FOREIGN KEY (source_id) REFERENCES sources(id),
+    FOREIGN KEY (bundle_id) REFERENCES bundle(id),
     FOREIGN KEY (media_id) REFERENCES media(id),
-    FOREIGN KEY (meta_id) REFERENCES meta(id),
-    FOREIGN KEY (source_id) REFERENCES sources(id)
+    FOREIGN KEY (meta_id) REFERENCES meta(id)
 );

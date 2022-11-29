@@ -45,7 +45,7 @@ BEGIN
                 SET @NewEntry = LAST_INSERT_ID();
                 SET @Meta = NULL;
 
-                IF mediaCategories IS NOT NULL THEN
+                /* IF mediaCategories IS NOT NULL THEN
                     SET @Meta = mediaCategories;
                     SET @Current = 's';
                     WHILE @Current != '' DO
@@ -64,9 +64,9 @@ BEGIN
                             SET @Current = '';
                         END IF;
                     END WHILE;
-                END IF;
+                END IF; */
 
-                IF mediaArtists IS NOT NULL THEN
+                /* IF mediaArtists IS NOT NULL THEN
                     SET @Meta = mediaArtists;
                     SET @Current = 's';
                     WHILE @Current != '' DO
@@ -85,7 +85,7 @@ BEGIN
                             SET @Current = '';
                         END IF;
                     END WHILE;
-                END IF;
+                END IF; */
                 
                 CALL create_media_relation(@NewEntry, mediaCategories, mediaArtists);
             END IF;
