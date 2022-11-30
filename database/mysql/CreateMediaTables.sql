@@ -3,7 +3,7 @@ CREATE TABLE sources (
     id INT unsigned NOT NULL,
     title TEXT NOT NULL,
     abs_url TEXT NOT NULL,
-    entries_len INT NOT NULL
+    entries_len INT
 ) CHARACTER SET utf16 COLLATE utf16_unicode_ci;
 ALTER TABLE `sources`
 CHANGE `id` `id` int unsigned NOT NULL AUTO_INCREMENT PRIMARY KEY FIRST,
@@ -25,7 +25,7 @@ AUTO_INCREMENT=1;
 DROP TABLE IF EXISTS media;
 CREATE TABLE media (
     id INT unsigned NOT NULL,
-    title TEXT NOT NULL,
+    name TEXT NOT NULL,
     rel_url TEXT NOT NULL,
     cover_img_uri TEXT
 ) CHARACTER SET utf16 COLLATE utf16_unicode_ci;
@@ -43,29 +43,6 @@ CREATE TABLE meta (
     FOREIGN KEY (artist_id) REFERENCES meta(id),
     FOREIGN KEY (category_id) REFERENCES meta(id)
 ) CHARACTER SET utf16 COLLATE utf16_unicode_ci;
-/* ALTER TABLE `meta`
-CHANGE `id` `id` INT unsigned NOT NULL AUTO_INCREMENT PRIMARY KEY FIRST,
-AUTO_INCREMENT=1; */
-
-/* CREATE TABLE artists (
-    id INT unsigned NOT NULL,
-    name TEXT NOT NULL,
-    source_id INT unsigned NOT NULL,
-    FOREIGN KEY (source_id) REFERENCES source(id)
-) CHARACTER SET utf16 COLLATE utf16_unicode_ci;
-ALTER TABLE `artists`
-CHANGE `id` `id` int unsigned NOT NULL AUTO_INCREMENT PRIMARY KEY FIRST,
-AUTO_INCREMENT=1; */
-
-/* CREATE TABLE categories (
-    id INT unsigned NOT NULL,
-    name TEXT,
-    source_id INT unsigned NOT NULL,
-    FOREIGN KEY (source_id) REFERENCES source(id)
-) CHARACTER SET utf16 COLLATE utf16_unicode_ci;
-ALTER TABLE `categories`
-CHANGE `id` `id` int unsigned NOT NULL AUTO_INCREMENT PRIMARY KEY FIRST,
-AUTO_INCREMENT=1; */
 
 DROP TABLE IF EXISTS media_relationships;
 CREATE TABLE media_relationships (

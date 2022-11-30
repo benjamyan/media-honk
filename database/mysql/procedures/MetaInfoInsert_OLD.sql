@@ -27,10 +27,11 @@ Proceedure for both datasets present:
 */
 
 DELIMITER //
-CREATE PROCEDURE meta_info_insert (
+CREATE FUNCTION meta_info_insert (
     IN metaArtists TEXT,
     IN metaCategories TEXT
 )
+RETURNS INT unsigned
 BEGIN
 
     SET @Given = 0;
@@ -43,6 +44,8 @@ BEGIN
     
     IF @Given != 0 THEN
     
+        CREATE TEMPORARY TABLE IF NOT EXISTS given_meta LIKE meta;
+        
         SET @GivenArtists = metaArtists;
         SET @GivenCategories = metaCategories;
 
@@ -59,11 +62,43 @@ BEGIN
                     @GivenCategories
             );
             
-            SELECT single_meta_insert(
-                @CurrentArtist,
-                @CurrentCategory
-            );
-            
+            INSERT INTO 
+                given_meta
+            SET
+                artist_id = IF(
+                    @CurrentArtist is NOT NULL,
+                        (
+                            SELECT meta.id FROM meta WHERE meta.artist_name = @CurrentArtist
+                        ),
+                        NULL
+                ),
+                category_id = IF(
+                    @CurrentCategory IS NOT NULL,
+                        (
+                            SELECT meta.id FROM meta WHERE meta.category_name = @CurrentCategory
+                        ),
+                        NULL
+                ),
+                artist_name = IF(artist_id IS NOT NULL, NULL, @CurrentArtist),
+                category_name = IF(category_id IS NOT NULL, NULL, @CurrentCategory);
+                
+            INSERT INTO 
+                meta(artist_name, artist_id, category_name, category_id)
+            SELECT
+                artist_name,
+                artist_id,
+                category_name,
+                category_id
+            FROM
+                given_meta
+            WHERE 
+                given_meta.id = LAST_INSERT_ID()
+                AND (
+                    given_meta.artist_name IS NOT NULL 
+                    OR given_meta.category_name IS NOT NULL
+                );
+                
+            TRUNCATE given_meta;
             SET @GivenArtists = IF(
                 LOCATE(',', @GivenArtists) > 0, 
                     SUBSTRING(@GivenArtists, LOCATE(',', @GivenArtists) + 1), 
@@ -76,13 +111,15 @@ BEGIN
             );
 
         END WHILE; 
-        
+
+        DROP TEMPORARY TABLE given_meta;
+
     END IF;
     
 END//
 DELIMITER ;
 
-/* CALL meta_info_insert(
+CALL meta_info_insert(
     'lorem,ipsum,dolor sit,lorem,consectetor',
     'domas,lamprey,lamprey,kins met,tempo'
-); */
+);
