@@ -1,52 +1,45 @@
-DROP FUNCTION IF EXISTS set_bundle_entry;
+DROP FUNCTION IF EXISTS set_media_entry;
 
 DELIMITER //
-CREATE FUNCTION set_bundle_entry(
-    name TEXT NOT NULL,
-    relativeUrl TEXT NOT NULL,
-    posterImg TEXT,
-    entriesNum INT NOT NULL
+CREATE FUNCTION set_media_entry(
+    givenName TEXT,
+    relativeUrl TEXT,
+    coverImgUrl TEXT,
+    sourceId INT
 ) 
 RETURNS INT
 DETERMINISTIC
 BEGIN
 
-    SET @BundleExists = (
+    SET @MediaExists = (
         SELECT 
             id 
         FROM 
-            bundles 
+            media 
         WHERE
-            main_title = title
-            AND sub_title = subtitle
+            name = givenName
+            AND rel_url = relativeUrl
     );
 
-    IF ISNULL(@BundleExists) THEN
+    IF ISNULL(@MediaExists) THEN
         INSERT INTO
-            bundles (
-                main_title, 
-                sub_title, 
-                rel_url, 
-                poster_img_uri, 
-                entries 
+            media (
+                name,
+                rel_url,
+                cover_img_uri,
+                source_id
             )
         VALUES (
-                title TEXT NOT NULL, 
-                subtitle TEXT, 
-                relativeUrl TEXT NOT NULL, 
-                posterImg TEXT, 
-                entriesNum INT NOT NULL 
+                givenName,
+                relativeUrl,
+                coverImgUrl,
+                sourceId 
             );
-        SET @NewBundleId = LAST_INSERT_ID();
-        RETURN (@NewBundleId);
+        SET @NewMediaId = LAST_INSERT_ID();
+        RETURN (@NewMediaId);
     ELSE
-        RETURN (@BundleExists);
+        RETURN (@MediaExists);
     END IF;
 
 END//
 DELIMITER ;
-
-SELECT set_bundle_entry(
-    'lorem',
-    'domas'
-);

@@ -2,11 +2,9 @@ DROP FUNCTION IF EXISTS set_bundle_entry;
 
 DELIMITER //
 CREATE FUNCTION set_bundle_entry(
-    title TEXT NOT NULL,
+    title TEXT,
     subtitle TEXT,
-    relativeUrl TEXT NOT NULL,
-    posterImg TEXT,
-    entriesNum INT NOT NULL
+    mediaId INT unsigned
 ) 
 RETURNS INT
 DETERMINISTIC
@@ -27,16 +25,12 @@ BEGIN
             bundles (
                 main_title, 
                 sub_title, 
-                rel_url, 
-                poster_img_uri, 
-                entries 
+                cover_img_uri
             )
         VALUES (
-                title TEXT NOT NULL, 
-                subtitle TEXT, 
-                relativeUrl TEXT NOT NULL, 
-                posterImg TEXT, 
-                entriesNum INT NOT NULL 
+                title, 
+                subtitle, 
+                mediaId
             );
         SET @NewBundleId = LAST_INSERT_ID();
         RETURN (@NewBundleId);
@@ -46,8 +40,3 @@ BEGIN
 
 END//
 DELIMITER ;
-
-SELECT set_bundle_entry(
-    'lorem',
-    'domas'
-);

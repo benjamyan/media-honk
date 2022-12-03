@@ -1,9 +1,23 @@
-DROP FUNCTION IF EXISTS single_meta_insert;
+DROP FUNCTION IF EXISTS single_meta_row_insert;
 /*
 This can be done with a inner join/insert select with a cte, but good enough for mvp
+
+OLD docs:
+1. Create temp table containing the same col as our `meta` table in db
+2. Add our given items into temp table from a LOCATE statement against ',' seperators
+    a. At this point only the TEXT cols should have entries in temp table
+3. Run check against our meta db table for the entries
+    a. if an entry is present matching the table, proceed
+    b. if entry for only one col exists, insert (into temp) its key value as id and remove its text entry 
+4. Inser the finalized temp entry into our db table 
+5. End --
+    a. Delete the temp table
+    b. Remove the current artist and category from the given params
+    c. Call proceedure with new params
+    
 */
 DELIMITER //
-CREATE FUNCTION single_meta_insert(
+CREATE FUNCTION single_meta_row_insert(
     metaArtist TEXT,
     metaCategory TEXT
 ) 
@@ -57,7 +71,7 @@ BEGIN
 END//
 DELIMITER ;
 
-SELECT single_meta_insert(
+/* SELECT single_meta_row_insert(
     'lorem',
     'domas'
-);
+); */
