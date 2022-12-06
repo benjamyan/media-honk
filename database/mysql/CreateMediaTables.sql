@@ -2,7 +2,7 @@ DROP TABLE IF EXISTS media_relationships;
 DROP TABLE IF EXISTS meta;
 DROP TABLE IF EXISTS bundles;
 DROP TABLE IF EXISTS media;
-DROP TABLE IF EXISTS sources;
+/* DROP TABLE IF EXISTS sources; */
 
 CREATE TABLE sources (
     id INT unsigned NOT NULL,
@@ -48,8 +48,9 @@ CREATE TABLE meta (
 
 CREATE TABLE media_relationships (
     bundle_id INT unsigned,
-    media_id INT unsigned NOT NULL,
     meta_id INT unsigned,
+    media_id INT unsigned NOT NULL,
+    media_index INT,
     FOREIGN KEY (bundle_id) REFERENCES bundles(id),
     FOREIGN KEY (media_id) REFERENCES media(id),
     FOREIGN KEY (meta_id) REFERENCES meta(id)

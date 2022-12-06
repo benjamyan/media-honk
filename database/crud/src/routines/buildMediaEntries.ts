@@ -7,7 +7,14 @@ import { LocalConfig, MediaDB } from '../'
 import { StringUtil } from '../utils';
 import { addNewMediaEntry } from '../statements'
 
-type LibEntryReturnType = Omit<Honk.Media.BasicLibraryEntry, 'sourceName'>;
+type LibEntryReturnType = Omit<Honk.Media.BasicLibraryEntry, 'sourceName' | 'sourceUrl'>;
+
+const factory_libraryEntry = (entry: string, properties: Honk.Media.BaselineMediaProperties): LibEntryReturnType => ({
+	relativeUrl: entry + '/',
+	entries: [],
+	coverImageUri: undefined,
+	...properties
+});
 
 const processDirectoryEntry = async (entry: string): Promise<LibEntryReturnType| undefined> => {
 	const directoryContent: string[] | void = (
@@ -28,16 +35,20 @@ const processDirectoryEntry = async (entry: string): Promise<LibEntryReturnType|
 
 		const file = await Fsp.readFile(Path.resolve(entry, directoryContent[yamlFileIndex]), 'utf8');
 		const propertiesContent = Yaml.parse(file);
-		const libEntry: LibEntryReturnType = {
-			relativeUrl: entry + '/',
-			entries: [],
-            coverImageUri: undefined,
-			...propertiesContent
+		// const libEntry: LibEntryReturnType = {
+		// 	relativeUrl: entry + '/',
+		// 	entries: [],
+        //     coverImageUri: undefined,
+		// 	...propertiesContent
+		// };
+		const libEntry = {
+			...factory_libraryEntry(entry, propertiesContent)
 		};
 		directoryContent.splice(yamlFileIndex, 1);
 		
         let fileExt: string,
             fileName: string;
+
 		await Promise.all(directoryContent.map( async (dirFile: string, index): Promise<void> => {
 			fileExt = dirFile.split('.').slice(-1)[0];
 			fileName = dirFile.split('.')[0];
@@ -64,33 +75,6 @@ const processDirectoryEntry = async (entry: string): Promise<LibEntryReturnType|
                     })
                 })
 			}
-
-			// if (constants.imageExtensions.includes(fileExt)) {
-			// 	if (libEntry.entries[constants.coverUrlKeyName] === undefined || libEntry.entries[constants.coverUrlKeyName].length === 0) {
-			// 		libEntry.entries[constants.coverUrlKeyName] = dirFile;
-			// 	}
-			// 	libEntry.entries[fileName] = dirFile;
-			// 	// if (libEntry.coverUrl === undefined || libEntry.coverUrl.length === 0) {
-			// 		// libEntry.coverUrl = dirFile;
-			// 	// }
-			// 	// if (libEntry.type === 'gallery') {
-			// 		// libEntry.mediaUrl[fileName] = dirFile;
-			// 	// }
-			// }
-
-			// if (constants.videoExtensions.includes(fileExt)) {
-			// 	// if (libEntry.type === 'series') {
-			// 	// 	libEntry.mediaUrl[fileName] = dirFile;
-			// 	// } else {
-			// 	libEntry.entries[fileName] = dirFile;
-			// 	// }
-			// }
-
-			// if (constants.audioExtensions.includes(fileExt)) {
-			// 	// if (libEntry.type === 'album' || libEntry.type === 'singles') {
-			// 	libEntry.entries[fileName] = dirFile;
-			// 	// }
-			// }
 			
 		}));
 		

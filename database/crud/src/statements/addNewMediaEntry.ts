@@ -19,6 +19,9 @@ import { PathLike } from 'node:fs';
 /** These functions would be a good usecase for generators */
 export const addNewMediaEntry = async (data: Honk.Media.BasicLibraryEntry): Promise<Honk.DB.source[] | Error> => {
     try {
+
+        console.log(data)
+
         const { entries, categories, artists } = data;
         if (entries.length === 0) {
             throw new Error('Media entries cannot be empty')
