@@ -57,7 +57,8 @@ BEGIN
     }';
     DECLARE SourceId INT unsigned DEFAULT NULL;
     DECLARE BundleId INT unsigned DEFAULT NULL;
-    DECLARE MediaMetaId TEXT DEFAULT NULL;
+    DECLARE MediaMetaIdList TEXT DEFAULT NULL;
+    DECLARE MediaEntryList TEXT DEFAULT NULL;
     DECLARE Jndex INT unsigned DEFAULT 0;
     DECLARE ErrMsg TEXT DEFAULT 'Unknown exception in `media_bundle_entry_set_relationships`';
     DECLARE RetryDeclare VARCHAR(10) DEFAULT 'SourceId';
@@ -82,7 +83,6 @@ BEGIN
                     SIGNAL SQLSTATE 'ERROR';
             END CASE;
         END;
-
         
     -- Error checks and validation
     IF ISNULL(sourceUrl) THEN
@@ -102,7 +102,9 @@ BEGIN
         SIGNAL SQLSTATE 'ERROR';
     END IF;
     
-    -- #1 find our source and store its ID
+    /*
+    #1 find our source and store its ID
+    */
     SIGNAL SQLSTATE 'RETRY';
     IF ISNULL(SourceId) THEN
         -- If we have a valid sourceUrl parameter, but failed to locate it on table, retrun error and exit
@@ -110,7 +112,9 @@ BEGIN
         SIGNAL SQLSTATE 'ERROR';
     END IF;
 
-    -- #2 (find or persist) the bundle and store its ID
+    /*
+    #2 (find or persist) the bundle and store its ID
+    */
     SET RetryDeclare = 'BundleId';
     SIGNAL SQLSTATE 'RETRY';
     IF ISNULL(BundleId) THEN
@@ -129,7 +133,9 @@ BEGIN
         END IF;
     END IF;
 
-    -- #3 If given cats and artists, run that FN and store the return keys into a temp table
+    /*
+    #3 If given categories and artists, run that FN and store the return keys into a temp table
+    */
     IF mediaArtists IS NOT NULL OR mediaCategories IS NOT NULL THEN
 
         SET @MoreArtistsThanCategoriesFlag = IF(
@@ -167,7 +173,7 @@ BEGIN
                     -- we have nothing further to loop in our minority, set it to null and exit
                     SET @MetaMinority = NULL;
                 ELSE
-                    -- reset our minority item and remove it from our minority list
+                    -- reset our minority item and remove current from our minority list
                     SET @MetaMinority = IF(
                         LOCATE(',', @MetaMinority) > 0,
                             SUBSTRING(@MetaMinority, LOCATE(',', @MetaMinority) + 1),
@@ -180,14 +186,18 @@ BEGIN
                     );
                 END IF;
             ELSE
-
+                -- All of our above checks passed, add the meta entry, append its id to the list, move forward
                 SET @NewMetaId = ( 
                     SELECT meta_row_insert( 
                         TRIM(IF(@MoreArtistsThanCategoriesFlag = 1, @CurrentMajorityItem, @CurrentMinorityItem)), 
                         TRIM(IF(@MoreArtistsThanCategoriesFlag = 0, @CurrentMajorityItem, @CurrentMinorityItem))
                     ) 
                 );
-                SELECT @NewMetaId ;
+                SET MediaMetaIdList = IF(
+                        ISNULL(MediaMetaIdList),
+                            LTRIM(@NewMetaId),
+                            CONCAT(MediaMetaIdList, ',', @NewMetaId)
+                    );
                 
                 SET @MetaMajority = IF(
                         LOCATE(',', @MetaMajority) > 0,
@@ -197,162 +207,62 @@ BEGIN
                 
             END IF;
 
-            
-
-
-
-
-
-
-
-
-/* 
-            IF LOCATE(',', @MediaCategories) > 0 THEN
-                SET @CurrentCategory = SUBSTRING_INDEX(@MediaCategories, ',', 1);
-            END IF;
-
-            IF LOCATE(',', @MediaArtists) > 0 THEN
-                SET @CurrentArtist = SUBSTRING_INDEX(@MediaArtists, ',', 1);
-                SET @MediaArtists = SUBSTRING(@MediaArtists, LOCATE(',', @MediaArtists) + 1);
-            ELSEIF LENGTH(@MediaArtists) > 0 THEN
-                SET @CurrentArtist = @MediaArtists;
-                SET @MediaArtists = NULL;
-
-            ELSE
-                SET @CurrentArtist = NULL;
-            END IF;
-
-            SET @CurrentCategory = IF(
-                    LOCATE(',', @MediaCategories) > 0, 
-                        SUBSTRING_INDEX(@MediaCategories, ',', 1), 
-                        @MediaCategories
-                );
-
-
-
-            IF ISNULL(@CurrentArtist) THEN
-                SET @CurrentArtist = IF(
-                        LOCATE(',', @MediaArtists) > 0, 
-                            SUBSTRING_INDEX(@MediaArtists, ',', 1), 
-                            @MediaArtists
-                    );
-            ELSE
-
-            END IF;
-            
-            SET @Art = IF(
-                    LOCATE(',', @MediaArtists) > 0, 
-                        SUBSTRING_INDEX(@MediaArtists, ',', 1), 
-                        @MediaArtists
-                );
-            SELECT @Art;
-            
-            SELECT @Cat;
-            -- Run our procedure for inserting an individual set of artist and category
-            SET @NewMetaId = ( 
-                SELECT meta_row_insert( @Art, @Cat ) 
-            );
-            SELECT @NewMetaId;
-            -- Take the given id, convert it to a string and store it for future reference
-            SET MediaMetaId = IF(
-                ISNULL(MediaMetaId) OR LOCATE(',', MediaMetaId) = 0,
-                    LTRIM(@NewMetaId),
-                    CONCAT(MediaMetaId, ',', LTRIM(@NewMetaId))
-            );
-            -- Remove the already entered artist/category from the variables and repeat
-            SET @MediaArtists = IF(
-                LOCATE(',', @MediaArtists) > 0, 
-                    SUBSTRING(@MediaArtists, LOCATE(',', @MediaArtists) + 1), 
-                    NULL
-            );
-            SET @MediaCategories = IF(
-                LOCATE(',', @MediaCategories) > 0, 
-                    SUBSTRING(@MediaCategories, LOCATE(',', @MediaCategories) + 1),
-                    NULL
-            ); */
         END WHILE;
-
+        
     END IF;
 
 
-    -- #4. Loop through the given `mediaEntries`, persist in `media` and set relations in `media_relationships`
+    /*
+    #4. Loop through the given `mediaEntries`, 
+    persist in `media` and 
+    set relations in `media_relationships`
+    */
+    SET Jndex = 0;
     REPEAT
-        SET @Entry = JSON_EXTRACT(mediaEntries, CONCAT('$[', Jndex, ']'));
+        SET @EntryIndex = JSON_EXTRACT(mediaEntries, CONCAT('$[', Jndex, '].index'));
+        SET @EntryTitle = JSON_EXTRACT(mediaEntries, CONCAT('$[', Jndex, '].title'));
+        SET @EntryFilename = JSON_EXTRACT(mediaEntries, CONCAT('$[', Jndex, '].filename'));
         
-        /* IF JSON_SCHEMA_VALID(@EntriesSchema, @Entry) = 0 THEN
-            SET ErrMsg = CONCAT('Invalid JSON schema provided at "mediaEntries[', @Index, ']"');
-            SIGNAL SQLSTATE 'ERROR';
-        ELSE */
-            /* INSERT IGNORE INTO
-                media(
-                    name,
-                    rel_url,
-                    cover_img_uri,
-                    source_id
-                )
-            VALUES
+        SET @EntryUrl = TRIM(TRAILING '/' FROM relativeUrl);
+
+        SET @NewEntryId = set_media_entry( 
+                TRIM(BOTH '"' FROM @EntryTitle), 
+                TRIM(BOTH '"' FROM @EntryFilename),
+                @EntryUrl, 
+                TRIM(BOTH '"' FROM coverImageUri), 
+                SourceId 
+            );
+        SET @MediaEntryMeta = MediaMetaIdList;
+        
+        WHILE @MediaEntryMeta IS NOT NULL DO
+        
+            INSERT IGNORE INTO
+                media_meta(media_id, meta_id)
+            VALUES(
+                @NewEntryId,
                 (
-                    @Entry.title,
-                    @Entry.filename
-                ); */
-            
-
-            SET Jndex = Jndex + 1;
-        /* END IF; */
-        
-        UNTIL Jndex = JSON_LENGTH(mediaEntries)
-    END REPEAT;
-
-        
-        /*
-        SET @NewEntry = (
-            SELECT id 
-            FROM media
-            WHERE (
-                main_title = mainTitle
-                AND sub_title <=> subTitle
-                AND rel_url = relativeUrl
-            )
-            LIMIT 1
-        );
-        
-        IF @NewEntry IS NULL THEN
-
-            SET @SourceID = ( 
-                SELECT id FROM source WHERE source.abs_url = sourceUrl 
+                    SELECT id FROM meta WHERE CONVERT(id, CHAR) = IF(
+                            LOCATE(',', @MediaEntryMeta) > 0,
+                                SUBSTRING_INDEX(@MediaEntryMeta, ',', 1),
+                                @MediaEntryMeta
+                        )
+                )
             );
 
-            IF @SourceID IS NULL THEN
-                SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Source ID cannot be NULL';
-            ELSE
-
-                SET @MediaEntry = (
-                    SELECT set_media_entry(
-                        
-                    )
+            SET @MediaEntryMeta = IF(
+                    LOCATE(',', @MediaEntryMeta) > 0,
+                        SUBSTRING(@MediaEntryMeta, LOCATE(',', @MediaEntryMeta) + 1),
+                        NULL
                 );
+        END WHILE;
+        
+        INSERT IGNORE INTO 
+            bundle_media(bundle_id, media_id, media_index)
+        VALUES ( BundleId, @NewEntryId, @EntryIndex );
 
-                SET @BundleEntry = (
-                    SELECT set_bundle_entry(
-                        mainTitle,
-                        subTitle,
-                        relativeUrl,
-                        NULL,
-                        0
-                    )
-                );
-                
-                IF mediaArtists IS NOT NULL OR mediaCategories IS NOT NULL THEN
-                    CALL meta_info_insert(mediaArtists, mediaCategories);
-                END IF;
-
-                CALL create_media_relation(@NewEntry, mediaCategories, mediaArtists);
-            END IF;
-
-        ELSE
-            SIGNAL SQLSTATE '45612' SET MESSAGE_TEXT = 'A media entry for this item already exists';
-        END IF;
-        */
+        SET Jndex = Jndex + 1;
+        UNTIL Jndex = JSON_LENGTH(mediaEntries)
+    END REPEAT;
 
 END//
 DELIMITER ;
@@ -369,35 +279,11 @@ CALL media_bundle_entry_set_relationships(
     --  IN coverImageUri TEXT, --  
     'cover.jpg',
     --  IN mediaEntries JSON, --  
-    '[{"index":0,"filename":"01_our_twilight.mp3","title":"Our Twilight"},
-    {"index":1,"filename":"02_jewel.mp3","title":"Jewel"},
-    {"index":2,"filename":"03_flame_of_serenity.mp3","title":"Flame of Serenity"},
-    {"index":3,"filename":"04_floodred.mp3","title":"Floodred"}]',
+    '[{"index":0,"filename":"01_our_twilight.mp3","title":"Our Twilight"},{"index":1,"filename":"02_jewel.mp3","title":"Jewel"},{"index":2,"filename":"03_flame_of_serenity.mp3","title":"Flame of Serenity"},{"index":3,"filename":"04_floodred.mp3","title":"Floodred"}]',
     --  IN mediaArtists TEXT, --  
     'Barren Earth,Lorem ipsum,Dolor',
     --  IN mediaCategories TEXT --  
     'Metal,Black Metal,Pop,Super bop,pringle'
-);
-CALL media_bundle_entry_set_relationships(
-    -- IN sourceUrl TEXT  , --
-    '/home/benjamyan/Working/media-server/media/audio',
-    --  IN relativeUrl TEXT, --  
-    '/barren_earth/barren_earth_2009_our_twilight_ep/',
-    --  IN mainTitle TEXT, --  
-    'Our Twilight EP',
-    --  IN subTitle TEXT, --  
-    'EP',
-    --  IN coverImageUri TEXT, --  
-    'cover.jpg',
-    --  IN mediaEntries JSON, --  
-    '[{"index":0,"filename":"01_our_twilight.mp3","title":"Our Twilight"},
-    {"index":1,"filename":"02_jewel.mp3","title":"Jewel"},
-    {"index":2,"filename":"03_flame_of_serenity.mp3","title":"Flame of Serenity"},
-    {"index":3,"filename":"04_floodred.mp3","title":"Floodred"}]',
-    --  IN mediaArtists TEXT, --  
-    'Lorem ipsum ',
-    --  IN mediaCategories TEXT --  
-    'rock, country'
 );
 /* 
 object schema from crud op

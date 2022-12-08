@@ -53,39 +53,60 @@ BEGIN
             This should only be runnig twice - once on function invokation, 
             another after our INSERT statement
             */
-            /* IF ArtistId IS NOT NULL OR CategoryId IS NOT NULL THEN */
-                SET MetaRowId = (
-                    SELECT 
-                        id
-                    FROM 
-                        meta
-                    WHERE (
-                            artist_name = givenArtistName
-                            OR artist_id = ArtistId
-                        ) AND (
+            
+            SET MetaRowId = (
+                SELECT id
+                FROM meta
+                WHERE (
+                    (
+                        artist_name = givenArtistName
+                        AND (
                             category_name = givenCategoryName
                             OR category_id = CategoryId
                         )
-                );
-                IF ISNULL(MetaRowId) then
-                    SET MetaRowId = (
-                        SELECT id 
-                        FROM meta 
-                        WHERE 
-                            artist_id <=> ArtistId
-                            AND category_id <=> CategoryId
-                            AND artist_name <=> ArtistName
-                            AND category_name <=> CategoryName
-                        LIMIT 1
-                    );
-                END IF; 
-            /* IF ArtistId IS NOT NULL AND ISNULL(givenCategoryName) THEN
-                -- Artist is already present in table, we were provided no category, just return the artist ID
-                SET MetaRowId = ArtistId;
-            ELSEIF CategoryId IS NOT NULL AND ISNULL(givenArtistName) THEN
-                -- Same as above, category already exists and we werent given a new artist
-                SET MetaRowId = CategoryId;
-            ELSE
+                    ) OR (
+                        category_name = givenCategoryName
+                        AND (
+                            artist_name = givenArtistName
+                            OR artist_id = ArtistId
+                        )
+                    )
+                )
+            );
+
+            IF ISNULL(MetaRowId) THEN
+                IF ArtistId IS NOT NULL THEN
+                    -- Artist is already present in table, we were provided no category, just return the artist ID
+                    IF ISNULL(givenCategoryName) THEN
+                        SET MetaRowId = ArtistId;
+                    ELSE 
+                        SET MetaRowId = (
+                            SELECT id
+                            FROM meta
+                            WHERE (
+                                artist_id = ArtistId
+                                AND category_name = givenCategoryName
+                            )
+                        );
+                    END IF;
+                ELSEIF CategoryId IS NOT NULL THEN
+                    -- Same as above, category already exists and we werent given a new artist
+                    IF ISNULL(givenArtistName) THEN
+                        SET MetaRowId = CategoryId;
+                    ELSE
+                        SET MetaRowId = (
+                            SELECT id
+                            FROM meta
+                            WHERE (
+                                category_id = CategoryId
+                                AND artist_name = givenArtistName
+                            )
+                        );
+                    END IF;
+                END IF;
+            END IF;
+            
+            IF ISNULL(MetaRowId) THEN
                 -- All custom values present, check for everything
                 SET MetaRowId = (
                     SELECT id 
@@ -97,7 +118,7 @@ BEGIN
                         AND category_name <=> CategoryName
                     LIMIT 1
                 );
-            END IF; */
+            END IF;
             
         END;
     DECLARE EXIT HANDLER FOR SQLSTATE 'ERROR'
@@ -112,6 +133,7 @@ BEGIN
 
     -- No row has been found matching params, insert a new one and select (retry) again
     IF ISNULL(MetaRowId) THEN
+        
         INSERT INTO 
             meta(
                 artist_name, 
@@ -147,23 +169,26 @@ SELECT meta_row_insert(
     'lorem', NULL
 );
 SELECT meta_row_insert(
-    NULL,
-    'domas'
+    NULL, 'domas'
 );
 SELECT meta_row_insert(
-    'lorem',
-    'domas'
+    'lorem', 'domas'
 );
 SELECT meta_row_insert(
-    'lorem',
-    'domas'
+    'lorem', 'domas'
 );
 SELECT meta_row_insert(
     'lorem', NULL
+);
+SELECT meta_row_insert(
+    'milo', 'hello'
 );
 SELECT meta_row_insert(
     'lorem', 'hello'
 );
 SELECT meta_row_insert(
     'lorem', 'world'
+);
+SELECT meta_row_insert(
+    'milo', 'world'
 );
