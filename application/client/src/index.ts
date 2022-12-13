@@ -1,3 +1,11 @@
-export * from './views'
+import Controller from './controller';
+import View from './view';
+import Model from './model';
 
-export * from './views/Client.mount'
+(function(){
+    // const controller = new Controller({Model, View});
+
+    new Controller({Model, View}).init();
+
+})();
+

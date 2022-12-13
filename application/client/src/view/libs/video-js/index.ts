@@ -1,5 +1,4 @@
 export * from './CustomMenu';
 // export * from './ThumbnailSeeking';
-export * from './VrZoom';
-
+// export * from './videojs-java';
 export * from './vjsConfig'

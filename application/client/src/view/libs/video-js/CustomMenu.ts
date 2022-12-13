@@ -1,6 +1,6 @@
-import { VideoHTMLAttributes } from 'react';
+// import { VideoHTMLAttributes } from 'react';
 import { default as videojs } from 'video.js';
-import { CastMedia } from '../../features';
+// import { CastMedia } from '../../features';
 // import { CastOptionsModal } from '../../features/CastMedia/components/CastOptionsModal';
 
 const Component = videojs.getComponent('Component');
@@ -26,7 +26,7 @@ export class CustomMenu extends Component {
     }
     createEl() {
         return videojs.dom.createEl('div', {
-            className: `vjs-custom-menu video__player--control`
+            className: `vjs-custom-menu media__player--control`
         })
     }
 }
@@ -40,13 +40,13 @@ export class CustomCloseButton extends ClickableComponent {
     }
     createEl() {
         return videojs.dom.createEl('div', {
-            className: `vjs-custom-clickable-component button__close video__player--control-close`
+            className: `vjs-custom-clickable-component button__close media__player--control-close`
         })
     }
     handleClick(_event: videojs.EventTarget.Event): void {
         // videojs(videoRef.current).dispose()
         // playerRef.current?.dispose()
-        console.log('dispose')
+        // console.log('dispose')
         this.playerInstance.dispose()
     }
 }
@@ -57,12 +57,12 @@ export class CastVideoButton extends ClickableComponent {
     }
     createEl() {
         return videojs.dom.createEl('div', {
-            className: `vjs-custom-clickable-component cast__button video__player--control-cast`
+            className: `vjs-custom-clickable-component cast__button media__player--control-cast`
         })
     }
     handleClick(_event: videojs.EventTarget.Event): void {
         console.log('CAST');
-        CastMedia({ isOpen: true })
+        // CastMedia({ isOpen: true })
         // return CastMedia
     }
 }

@@ -1,25 +1,18 @@
-const webpack = require('webpack')
+const webpack = require('webpack');
 const path = require("path");
 const HtmlWebpackPlugin = require("html-webpack-plugin");
-// const ExtractTextPlugin = require("extract-text-webpack-plugin")
+const MiniCssExtractPlugin = require("mini-css-extract-plugin");
 // const InlineChunkHtmlPlugin = require('react-dev-utils/InlineChunkHtmlPlugin');
 
 module.exports = {
     entry: "./src/index.ts",
     mode: process.env.NODE_ENV || "development",
-    // output: {
-    //     path: path.resolve(__dirname, 'public')
-    // },
     resolve: { 
         extensions: ['.js', '.ts', '.tsx'],
         modules: [
             path.resolve(__dirname, "src"),
             "node_modules"
-        ],
-        fallback: {
-            'react/jsx-runtime': 'react/jsx-runtime.js',
-            'react/jsx-dev-runtime': 'react/jsx-dev-runtime.js',
-        }
+        ]
     },
     optimization: {
         minimize: false
@@ -58,19 +51,46 @@ module.exports = {
             //         ]
             //     })
             // }
+            // {
+            //     test: /\.(scss|sass)$/,
+            //     exclude: /node_modules/,
+            //     use: [
+            //         {
+            //             loader: 'file-loader',
+            //             options: { outputPath: 'css/', name: '[name].min.css'}
+            //         },
+            //         'sass-loader'
+            //     ]
+            // }
             {
                 test: /\.(css|scss|sass)$/,
                 use: ["style-loader", "css-loader", "sass-loader"],
             }
         ],
     },
+    output: {
+        path: path.resolve(__dirname, './public'),
+        filename: 'main.js',
+    },
+    devServer: {
+        // contentBase: path.resolve(__dirname, './public'),
+        hot: true
+    },
     plugins: [
-        new HtmlWebpackPlugin({
-            template: path.join(__dirname, "public", "index.html"),
-            // inject: 'body',
-            minify: {
-                collapseWhitespace: false
-            }
+        // new HtmlWebpackPlugin({
+        //     template: path.join(__dirname, "public", "index.html"),
+        //     // inject: 'body',
+        //     minify: {
+        //         collapseWhitespace: false
+        //     }
+        // }),
+        new MiniCssExtractPlugin({
+            filename: 'style.css'
         })
-    ],
+        // new ExtractTextPlugin({ 
+            // filename: 'style.css', 
+            // disable: false, 
+            // allChunks: true 
+        // })
+    ]
 };
