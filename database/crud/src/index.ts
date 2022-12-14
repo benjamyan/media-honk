@@ -61,12 +61,7 @@ Server.listen(3000, async ()=> {
         }
         if (args.includes('media')) {
             console.log("Running `media`")
-            // const mediaTypeFlag: MediaTypeProcessingFlag = (
-            //     args.includes('--media-type')
-            //         ? []
-            //         : null
-            // );
-            const mediaEntries = await buildMediaEntries();
+            await buildMediaEntries();
             
         }
         if (args.includes('backup')) {
@@ -80,6 +75,8 @@ Server.listen(3000, async ()=> {
         } else {
             Kill('Unhandled exception in server')
         }
+    } finally {
+        process.exit(0);
     }
 })
 
