@@ -9,7 +9,7 @@ export const aggregateSourceEntries = async (): Promise<Honk.DB.source[] | Error
         const remoteSources = await (
             Database
                 .query<Mysql.RowDataPacket[]>(
-                    `SELECT * FROM source`, 
+                    `SELECT * FROM sources`, 
                     { rowsAsArray: true }
                 )
                 .then(res=> {

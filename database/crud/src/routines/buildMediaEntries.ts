@@ -27,56 +27,55 @@ const processDirectoryEntry = async (entry: string): Promise<LibEntryReturnType|
 	processProperties:
 	if (Array.isArray(directoryContent) && directoryContent.length > 0) {
 		const yamlFileIndex = directoryContent.findIndex( (file)=>file.endsWith('yaml') );
-		
 		if (yamlFileIndex === -1) {
 			exitMediaProcess = true;
 			break processProperties;
 		}
-
 		const file = await Fsp.readFile(Path.resolve(entry, directoryContent[yamlFileIndex]), 'utf8');
 		const propertiesContent = Yaml.parse(file);
-		// const libEntry: LibEntryReturnType = {
-		// 	relativeUrl: entry + '/',
-		// 	entries: [],
-        //     coverImageUri: undefined,
-		// 	...propertiesContent
-		// };
-		const libEntry = {
-			...factory_libraryEntry(entry, propertiesContent)
+		const libEntry = { 
+			...factory_libraryEntry(entry, propertiesContent) 
 		};
 		directoryContent.splice(yamlFileIndex, 1);
 		
         let fileExt: string,
             fileName: string;
-
-		await Promise.all(directoryContent.map( async (dirFile: string, index): Promise<void> => {
-			fileExt = dirFile.split('.').slice(-1)[0];
-			fileName = dirFile.split('.')[0];
 			
-			if (constants.mediaExtensions.includes(fileExt)) {
+		parseDirectoryContent:
+		for await (const dirFile of directoryContent) {
+			try {
+				fileExt = dirFile.split('.').slice(-1)[0];
+				fileName = dirFile.split('.')[0];
+				
+				if (constants.mediaExtensions.includes(fileExt)) {
 
-                if (constants.imageExtensions.includes(fileExt)) {
-                    if (libEntry.coverImageUri === undefined || libEntry.coverImageUri.length === 0) {
-                        /** The first image found will count as our cover */
-                        libEntry.coverImageUri = dirFile;
-                    } else if (fileName === constants.coverImageOverrideName) {
-                        /** If the override name is provided as the filename then the cover image URI will be overwritten */
-                        libEntry.coverImageUri = dirFile;
-                    }
-                }
-                
-                /** Parse for the title and pass in our index to ensure proper ordering */
-                libEntry.entries.push({
-                    index,
-                    filename: dirFile,
-                    title: StringUtil.standardizeTitleFormat(fileName.toLowerCase(), {
-                        removeStrings: Array.isArray(libEntry.artists) ? [...libEntry.artists] : [],
-                        selectiveUppercase: true
-                    })
-                })
+					/** Check cover images, need to return so covers dont get persisted on a media table */
+					if (constants.imageExtensions.includes(fileExt)) {
+						if (fileName === constants.coverImageOverrideName) {
+							/** If the override name is provided as the filename then the cover image is assigned, and the current file will not be added to our media array (and table) */
+							libEntry.coverImageUri = dirFile;
+							continue parseDirectoryContent;
+						}
+						if (libEntry.coverImageUri === undefined || libEntry.coverImageUri.length === 0) {
+							/** The first image found will count as our cover, but will still be added to the media array */
+							libEntry.coverImageUri = dirFile;
+						}
+					}
+					
+					/** Parse for the title and pass in our index to ensure proper ordering */
+					libEntry.entries.push({
+						index: libEntry.entries.length + 1,
+						filename: dirFile,
+						title: StringUtil.standardizeTitleFormat(fileName.toLowerCase(), {
+							removeStrings: Array.isArray(libEntry.artists) ? [...libEntry.artists] : [],
+							selectiveUppercase: true
+						})
+					})
+				}
+			} catch (err) {
+				console.log(err)
 			}
-			
-		}));
+		}
 		
 		return !exitMediaProcess ? libEntry : undefined
 	} else {
@@ -89,14 +88,16 @@ const parseFilesForLibrary = async (source: string, dir: PathLike): Promise<Honk
 	const dirents = await Fsp.readdir(dir, { withFileTypes: true });
 	let accumulator: Omit<Honk.Media.BasicLibraryEntry, 'uuid'>[] = [];
 
-	await Promise.all(dirents.map(async (dirent, _index, dirents) => {
+	for await (const dirent of dirents) {
 		try {
+			
 			const res = Path.resolve(dir as string, dirent.name);
 			let childEntries: any,
 				entryAttempt: LibEntryReturnType | undefined,
                 entrySource: PathLike | undefined;
 
 			if (Fs.existsSync(Path.join(res, 'properties.yaml'))) {
+				console.log(`    Processing: ${dirent.name}`);
 
 				entryAttempt = await processDirectoryEntry(res);
                 entrySource = (
@@ -115,50 +116,56 @@ const parseFilesForLibrary = async (source: string, dir: PathLike): Promise<Honk
                     sourceUrl: entrySource,
                     relativeUrl: (entryAttempt.relativeUrl as string).split(entrySource as string)[1]
                 })
-
+				// console.log(`-- -- END: ${dirent.name}\n`)
 			} else if (dirents.length > 0) {
+				// console.log(`\n-- DIR: ${dirent.name}`)
 				childEntries = await parseFilesForLibrary(source, res);
 				if (Array.isArray(childEntries)) {
+					
 					accumulator = [ ...accumulator, ...childEntries ]
 				}
+				// console.log(`-- END: ${dirent.name}\n`)
 			}
-			return 0
+			
+			Promise.resolve(0)
+			// return 0
 		} catch (err) {
 			console.log(err)
-			return 0
+			// console.log(`-- -- END: ${dirent.name}\n`)
+			
+			Promise.resolve(1)
+			// return 0
 		}
-	}));
+	}
+	
 	return accumulator
 };
 
 export async function buildMediaEntries(): Promise<Omit<Honk.Media.BasicLibraryEntry, 'uuid'>[]> {
 	try {
+
 		const configMediaPaths = LocalConfig.api.media_paths;
 		if (!!configMediaPaths) {
             const mediaLibraryEntries: Honk.Media.BasicLibraryEntry[] = [];
             
-            for (const entry in configMediaPaths) {
-                await parseFilesForLibrary(entry, configMediaPaths[entry])
+            for await (const entry of Object.entries(configMediaPaths)) {
+				console.log(`\nParsing: "${entry[1]}"`)
+                await parseFilesForLibrary(entry[0], entry[1])
                     .then((result)=> {
-                        console.log(`\nParsed "${entry}" found ${result.length} media items`);
+                        console.log(`Finished "${entry[1]}" found ${result.length} media bundles\n`);
                         if (Array.isArray(result)) {
                             mediaLibraryEntries.push(...result.filter(Boolean))
                         }
-                        
-                        //
                     })
                     .catch((err)=> {
                         console.warn(err)
                         //
                     })
             }
-            
+			
 			if (mediaLibraryEntries.length > 0) {
-                // console.log(mediaLibraryEntries)
                 for await (const entry of mediaLibraryEntries) {
-                    console.log(entry)
-                    await addNewMediaEntry(entry)
-                    // break
+                    await addNewMediaEntry(entry);
                 }
 				return mediaLibraryEntries
 			} else {

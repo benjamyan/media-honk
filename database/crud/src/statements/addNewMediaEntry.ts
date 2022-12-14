@@ -1,61 +1,55 @@
-import * as Mysql from 'mysql2/promise';
 import { Honk } from 'mediahonk';
-
 import { Database } from '..';
-import { PathLike } from 'node:fs';
-
-// CREATE PROCEDURE complete_entry_from_data 
-// (
-//     IN sourceUrl TEXT,
-//     IN relativeUrl TEXT,
-//     IN mainTitle TEXT,
-//     IN subTitle TEXT,
-//     IN coverImageUri TEXT,
-//     IN totalEntries JSON,
-//     IN mediaCategories TEXT,
-//     IN mediaArtists TEXT
-// )
 
 /** These functions would be a good usecase for generators */
-export const addNewMediaEntry = async (data: Honk.Media.BasicLibraryEntry): Promise<Honk.DB.source[] | Error> => {
+export const addNewMediaEntry = async (data: Honk.Media.BasicLibraryEntry): Promise<true | Error> => {
     try {
-
-        console.log(data)
-
+        
         const { entries, categories, artists } = data;
         if (entries.length === 0) {
             throw new Error('Media entries cannot be empty')
         }
-
-        const remoteSources = await (
+        
+        const mediaEntryArguments = [
+            data.sourceUrl,
+            data.relativeUrl,
+            data.title,
+            data.subtitle,
+            data.coverImageUri,
+            JSON.stringify(entries),
+            (
+                artists === undefined || !Array.isArray(artists) || artists.length === 0 
+                    ? null 
+                    : artists.join(',')
+            ),
+            (
+                categories === undefined || !Array.isArray(categories) || categories.length === 0 
+                    ? null 
+                    : categories.join(',')
+            )
+        ];
+        const addMediaBundle = await (
             Database
                 .query(
-                    `CALL complete_entry_from_data(?,?,?,?,?,?,?,?)`,
-                    [
-                        data.sourceUrl,
-                        data.relativeUrl,
-                        data.title,
-                        data.subtitle,
-                        data.coverImageUri,
-                        JSON.stringify(entries),
-                        !!categories && categories.length === 0 ? null : Database.escape(categories),
-                        !!artists && artists.length === 0 ? null : Database.escape(artists)
-                           
-                    ]
-                    // { rowsAsArray: true }
+                    `CALL media_bundle_entry_set_relationships(?,?,?,?,?,?,?,?)`,
+                    mediaEntryArguments
                 )
-                .then(res=> {
-                    console.log(res)
-                    return [].slice.call(res[0], 0) as Honk.DB.source[]
+                .then(()=> {
+                    return true;
                 })
-                .catch(err=>console.log(err))
+                .catch((err)=>{
+                    console.log(err)
+                    return err
+                })
         );
-        if (remoteSources === undefined || !Array.isArray(remoteSources)) {
-            throw new Error('Failed to get remote db sources')
+        if (addMediaBundle === undefined || addMediaBundle !== true) {
+            throw new Error('Failed to add media bundle entry to DB')
         }
         
-        return [ ...remoteSources ];
+        return true;
+        
     } catch (err) {
+        console.log(data)
         console.error(err)
         return err instanceof Error ? err : new Error(`Unhandled exception`);
     }

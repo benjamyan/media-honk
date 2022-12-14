@@ -34,6 +34,38 @@ CREATE PROCEDURE media_bundle_entry_set_relationships
 )
 BEGIN
 
+    /* DECLARE ProcedureSchema TEXT DEFAULT '{
+        "$schema": "http://json-schema.org/draft-04/schema#",
+        "title": "Schema for procedure parameters",
+        "type": "object",
+        "properties": {
+            "sourceUrl": {
+                "type": "string"
+            },
+            "relativeUrl": {
+                "type": "string"
+            },
+            "mainTitle": {
+                "type": "string"
+            },
+            "subTitle": {
+                "type": "string"
+            },
+            "coverImageUri": {
+                "type": "string"
+            },
+            "mediaEntries": {
+                "type": "array"
+            },
+            "mediaArtists": {
+                "type": "array"
+            },
+            "mediaCategories": {
+                "type": "array"
+            }
+        },
+        "required": ["sourceUrl", "relativeUrl", "mainTitle", "mediaEntries"]
+    }'; */
     DECLARE EntriesSchema TEXT DEFAULT '{
         "$schema": "http://json-schema.org/draft-04/schema#",
         "title": "Bundle media entry array",
@@ -76,7 +108,7 @@ BEGIN
                     );
                 WHEN RetryDeclare = 'BundleId' THEN
                     SET BundleId = (
-                        SELECT id FROM bundles WHERE main_title = mainTitle AND sub_title = subTitle
+                        SELECT id FROM bundles WHERE main_title = mainTitle AND sub_title <=> subTitle
                     );
                 ELSE
                     SET ErrMsg = 'Bad retry declaration.';
@@ -223,12 +255,10 @@ BEGIN
         SET @EntryTitle = JSON_EXTRACT(mediaEntries, CONCAT('$[', Jndex, '].title'));
         SET @EntryFilename = JSON_EXTRACT(mediaEntries, CONCAT('$[', Jndex, '].filename'));
         
-        SET @EntryUrl = TRIM(TRAILING '/' FROM relativeUrl);
-
         SET @NewEntryId = set_media_entry( 
                 TRIM(BOTH '"' FROM @EntryTitle), 
                 TRIM(BOTH '"' FROM @EntryFilename),
-                @EntryUrl, 
+                TRIM(TRAILING '/' FROM relativeUrl), 
                 TRIM(BOTH '"' FROM coverImageUri), 
                 SourceId 
             );
@@ -267,6 +297,7 @@ BEGIN
 END//
 DELIMITER ;
 
+/* 
 CALL media_bundle_entry_set_relationships(
     -- IN sourceUrl TEXT  , --
     '/home/benjamyan/Working/media-server/media/audio',
@@ -284,7 +315,8 @@ CALL media_bundle_entry_set_relationships(
     'Barren Earth,Lorem ipsum,Dolor',
     --  IN mediaCategories TEXT --  
     'Metal,Black Metal,Pop,Super bop,pringle'
-);
+); 
+*/
 /* 
 object schema from crud op
 {

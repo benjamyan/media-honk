@@ -1,10 +1,10 @@
-import * as Mysql from 'mysql2/promise';
+// import * as Mysql from 'mysql2/promise';
 import { default as Fs, PathLike } from 'node:fs';
 import * as Path from 'node:path';
 import { Honk } from 'mediahonk';
 
-import { LocalConfig, Kill, Database } from '..';
-import { aggregateSourceEntries } from '../statements/aggregateSourceEntries';
+import { LocalConfig, Kill } from '..';
+import { addSourceTableEntry, aggregateSourceEntries } from '../statements';
 
 /**
  * Pulls down all media sources from the provided paths and creates an object matching the database configuration
@@ -84,17 +84,18 @@ export const persistMissingSources = async (): ReturnType<typeof aggregateSource
                     console.log(`Skipping source "${source.title}" because it already exists`)
                 }
             } else {
-                await (
-                    Database
-                        .query('INSERT INTO source SET ?', source)
-                        .then(()=>{
-                            console.log(`SUCCESS adding entry "${source.title}" to DB.source`)
-                        })
-                        .catch((err)=> {
-                            console.warn(`FAILED adding entry "${source.title}" to DB.source`)
-                            console.warn(err)
-                        })
-                )
+                await addSourceTableEntry(source);
+                // await (
+                //     Database
+                //         .query('INSERT INTO sources SET ?', source)
+                //         .then(()=>{
+                //             console.log(`SUCCESS adding entry "${source.title}" to DB.source`)
+                //         })
+                //         .catch((err)=> {
+                //             console.warn(`FAILED adding entry "${source.title}" to DB.source`)
+                //             console.warn(err)
+                //         })
+                // )
             }
         }
 

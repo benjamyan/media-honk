@@ -2,9 +2,9 @@ DROP TABLE IF EXISTS media_relationships;
 DROP TABLE IF EXISTS meta;
 DROP TABLE IF EXISTS bundles;
 DROP TABLE IF EXISTS media;
-/* DROP TABLE IF EXISTS sources; */
+/* DROP TABLE IF EXISTS sources;
 
-/* CREATE TABLE sources (
+CREATE TABLE sources (
     id INT unsigned NOT NULL,
     title TEXT NOT NULL,
     abs_url TEXT NOT NULL

@@ -30,9 +30,11 @@ BEGIN
                         SELECT id FROM media WHERE title = mediaTitle AND (rel_url = relativeUrl OR rel_url_id = RelUrlId)
                     );
             ELSEIF  RetryDeclare = 'COVER' THEN
-                SET CoverImgId = (
-                    SELECT id FROM covers WHERE file_url = CoverImgUrl AND source_id = sourceId
-                );
+                IF coverImg IS NOT NULL THEN
+                    SET CoverImgId = (
+                        SELECT id FROM covers WHERE file_url = CoverImgUrl AND source_id = sourceId
+                    );
+                END IF;
             END IF;
         END;
     SET RetryDeclare = 'URL';
@@ -44,7 +46,7 @@ BEGIN
     
     IF ISNULL(MediaRowId) THEN
     
-        IF ISNULL(CoverImgId) THEN
+        IF ISNULL(CoverImgId) AND coverImg IS NOT NULL THEN
             INSERT INTO 
                 covers(file_url, source_id)
             VALUES (

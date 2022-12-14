@@ -8,9 +8,6 @@
 		},
 		{
 			"path": "client"
-		},
-		{
-			"path": "client-mvc"
 		}
 	]
 }
