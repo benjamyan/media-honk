@@ -8,11 +8,11 @@
     "dev": "CONFIG_FILE='config.yaml' ts-node src/index.ts",
     "source": "CONFIG_FILE='config.yaml' ts-node src/index.ts source",
     "media": "CONFIG_FILE='config.yaml' ts-node src/index.ts media",
-    "media-audio": "CONFIG_FILE='config.yaml' ts-node src/index.ts media --media-type audio",
-    "media-image": "CONFIG_FILE='config.yaml' ts-node src/index.ts media --media-type image",
-    "media-video": "CONFIG_FILE='config.yaml' ts-node src/index.ts media --media-type video",
+    "audio": "CONFIG_FILE='config.yaml' ts-node src/index.ts media --media-type audio",
+    "image": "CONFIG_FILE='config.yaml' ts-node src/index.ts media --media-type image",
+    "video": "CONFIG_FILE='config.yaml' ts-node src/index.ts media --media-type video",
     "backup": "CONFIG_FILE='config.yaml' ts-node src/index.ts backup",
-    "all": "CONFIG_FILE='config.yaml' ts-node src/index.ts source media"
+    "crud": "CONFIG_FILE='config.yaml' ts-node src/index.ts source media backup"
   },
   "author": "benjamyan",
   "license": "ISC",

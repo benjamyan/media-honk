@@ -24,10 +24,7 @@ export const MediaDB: Honk.DB.Schema = {
 export let LocalConfig!: Honk.Configuration;
 export let Database!: Mysql.Connection;
 
-// type MediaTypeProcessingFlag = ('IMAGE' | 'AUDIO' | 'VIDEO')[] | null;
-
 Server.listen(3000, async ()=> {
-    console.log('Server started on 3000');
     try {
         const parseConfig = await parseLocalConfigFile();
         
@@ -49,7 +46,7 @@ Server.listen(3000, async ()=> {
         const args = process.argv.slice(2, process.argv.length);
         
         if (args.includes('source')) {
-            console.log("Running `source`");
+            console.log("\n\nRunning `source`");
             const remoteSources = await persistMissingSources();
             if (Array.isArray(remoteSources)) {
                 MediaDB.source = [ ...remoteSources ];
@@ -60,12 +57,14 @@ Server.listen(3000, async ()=> {
             }
         }
         if (args.includes('media')) {
-            console.log("Running `media`")
+            console.log("\n\nRunning `media`")
             await buildMediaEntries();
-            
+            if (args.includes('--media-type')) {
+                console.log(`TODO media-type flags`)
+            }
         }
         if (args.includes('backup')) {
-            console.log("Running `backup`")
+            console.log("\n\nTODO `backup`")
 
         }
     } catch (err) {
@@ -73,7 +72,7 @@ Server.listen(3000, async ()=> {
         if (err instanceof Error) {
             Kill(err)
         } else {
-            Kill('Unhandled exception in server')
+            Kill('\n\n ERR! Unhandled exception on server')
         }
     } finally {
         process.exit(0);
