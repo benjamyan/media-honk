@@ -15,11 +15,13 @@ export namespace Serve {
         userMediaPaths: Record<string | number, string>;
         users: string[];
         admins: string[];
+        mysql: Record<string, any>;
     }
 
     /** Redeclaring express namespaces */
     export interface Request extends Express.Request {
         query: {
+            metaType?: 'artists' | 'categories';
             file?: string;
         }
     }

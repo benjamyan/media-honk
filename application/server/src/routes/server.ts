@@ -1,7 +1,7 @@
 import express from "express";
 import cors from 'cors';
 
-import * as serverController from '../controllers/server';
+import * as serverController from '../services/server';
 
 export const serverCors = (localConfig: Record<string, any>): cors.CorsOptions => ({
     origin: localConfig.allowedOrigins as string[],

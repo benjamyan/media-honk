@@ -1,86 +1,20 @@
-// import CONFIG from  
-
-// import * as Process from 'node:process';
+import * as Https from 'node:https';
 import * as Fs from 'node:fs';
 import * as Path from 'node:path';
-// import * as Http from 'node:http';
-// import * as Https from 'node:https';
-import express from 'express';
-import cors from 'cors';
-import * as Yaml from 'yaml';
 
-import * as Routes from './routes'
-import { Serve } from './types';
-import { logger, authenticationMiddleware } from './middleware'
+import App from './ServerController';
 
-class App {
-    public process: NodeJS.Process;
-    public app;
-    public locals!: Serve.Configuration;
+console.log("Stating app...")
 
-    constructor() {
-        this.process = process;
-        this.app = express();
-        this.mountLocals();
-        this.setMiddleware();
-        this.mountRoutes();
-        
-        this.process.on('exit', (exitCode)=> {
-            console.log(`\n----\nNode server shutting down with status code ${exitCode}\n----\n`)
-        })
-    }
-
-    private mountLocals(): void {
-        try {
-            const configFile = Path.resolve(__dirname, '../config.yaml');
-            if (Fs.existsSync(configFile)) {
-                const localConfig: Serve.Configuration = (
-                    Yaml.parse(Fs.readFileSync(configFile, 'utf-8'))
-                );
-                this.locals = { ...localConfig }
-                this.app.response.locals = { ...localConfig };
-            } else throw new Error('Failed to locate required configurations')
-        } catch (err) {
-            console.log(err)
-            this.process.exit(1)
-        }
-    }
-
-    private setMiddleware(): void {
-        // const _self = this;
-        // this.app.use(cors(function(req, callback) {
-        //     const corsOptions: cors.CorsOptions = {
-        //         methods: [ 'OPTIONS', 'GET', 'PUT', 'HEAD' ],
-        //         optionsSuccessStatus: 200
-        //     };
-        // console.log()
-        //     if (_self.locals.allowedOrigins.includes(req.header('Origin'))) {
-        //         corsOptions.origin = true
-        //     } else {
-        //         corsOptions.origin = false
-        //     }
-        //     callback(null, corsOptions)
-        // }))
-        // this.app.use(express.static(Path.join(__dirname, '../static')));
-        // this.app.response.locals = this.locals;
-
-        this.app.use(express.json());
-        this.app.use(express.urlencoded());
-
-        // basic logger
-        this.app.use('*', logger.bind(this))
-
-        // auth middleware for all connections
-        // this.app.use('*', authenticationMiddleware.bind(this))
-        
-    }
-
-    private mountRoutes(): void {
-        this.app.use('/', Routes.staticRoutes());
-        // this.app.use('/auth', Routes.authRoutes());
-        this.app.use('/server', Routes.serverRoutes());
-        this.app.use('/relay', Routes.relayRoutes());
-    }
+if (process.argv.includes('https')) {
+    Https.createServer({
+        key: Fs.readFileSync(Path.resolve(__dirname, '../cert/192.168.0.11-key.pem'), 'utf8'),
+        cert: Fs.readFileSync(Path.resolve(__dirname, '../cert/192.168.0.11.pem'), 'utf8')
+    }, App).listen(82, (): void => {
+        console.log(`HTTPS listening on https://localhost:82`)
+    });
 }
 
-export default new App().app
+App.listen(81, '192.168.0.11', (): void => {
+    console.log(`HTTP listening on http://192.168.0.11:81`)
+})
