@@ -21,7 +21,7 @@ export namespace Serve {
     /** Redeclaring express namespaces */
     export interface Request extends Express.Request {
         query: {
-            metaType?: 'artists' | 'categories';
+            metatype?: 'artists' | 'categories';
             file?: string;
         }
     }

@@ -1,7 +1,7 @@
 import { Model } from 'objection';
-import { Default } from './_Default';
+import {DefaultHonkModel} from './_DefaultModel';
 
-export class Sources extends Default {
+export class SourcesModel  extends DefaultHonkModel {
 
 	/** Table name is the only required property. */
 	static tableName = 'sources';
@@ -29,7 +29,7 @@ export class Sources extends Default {
 		return {
 			media: {
 				relation: Model.HasManyRelation,
-				modelClass: require('./Media'),
+				modelClass: require('./MediaModel'),
 				join: {
 					from: 'source.id',
 					to: 'media.source_id'
@@ -37,7 +37,7 @@ export class Sources extends Default {
 			},
 			covers: {
 				relation: Model.HasManyRelation,
-				modelClass: require('./Covers'),
+				modelClass: require('./CoversModel'),
 				join: {
 					from: 'source.id',
 					to: 'covers.source_id'

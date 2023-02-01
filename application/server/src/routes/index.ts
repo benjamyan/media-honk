@@ -2,7 +2,7 @@
 
 // const mediaRoute = new MediaRoutes().router;
 
-import { MediaRoutes } from './media';
+import { MediaRoutes } from './MediaRoute';
 
 const mediaRoute = new MediaRoutes().router;
 

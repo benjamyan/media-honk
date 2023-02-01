@@ -17,16 +17,15 @@ import * as Routes from './routes'
 import { Serve } from './types';
 import { logger, authenticationMiddleware } from './middleware';
 
-import { Default } from './models/_Default';
-import { default as MediaRoute, MediaRoutes } from './routes/media';
+// import { DefaultHonkModel } from './models/_DefaultModel';
+import { default as MediaRoute, MediaRoutes } from './routes/MediaRoute';
 
 class App {
     public process: NodeJS.Process;
     public app;
     public locals!: Serve.Configuration;
     private configFilePath: Fs.PathLike = Path.resolve(__dirname, '../../config.yaml');
-    // public db!: Connection;
-
+    
     constructor() {
 
         this.process = process;
@@ -34,7 +33,7 @@ class App {
         this.mountLocals();
         this.setMiddleware();
 
-        this.initDatabaseConnect();
+        this.initKnexDbConnection();
         this.mountRoutes();
         
         this.process.on('exit', (exitCode)=> {
@@ -60,34 +59,39 @@ class App {
     }
 
     private setMiddleware(): void {
-        // const _self = this;
-        // this.app.use(cors(function(req, callback) {
-        //     const corsOptions: cors.CorsOptions = {
-        //         methods: [ 'OPTIONS', 'GET', 'PUT', 'HEAD' ],
-        //         optionsSuccessStatus: 200
-        //     };
-        // console.log()
-        //     if (_self.locals.allowedOrigins.includes(req.header('Origin'))) {
-        //         corsOptions.origin = true
-        //     } else {
-        //         corsOptions.origin = false
-        //     }
-        //     callback(null, corsOptions)
-        // }))
-        // this.app.use(express.static(Path.join(__dirname, '../static')));
-        // this.app.response.locals = this.locals;
-
-        this.app.use(express.json());
-        this.app.use(express.urlencoded());
-
-        // basic logger
-        this.app.use('*', logger.bind(this))
-
-        // auth middleware for all connections
-        // this.app.use('*', authenticationMiddleware.bind(this))
+        try {
+            // const _self = this;
+            // this.app.use(cors(function(req, callback) {
+            //     const corsOptions: cors.CorsOptions = {
+            //         methods: [ 'OPTIONS', 'GET', 'PUT', 'HEAD' ],
+            //         optionsSuccessStatus: 200
+            //     };
+            // console.log()
+            //     if (_self.locals.allowedOrigins.includes(req.header('Origin'))) {
+            //         corsOptions.origin = true
+            //     } else {
+            //         corsOptions.origin = false
+            //     }
+            //     callback(null, corsOptions)
+            // }))
+            // this.app.use(express.static(Path.join(__dirname, '../static')));
+            // this.app.response.locals = this.locals;
+    
+            this.app.use(express.json());
+            this.app.use(express.urlencoded());
+    
+            // basic logger
+            this.app.use('*', logger.bind(this))
+    
+            // auth middleware for all connections
+            // this.app.use('*', authenticationMiddleware.bind(this))
+        } catch (err) {
+            console.log(err)
+            this.process.exit(2)
+        }
     }
 
-    private initDatabaseConnect(): void {
+    private initKnexDbConnection(): void {
         try {
             const thisKnex = Knex({
                 client: 'mysql2',
@@ -103,29 +107,8 @@ class App {
             objection.Model.knex(thisKnex);
         } catch (err) {
             console.log(err)
+            this.process.exit(3);
         }
-
-
-        // console.log('Waiting for connection to DB...');
-        // Mysql.createConnection({
-        //     host: this.locals.mysql.host,
-        //     port: this.locals.mysql.port,
-        //     user: this.locals.mysql.username,
-        //     password: this.locals.mysql.password,
-        //     database: this.locals.mysql.db_name,
-        //     insecureAuth: this.locals.mysql.allow_insecure
-        // })
-        // .then((res: any)=> {
-        //     console.log("Connected to mySQL as: " + res.connection.config.user)
-        //     const thisKnex = Knex({
-        //         client: 'mysql2',
-        //         connection: res
-        //     });
-        //     objection
-        //         .Model
-        //         .knex(thisKnex);
-        // })
-        // .catch(err=> console.error(err))
     }
 
     private mountRoutes(): void {

@@ -15,7 +15,7 @@ import { Model } from 'objection';
  * - https://vincit.github.io/objection.js/api/model/ 
  * - https://github.com/knex/knex
  * */
-export class Default extends Model {
+export class DefaultHonkModel extends Model {
 	// Each model must have a column (or a set of columns) that uniquely
 	// identifies the rows. The column(s) can be specified using the `idColumn`
 	// property. `idColumn` returns `id` by default and doesn't need to be

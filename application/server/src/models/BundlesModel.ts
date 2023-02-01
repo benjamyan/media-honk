@@ -1,7 +1,7 @@
 import { Model } from 'objection';
-import { Default } from './_Default';
+import {DefaultHonkModel} from './_DefaultModel';
 
-export class Bundles extends Default {
+export class BundlesModel extends DefaultHonkModel {
 	static tableName = 'bundles';
 
 	/** Optional JSON schema. This is not the database schema!
@@ -29,7 +29,7 @@ export class Bundles extends Default {
 		return {
 			cover: {
 				relation: Model.ManyToManyRelation,
-				modelClass: require('./Covers'), 
+				modelClass: require('./CoversModel'), 
 				join: {
 					from: 'bundles.cover_img_id',
 					to: 'covers.id'
@@ -37,7 +37,7 @@ export class Bundles extends Default {
 			},
 			media: {
 				relation: Model.ManyToManyRelation,
-				modelClass: require('./Media'),
+				modelClass: require('./MediaModel'),
 				join: {
 				  from: 'bundles.id',
 				  through: {
@@ -57,7 +57,7 @@ export class Bundles extends Default {
 			// },
 			// meta: {
 			// 	relation: Model.ManyToManyRelation,
-			// 	modelClass: require('./Meta'), // Meta,
+			// 	modelClass: require('./MetaModel'), // MetaModel,
 			// 	join: {
 			// 	  from: 'media.id',
 			// 	  // ManyToMany relation needs the `through` object

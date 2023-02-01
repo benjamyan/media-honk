@@ -1,7 +1,7 @@
 import { Model } from 'objection';
-import { Default } from './_Default';
+import {DefaultHonkModel} from './_DefaultModel';
 
-export class Media extends Default {
+export class MediaModel extends DefaultHonkModel {
 
 	/** Table name is the only required property. */
 	static tableName = 'media';
@@ -49,7 +49,7 @@ export class Media extends Default {
 		return {
 			covers: {
 				relation: Model.ManyToManyRelation,
-				modelClass: require('./Sources'), // Sources,
+				modelClass: require('./SourcesModel'), // Sources,
 				join: {
 					from: 'media.source_id',
 					to: 'sources.id'
@@ -57,7 +57,7 @@ export class Media extends Default {
 			},
 			sources: {
 				relation: Model.ManyToManyRelation,
-				modelClass: require('./Covers'), // Covers,
+				modelClass: require('./CoversModel'), // Covers,
 				join: {
 					from: 'media.cover_img_id',
 					to: 'covers.id'
@@ -65,7 +65,7 @@ export class Media extends Default {
 			},
 			meta: {
 				relation: Model.ManyToManyRelation,
-				modelClass: require('./Meta'), // Meta,
+				modelClass: require('./MetaModel'), // MetaModel,
 				join: {
 				  from: 'media.id',
 				  // ManyToMany relation needs the `through` object
@@ -82,7 +82,7 @@ export class Media extends Default {
 			},
 			bundles: {
 				relation: Model.ManyToManyRelation,
-				modelClass: require('./Bundles'), // Bundles,
+				modelClass: require('./BundlesModel'), // BundlesModel,
 				join: {
 				  from: 'media.id',
 				  through: {
@@ -94,7 +94,7 @@ export class Media extends Default {
 			},
 			relativeUrl: {
 				relation: Model.HasManyRelation,
-				modelClass: Media,
+				modelClass: MediaModel,
 				join: {
 						from: 'media.rel_url_id',
 						to: 'media.id'

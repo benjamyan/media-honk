@@ -1,7 +1,7 @@
 import { Model } from 'objection';
-import { Default } from "./_Default";
+import {DefaultHonkModel} from "./_DefaultModel";
 
-export class Meta extends Default {
+export class MetaModel extends DefaultHonkModel {
 
 	/** Table name is the only required property. */
 	static tableName = 'meta';
@@ -37,7 +37,7 @@ export class Meta extends Default {
 		return {
 			artist: {
 				relation: Model.ManyToManyRelation,
-				modelClass: Meta,
+				modelClass: MetaModel,
 				join: {
 					from: 'meta.artist_id',
 					to: 'meta.id'
@@ -45,7 +45,7 @@ export class Meta extends Default {
 			},
 			category: {
 				relation: Model.ManyToManyRelation,
-				modelClass: Meta,
+				modelClass: MetaModel,
 				join: {
 					from: 'meta.catgory_id',
 					to: 'meta.id'
@@ -53,7 +53,7 @@ export class Meta extends Default {
 			},
 			media: {
 				relation: Model.ManyToManyRelation,
-				modelClass: require('./Media'),
+				modelClass: require('./MediaModel'),
 				join: {
 					from: 'meta.id',
 					through: {
@@ -66,8 +66,25 @@ export class Meta extends Default {
 		}
 	}
 
-	// static get allArtists() {
-	// 	return this.query(``);
-	// }
+    static metaRowContentGetter(row: 'artist_name' | 'category_name'): Promise<string[] | Error> | Error {
+        try {
+            return new Promise((resolve, reject)=> (
+                this.query()
+                    .whereNot(row, `NULL`)
+                    .select(row)
+                    .then((res: any)=>{
+                        resolve(res.map((meta: any)=>meta[row]))
+                        return 
+                    })
+                    .catch((err)=>{
+                        reject(new Error(JSON.stringify(err)))
+                        return 
+                    })
+            ));
+        }
+        catch (err) {
+            return err instanceof Error ? err : new Error('Unhandled exception.')
+        }
+    }
 
 }

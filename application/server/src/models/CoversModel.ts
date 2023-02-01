@@ -1,7 +1,7 @@
 import { Model } from 'objection';
-import { Default } from './_Default';
+import {DefaultHonkModel} from './_DefaultModel';
 
-export class Covers extends Default {
+export class CoversModel extends DefaultHonkModel {
 	static tableName = 'covers';
 
 	/** Optional JSON schema. This is not the database schema!
@@ -27,7 +27,7 @@ export class Covers extends Default {
 		return {
 			media: {
 				relation: Model.HasManyRelation,
-				modelClass: require('./Media'),
+				modelClass: require('./MediaModel'),
 				join: {
 					from: 'covers.id',
 					to: 'media.cover_img_id'
@@ -35,7 +35,7 @@ export class Covers extends Default {
 			},
 			source: {
 				relation: Model.ManyToManyRelation,
-				modelClass: require('./Sources'),
+				modelClass: require('./SourcesModel'),
 				join: {
 					from: 'covers.source_id',
 					to: 'sources.id'
