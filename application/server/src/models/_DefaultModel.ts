@@ -1,4 +1,4 @@
-import { Model } from 'objection';
+import { Model, snakeCaseMappers } from 'objection';
 // import { default as Mysql } from 'mysql2';
 
 // const connection = Mysql.createConnection({
@@ -23,4 +23,8 @@ export class DefaultHonkModel extends Model {
 	static get idColumn() {
 		return 'id';
 	}
+	
+	// static get columnNameMappers() {
+	//   return snakeCaseMappers();
+	// }
 }

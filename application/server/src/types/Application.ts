@@ -17,7 +17,6 @@ export namespace Serve {
         admins: string[];
         mysql: Record<string, any>;
     }
-
     /** Redeclaring express namespaces */
     export interface Request extends Express.Request {
         query: {
@@ -26,11 +25,17 @@ export namespace Serve {
         }
     }
     export interface Response extends Express.Response {
-        locals: Configuration 
+        locals: Configuration;
     }
-    export interface NextFunction extends Express.NextFunction {
-        
+    /** The minimal data that needs to returned from a route */
+    export interface CommonResponse extends Partial<Express.Response> {
+        statusCode: number;
+        body?: Record<string, any>;
     }
+    export interface ErrorResponse extends Omit<CommonResponse, 'body'> {
+        message: string;
+    }
+    export interface NextFunction extends Express.NextFunction {}
     // export interface Application extends Express.Application {
     //     request: Request;
     //     response: Response;
