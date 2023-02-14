@@ -1,7 +1,7 @@
 import { Model } from 'objection';
-import {DefaultHonkModel} from './_DefaultModel';
+import {BaseHonkModel} from './_BaseModel';
 
-export class BundlesModel extends DefaultHonkModel {
+export class BundlesModel extends BaseHonkModel {
 	static tableName = 'bundles';
 
 	/** Optional JSON schema. This is not the database schema!

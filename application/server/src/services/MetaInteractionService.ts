@@ -2,20 +2,45 @@ import { MetaModel } from "../models/MetaModel";
 import { Serve } from "../types";
 
 export class ModelInteractionService {
+    static metaTableRowContent: any;
 
     constructor() {
 
     }
     
+    // public metaTableRowContent(row: 'artist_name' | 'category_name') {
+    //     try {
+    //         return new Promise((resolve, reject)=> (
+    //             MetaModel
+    //                 .column()
+    //                 .query()
+    //                 .select(['artist_name', 'category_name'])
+    //                 .then((res: any)=>{
+    //                     console.log(res)
+    //                     resolve(res)
+    //                     return 
+    //                 })
+    //                 .catch((err)=>{
+    //                     reject(new Error(JSON.stringify(err)))
+    //                     return 
+    //                 })
+    //         ));
+    //     }
+    //     catch (err) {
+    //         return err instanceof Error ? err : new Error('Unhandled exception.')
+    //     }
+    // }
+
     static queryMetaColumns(metaType: Serve.Request['query']['metatype']): Promise<Serve.CommonResponse> {
+        console.log(this.metaTableRowContent);
         return new Promise((resolve, reject)=> (
             Promise.all(
                 metaType === undefined
                     ? [
-                        MetaModel.metaRowContentGetter('artist_name'), 
-                        MetaModel.metaRowContentGetter('category_name')
+                        MetaModel.metaRowContent('artist_name'), 
+                        MetaModel.metaRowContent('category_name')
                     ]
-                    : [MetaModel.metaRowContentGetter(
+                    : [MetaModel.metaRowContent(
                         metaType === 'artists'
                             ? 'artist_name'
                             : 'category_name'

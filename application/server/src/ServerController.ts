@@ -17,7 +17,7 @@ import * as Routes from './routes'
 import { Serve } from './types';
 import { logger, authenticationMiddleware } from './middleware';
 
-// import { DefaultHonkModel } from './models/_DefaultModel';
+// import { BaseHonkModel } from './models/_DefaultModel';
 import { default as MediaRoute, MediaRoutes } from './routes/MediaRoute';
 
 class App {

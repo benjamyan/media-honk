@@ -1,7 +1,7 @@
 import { Model } from 'objection';
-import {DefaultHonkModel} from './_DefaultModel';
+import {BaseHonkModel} from './_BaseModel';
 
-export class SourcesModel  extends DefaultHonkModel {
+export class SourcesModel  extends BaseHonkModel {
 
 	/** Table name is the only required property. */
 	static tableName = 'sources';

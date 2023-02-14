@@ -1,7 +1,9 @@
 import { Model } from 'objection';
-import {DefaultHonkModel} from "./_DefaultModel";
+import {BaseHonkModel} from "./_BaseModel";
 
-export class MetaModel extends DefaultHonkModel {
+type MetaRowContentProps = Record<'artist_name' | 'category_name', any[]>
+
+export class MetaModel extends BaseHonkModel {
 
 	/** Table name is the only required property. */
 	static tableName = 'meta';
@@ -65,8 +67,41 @@ export class MetaModel extends DefaultHonkModel {
 			},
 		}
 	}
-
-    static metaRowContentGetter(row: 'artist_name' | 'category_name'): Promise<string[] | Error> | Error {
+	
+	// static metaRowContent(values: MetaRowContentProps): Promise<string[] | Error> | Error {
+	// 	try {
+	// 		const valuesParsed = Object.keys(values);
+	// 		const queryValues = {
+	// 			columns: (
+	// 				valuesParsed.length === 0
+	// 					? [ 'artist_name', 'category_name' ]
+	// 					: valuesParsed
+	// 			)
+	// 		}
+	// 		return new Promise((resolve, reject)=> (
+	// 			MetaModel
+	// 				.query()
+	// 				.columns(queryValues.columns)
+	// 				// .select()
+	// 				.where((col)=>{
+	// 					return col. !== 'NULL'
+	// 				})
+	// 				// .whereNot(row, `NULL`)
+	// 				.then((res: any)=>{
+	// 					resolve(res.map((meta: any)=>meta[row]))
+	// 					return 
+	// 				})
+	// 				.catch((err)=>{
+	// 					reject(new Error(JSON.stringify(err)))
+	// 					return 
+	// 				})
+	// 		));
+	// 	}
+	// 	catch (err) {
+	// 		return err instanceof Error ? err : new Error('Unhandled exception.')
+	// 	}
+	// }
+    static metaRowContent(row: 'artist_name' | 'category_name'): Promise<string[] | Error> | Error {
         try {
             return new Promise((resolve, reject)=> (
                 this.query()

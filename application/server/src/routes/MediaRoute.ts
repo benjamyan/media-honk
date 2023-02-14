@@ -2,7 +2,7 @@ import { default as Express, query } from 'express';
 import { Serve } from '../types';
 import { MetaModel } from '../models/MetaModel';
 import { CommonRoute } from './CommonRoutes';
-import { ModelInteractionService } from '../services/ModelInteractionService';
+import { ModelInteractionService } from '../services/MetaInteractionService';
 import { Model } from 'objection';
 import { FactoryService } from '../services/common';
 
@@ -30,10 +30,10 @@ export class MediaRoutes extends CommonRoute {
                 if (Object.entries(req.query).length > 0) {
                     if (req.query.metatype === undefined) {
                         throw new Error('Invalid query parameter provided')
-                    } else if (req.query.metatype === 'artists' || req.query.metatype === 'categories') {
-                        return req.query.metatype
-                    } else {
+                    } else if (req.query.metatype !== 'artists' && req.query.metatype !== 'categories') {
                         throw new Error('Invalid metatype query given')
+                    } else {
+                        return req.query.metatype
                     }
                 }
                 return undefined
@@ -41,7 +41,6 @@ export class MediaRoutes extends CommonRoute {
             ModelInteractionService
                 .queryMetaColumns(queryType)
                 .then((result: Serve.CommonResponse): void =>{
-                    console.log(result)
                     res
                         .status(result.statusCode || 400)
                         .send(result.body || 'Unhandled exception');

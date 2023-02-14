@@ -1,7 +1,7 @@
 import { Model } from 'objection';
-import {DefaultHonkModel} from './_DefaultModel';
+import {BaseHonkModel} from './_BaseModel';
 
-export class MediaModel extends DefaultHonkModel {
+export class MediaModel extends BaseHonkModel {
 
 	/** Table name is the only required property. */
 	static tableName = 'media';
