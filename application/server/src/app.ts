@@ -1,20 +1,22 @@
-import * as Https from 'node:https';
-import * as Fs from 'node:fs';
-import * as Path from 'node:path';
+import { default as Express } from 'express';
+import { default as dotenv } from 'dotenv';
+import { default as Path } from 'path';
+import { default as Knex } from 'knex';
 
-import App from './ServerController';
+import { MediaHonkServer } from "./Server"
 
-console.log("Stating app...")
+// dotenv.config({ path: Path.resolve(__dirname, '../.env') });
+// const app = Express();
+// app.locals = null!;
 
-if (process.argv.includes('https')) {
-    Https.createServer({
-        key: Fs.readFileSync(Path.resolve(__dirname, '../cert/192.168.0.11-key.pem'), 'utf8'),
-        cert: Fs.readFileSync(Path.resolve(__dirname, '../cert/192.168.0.11.pem'), 'utf8')
-    }, App).listen(82, (): void => {
-        console.log(`HTTPS listening on https://localhost:82`)
-    });
-}
+// let databaseConnection: ReturnType<typeof Knex> = null!;
 
-App.listen(81, '192.168.0.11', (): void => {
-    console.log(`HTTP listening on http://192.168.0.11:81`)
-})
+// const mediaEntries: Record<string, Honk.Media.BaselineMediaProperties> = {};
+
+new MediaHonkServer()
+
+// export {
+//     app,
+//     mediaEntries,
+//     databaseConnection
+// }

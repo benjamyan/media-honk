@@ -1,10 +1,13 @@
+import { default as Express } from 'express'
 import { MetaModel } from "../models/MetaModel";
-import { Serve } from "../types";
+import { MediaHonkServerBase } from "../_Base";
+// import { Serve } from "../types";
 
-export class ModelInteractionService {
-    static metaTableRowContent: any;
+export class ModelInteractionService extends MediaHonkServerBase {
+    // static metaTableRowContent: any;
 
     constructor() {
+        super();
 
     }
     
@@ -31,8 +34,8 @@ export class ModelInteractionService {
     //     }
     // }
 
-    static queryMetaColumns(metaType: Serve.Request['query']['metatype']): Promise<Serve.CommonResponse> {
-        console.log(this.metaTableRowContent);
+    static queryMetaColumns(metaType: Express.Request['query']['metatype']): Promise<Record<string, string[] | Error>> {
+        // console.log(this.metaTableRowContent);
         return new Promise((resolve, reject)=> (
             Promise.all(
                 metaType === undefined
@@ -57,39 +60,20 @@ export class ModelInteractionService {
                     }
                     return metaQueryResponse
                 })
-                .then((metaQuerySuccessData: Array<string[]>): Record<string, string[]> => {
+                .then((metaQuerySuccessData: Array<string[]>) => {
                     if (metaType !== undefined) {
-                        return { 
+                        return resolve({ 
                             [metaType as string]: metaQuerySuccessData[0] 
-                        };
+                        })
                     }
-                    return {
+                    return resolve({
                         artists: metaQuerySuccessData[0],
                         categories: metaQuerySuccessData[1]
-                    }
-                })
-                .then((formattedMetaQueryData: Record<string, string[]>): Serve.CommonResponse => {
-                    /** Successful response was gotten, parse the data and pass it to the responding block */
-                    let response: Serve.CommonResponse = {
-                        statusCode: 200,
-                        body: formattedMetaQueryData
-                    }
-                    if ([...Object.values(formattedMetaQueryData)].length === 0) {
-                        response.statusCode = 204;
-                    }
-                    return response
-                })
-                .then((finalMetaQueryResult: Serve.CommonResponse): void =>{
-                    if (!finalMetaQueryResult.statusCode || !finalMetaQueryResult.body) {
-                        throw new Error('Bad request');
-                    } else if (!Object.values(finalMetaQueryResult.body).every((entity)=>Array.isArray(entity))) {
-                        throw new Error('Invalid body parsed from request');
-                    }
-                    resolve(finalMetaQueryResult)
+                    })
                 })
                 .catch((err): void =>{
                     console.log(err)
-                    reject(err instanceof Error ? err : new Error('Unhandled exception.'))
+                    return reject(err instanceof Error ? err : new Error('Unhandled exception. ModelInteractionService.queryMetaColumns'));
                 })
         ))
     }

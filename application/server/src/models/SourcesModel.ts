@@ -1,5 +1,5 @@
 import { Model } from 'objection';
-import {BaseHonkModel} from './_BaseModel';
+import { BaseHonkModel } from './_BaseModel';
 
 export class SourcesModel  extends BaseHonkModel {
 
