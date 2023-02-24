@@ -5,18 +5,27 @@ import { default as Knex } from 'knex';
 
 import { MediaHonkServer } from "./Server"
 
-// dotenv.config({ path: Path.resolve(__dirname, '../.env') });
-// const app = Express();
-// app.locals = null!;
+new MediaHonkServer()
 
-// let databaseConnection: ReturnType<typeof Knex> = null!;
+// dotenv.config({ path: Path.resolve(__dirname, '../.env') });
+
+// const app = Express();
+
+// let databaseConnection: ReturnType<typeof Knex> = null!,
+//     localConfig: Honk.Configuration = null!
 
 // const mediaEntries: Record<string, Honk.Media.BaselineMediaProperties> = {};
 
-new MediaHonkServer()
+// export const MediaHonkServer = new MediaHonkServerInstance({
+//     app,
+//     databaseConnection,
+//     localConfig,
+//     mediaEntries
+// })
 
 // export {
 //     app,
 //     mediaEntries,
-//     databaseConnection
+//     databaseConnection,
+//     localConfig
 // }

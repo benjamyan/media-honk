@@ -1,9 +1,9 @@
-import { MediaHonkServerBase } from "../_Base";
+import { MediaHonkServerBase } from "../../_Base";
 
 export class ModelService extends MediaHonkServerBase {
     constructor() {
         super();
-
+        
     }
 
     /**
@@ -51,9 +51,18 @@ export class ModelService extends MediaHonkServerBase {
      * - The number of changes the query made to the table
      * - A SQLite or unhandled error 
      */
-    public insertUniqueEntry(tableName: string, valuesToInsert: any) {
+    public insertUniqueEntry(tableName: string, valuesToInsert: any): Promise<true | Error> {
         return new Promise((resolve, reject)=>{
             try {
+                this.db
+                    .insert(valuesToInsert)
+                    .into(tableName)
+                    .then(()=>{
+                        resolve(true)
+                    })
+                    .catch((err)=>{
+                        return reject(err)
+                    })
                 // this.db.run(
                 //     `INSERT OR IGNORE INTO ${tableName} ( ${Object.keys(valuesToInsert).join(', ')} ) VALUES ( ${this.formatInsertValues(valuesToInsert).join(', ')} )`,
                 //     function(error) {

@@ -1,10 +1,22 @@
 // import { Serve } from "../../types";
+import { promises as Fsp } from 'fs';
+import { default as Yaml } from 'yaml';
+import { default as Path } from 'path';
+
 import { UtilityService } from ".";
 
 export class FactoryService implements UtilityService {
 
     constructor() {
         // super()
+    }
+
+    static mediaLibraryEntry(entryPath: string, yamlContent: any) {
+        try {
+            
+        } catch (err) {
+
+        }
     }
 
     // static buildCommonResponseEntity(body: Serve.CommonResponse['body']): Serve.CommonResponse {

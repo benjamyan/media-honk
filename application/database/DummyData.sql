@@ -7,4 +7,4 @@ INSERT INTO meta (artist_name, category_name) VALUES ('test-artist_name', 'test-
 INSERT INTO meta (artist_id, category_name) VALUES (1, 'test-category_name');
 INSERT INTO meta (artist_name, category_id) VALUES ('test-artist_name', 2);
 INSERT INTO media_meta (media_id, meta_id) VALUES (1, 1);
-INSERT INTO bundle_media (media_id, media_index) VALUES (1, 1);
+INSERT INTO bundle_media (media_id, media_index, media_type) VALUES (1, 1, 'VU');

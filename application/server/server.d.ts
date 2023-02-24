@@ -6,10 +6,18 @@ import { PathLike } from "fs";
 declare global {
     declare namespace NodeJS {
         interface ProcessEnv {
+            /** Node env substitute
+             * `dev` -
+             * `stage` -
+             * `prod` -
+             */
             HONK_ENV: 'dev' | 'stage' | 'prod';
+            /** The location on your file system that the application is running from */
             BASE_DIRECTORY: string;
+            /** Your `config.yaml` file path relative to the `BASE_DIRECTORY` above */
             CONFIG_FILE_PATH: string;
-            // API_TOKEN: string;
+            /** Whether to run the aggregation service and populate the database */
+            AGGREGATE?: 'remake' | 'update' | 'add';
         }
     }
     namespace HonkServer {

@@ -4,16 +4,22 @@ import { json, Router } from 'express';
 
 import { MediaRoutes } from './routes';
 import { MediaHonkServerBase } from './_Base';
-import { MediaEntriesProxy } from './services';
+import { AggregateService, MediaEntriesProxy } from './services';
 
 export class MediaHonkServer extends MediaHonkServerBase {
-    private router: Router = Router().bind(this.app);
-    private mediaRouter = new MediaRoutes();
-
+    
     constructor() {
         super();
         
-        this.on('server.start', this.initializeExpressServer);
+        // this.enableLogging = true;
+        this.on('server.start', ()=> {
+            // console.log(process.env.AGGREGATE)
+            if (process.env.AGGREGATE !== undefined) {
+                this.aggregateDatabase();
+            }
+            this.initializeExpressServer();
+            
+        });
         this.on('server.listening', ()=> {
             try {
                 // this.db.all('SELECT * FROM jobs', (error, rows)=> {
@@ -37,7 +43,60 @@ export class MediaHonkServer extends MediaHonkServerBase {
         });
         this.emit('init');
     }
-    
+
+    private aggregateDatabase() {
+        this.logger('MediaHonkServer.aggregateDatabase -> ' + process.env.AGGREGATE)
+        try {
+            const Aggregate = new AggregateService();
+            
+            switch (process.env.AGGREGATE) {
+                case 'remake': {
+                    /** 
+                     * Create backup
+                     * Drop all tables
+                     * Run aggregate
+                     */
+
+                    break;
+                }
+                case 'update': {
+                    /** 
+                     * Add new entries
+                     * Overwrite existing entries 
+                     * Delete nonexistent entries
+                     */
+                    Aggregate.createDatabaseBackup()
+                    Aggregate.handleTableEntryAggregate({
+                        tableName: 'sources',
+                        comparisonKey: 'abs_url',
+                        comparisonData: this.config.api.media_paths,
+                        factoryCallback: (dataKey)=> ({
+                            abs_url: this.config.api.media_paths[dataKey],
+                            title: dataKey
+                        })
+                    })
+                    break;
+                }
+                case 'add': {
+                    /**
+                     * Adds new entries to database
+                     * Dont overwrite or delete existing entries
+                     */
+
+                    break;
+                }
+                default: {
+
+                }
+            }
+        } catch (err) {
+            this.emit('error', {
+                error: err instanceof Error ? err : new Error('Unable to establish database connection'),
+                severity: 1
+            })
+        }
+    }
+
     private initializeExpressServer() {
         this.logger('JobPostServer.initializeExpressServer()');
         try {

@@ -13,19 +13,19 @@ export class MediaRoutes extends RouteBase {
     constructor() {
         super({
             permittedQuery: {
-                // get: [ 'id' ],
+                get: [ 'metatype' ],
                 // post: [],
                 // patch: [],
                 // delete: [ '!id' ]
+            },
+            permittedBody: {
+                // post: [ '!abs_url', '!job_title', '!company_name', 'role_type', 'yoe', 'keywords', 'severity', 'date_posted' ],
+                // patch: [ '!_guid', '_applied', 'job_title', 'company_name', 'role_type', 'yoe', 'keywords', 'severity' ]
             },
             requiredHeader: {
                 // post: {
                 //     'Content-Type': 'application/json'
                 // }
-            },
-            permittedBody: {
-                // post: [ '!abs_url', '!job_title', '!company_name', 'role_type', 'yoe', 'keywords', 'severity', 'date_posted' ],
-                // patch: [ '!_guid', '_applied', 'job_title', 'company_name', 'role_type', 'yoe', 'keywords', 'severity' ]
             }
         });
         

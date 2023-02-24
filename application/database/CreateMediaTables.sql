@@ -5,7 +5,7 @@ DROP TABLE IF EXISTS media;
 DROP TABLE IF EXISTS sources;
 
 CREATE TABLE sources (
-    id INTEGER NOT NULL,
+    id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
     title TEXT NOT NULL,
     abs_url TEXT NOT NULL
 );
@@ -61,6 +61,15 @@ CREATE TABLE bundle_media (
     bundle_id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
     media_id INTEGER NOT NULL,
     media_index INTEGER,
+    /** 
+        VU = video unique (movie) 
+        VS = video series (episodes)
+        AU = audio unique (singles)
+        AS = audio series (album)
+        GU = gallery unique (singles)
+        GS = gallery series (ebook)
+    */
+    media_type TEXT CHECK( media_type IN ('VU','VS','AU','AS','GU','GS') ) NOT NULL,
     FOREIGN KEY (bundle_id) REFERENCES bundles(id),
     FOREIGN KEY (media_id) REFERENCES media(id)
 );

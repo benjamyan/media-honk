@@ -3,11 +3,6 @@
 import { PathLike } from 'node:fs';
 
 declare global {
-    interface MediaEntryItem {
-        index: number;
-        filename: string;
-        title: string;
-    }
     namespace Honk {
         interface Configuration {
             dns: string;
@@ -23,7 +18,7 @@ declare global {
                 permitted_origins: string[];
                 users: string[];
                 admins: string[];
-                media_paths: Record<string | number, PathLike>;
+                media_paths: Record<string, string>;
             };
             db: {
                 file: string;
@@ -39,61 +34,83 @@ declare global {
             interface source {
                 id: number;
                 title: string;
-                abs_url: PathLike;
+                abs_url: string;
             }
-            interface media {
-                id: number;
-                rel_url: string | PathLike;
-                cover_img_uri?: string;
+            interface bundles {
                 main_title: string;
                 sub_title?: string;
-                entries: MediaEntryItem[];
-                source_id: number;
+                cover_img_id?: number;
             }
-            interface artist {
-                id: number;
-                name: string;
-                source_id: number;
+            interface media {
+                title: string;
+                filename: string;
+                rel_url?: string,
+                rel_url_id?: number;
+                cover_img_id?: number;
+                source_id: number
             }
-            interface category {
-                id: number;
-                name: string;
-                source_id: number;
-            }
-            interface media_relation {
-                media_id: number;
+            interface meta {
+                artist_name?: string;
                 artist_id?: number;
+                category_name?: string;
                 category_id?: number;
             }
+            interface covers {
+                file_url: string;
+                source_id: string;
+            }
+            interface media_meta {
+                media_id: number;
+                meta_id: number;
+            }
+            interface bundle_media {
+                bundle_id: number;
+                media_id: number;
+                media_index?: number;
+                media_type: 'VU','VS','AU','AS','GU','GS';
+            }
             interface Schema {
+                // [key: keyof Schema]: Honk.DB.Schema[keyof Schema];
                 media: DB.media[];
-                source: DB.source[];
-                artist: DB.artist[];
-                category: DB.category[];
-                media_relation: DB.media_relation[];
+                bundles: DB.bundles[];
+                sources: DB.source[];
+                meta: DB.meta[];
+                covers: DB.covers[];
+                media_meta: DB.media_meta[];
+                bundle_media: DB.bundle_media[];
             }
         }
         namespace Media {
+            type AcceptedMediaTypes = 'movie' | 'series' | 'gallery' | 'album'
+            interface MediaEntryItem {
+                index: number;
+                filename: string;
+                title: string;
+            }
             interface BaselineMediaProperties {
                 title: string;
                 subtitle?: string;
                 artists: string[];
                 categories: string[];
+                type: Honk.Media.AcceptedMediaTypes;
+            }
+            interface MediaPropertyDefition extends BaselineMediaProperties {
                 _guid: string;
             }
+            
             interface BasicLibraryEntry extends BaselineMediaProperties {
                 /** The relative URL relative to our API */
-                relativeUrl: PathLike;
+                // relativeUrl: PathLike;
                 /** Name of the source in our configuration file */
-                sourceUrl: PathLike;
+                // sourceUrl: PathLike;
                 /** The found cover image (if any) */
-                coverImageUri?: string;
+                // coverImageUri?: string;
                 /** The media items under this entry  */
                 entries: MediaEntryItem[];
     
-                mediaUrl: Record<string, string>;
-                uuid: string;
-                baseUrl: string;
+                // mediaUrl: Record<string, string>;
+                // uuid: string;
+                // baseUrl: string;
             }
         }
     }

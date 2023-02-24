@@ -1,4 +1,5 @@
 export * from './common'
-export * from './ModelService';
+export * from './AggregateService';
+export * from './common/ModelService';
 export * from './MediaEntriesProxy';
 export * from './MetaInteractionService';

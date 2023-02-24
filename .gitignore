@@ -4,8 +4,12 @@ node_modules/
 
 _old/
 
+*.yaml
 **/*.yaml
 **/**/*.yaml
+*.env
+**/*.env
+**/**/*.env
 
 **/**/lib/
 **/**/dist/
@@ -36,5 +40,7 @@ application/client-react
 *.bak
 *.bak.*
 *.bak*
+.env
+.env.*
 
 docker-compose.yml
