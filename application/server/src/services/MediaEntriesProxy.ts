@@ -1,10 +1,10 @@
 import { MediaHonkServerBase } from '../_Base';
 
-const MediaEntriesProxy = (mediaJsonContent: Array<Honk.Media.BaselineMediaProperties>)=> {
+const MediaEntriesProxy = (mediaJsonContent: Array<Honk.Media.MediaPropertyDefition>)=> {
     const mediaEntries = new Proxy(
-        {} as Record<string, Honk.Media.BaselineMediaProperties>,
+        {} as Record<string, Honk.Media.MediaPropertyDefition>,
         {
-            set(target, key: string, value: Honk.Media.BaselineMediaProperties) {
+            set(target, key: string, value: Honk.Media.MediaPropertyDefition) {
                 target[key] = value;
                 return true   
             },

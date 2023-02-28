@@ -1,94 +1,171 @@
-import { ModelService } from "./common/ModelService";
+import { default as Yaml } from 'yaml';
+import { default as Fs } from 'fs';
 
-export class AggregateService extends ModelService {
+import { FactoryService, FileSystemService, ModelService } from "./common";
+import { ValidationService } from './ValidationService';
+import { ProcedureService } from './ProcedureService';
+import { Constants } from '../utils';
+
+export class AggregateService extends ProcedureService {
+    private FsService: FileSystemService = FileSystemService.instance;
+    public routine: Record<string, ()=> void> = {
+        backupDatabase: this.createDatabaseBackup,
+        updateSourcesTable: async ()=> (
+            ModelService.instance.handleTableEntryComparison({
+                tableName: 'sources',
+                comparisonKey: 'abs_url',
+                comparisonData: this.config.api.media_paths,
+                factoryCallback: (dataKey)=> ({
+                    abs_url: this.config.api.media_paths[dataKey],
+                    title: dataKey
+                })
+            })
+        )
+    }
 
     constructor() {
         super();
         
     }
     
+    public async handleAggregateRoutine(aggregationType: typeof process.env.AGGREGATE) {
+        this.logger('AggregateService.handleAggregateRoutine()');
+        switch (aggregationType) {
+            case 'remake': {
+                /** 
+                 * Create backup
+                 * Drop all tables
+                 * Run aggregate
+                 */
+                
+
+                break;
+            }
+            case 'update': {
+                /** 
+                 * Add new entries
+                 * Overwrite existing entries 
+                 * Delete nonexistent entries
+                 */
+                // this.createDatabaseBackup();
+                // this.handleTableEntryComparison({
+                //     tableName: 'sources',
+                //     comparisonKey: 'abs_url',
+                //     comparisonData: this.config.api.media_paths,
+                //     factoryCallback: (dataKey)=> ({
+                //         abs_url: this.config.api.media_paths[dataKey],
+                //         title: dataKey
+                //     })
+                // });
+                this.routine.updateSourcesTable();
+                await this.handleMediaEntryAggregation();
+                break;
+            }
+            case 'add': {
+                /**
+                 * Adds new entries to database
+                 * Dont overwrite or delete existing entries
+                 */
+
+                break;
+            }
+            default: {
+                this.emit('error', {
+                    error: new Error(`Invalid aggregation routine given: ${ aggregationType || '__UNDEFINED__'}`),
+                    severity: 1
+                })
+            }
+        }
+    }
+    
     /**
      * @method createDatabaseBackup will write a backup of the current database to the file system. 
      * @description Backup will be the database name appended with the time and date, with an extension of `.bak.db`
      */
-    public createDatabaseBackup() {
-        
+    private createDatabaseBackup() {
+        this.logger('AggregateService.createDatabaseBackup()');
+
     }
-    
-    /**
-     * @method handleTableEntryAggregate
-     * @param param0 
-     * - `tableName` an explicit tables name in the database
-     * - `comparisonKey` is an singular and explicit key of the database table to compare the query results
-     * - `comparisonData` is an implicitely defined set of data to compare the values of the select result against
-     * - `factoryCallback` should be a handler function for a `comparisonData` entry to be formatted for insertion into the datbase 
-     */
-    public handleTableEntryAggregate<K extends keyof Honk.DB.Schema, X extends Honk.DB.Schema[K] extends (infer U)[] ? U : Honk.DB.Schema[K]>({ 
-        tableName, comparisonKey, comparisonData, factoryCallback 
-    }: {
-        tableName: K,
-        comparisonKey: keyof X,
-        comparisonData: Record<string, any>,
-        factoryCallback: (dataKey: string)=> any;
-    }) {
+
+    private async handleMediaEntryAggregation(overwrite?: boolean): Promise<boolean> {
+        this.logger('AggregateService.handleMediaEntryAggregation()');
         try {
-            this.db
-                .select(comparisonKey as string)
-                .from(tableName)
-                .then(async (selectRes: Array<X>)=> {
-                    let currentOperationResult: Awaited<ReturnType<typeof this.insertUniqueEntry>>;
-                    for (const path in comparisonData) {
-                        if (selectRes.some((queryValue)=>queryValue[comparisonKey] === comparisonData[path])) {
-                            continue;
-                        }
-                        currentOperationResult = await this.insertUniqueEntry(tableName, factoryCallback(path));
-                        if (currentOperationResult instanceof Error) {
-                            throw currentOperationResult;
-                        }
-                    }
-                })
-                .catch(err=>{
-                    this.emit('error', {
-                        error: err,
-                        severity: 2
-                    })
-                });
+            const mediaPathYamlEntries = Object.assign(
+                {},
+                Object.keys(this.config.api.media_paths).reduce(
+                    (accumulator, mediaPath: string)=>({
+                        ...accumulator,
+                        [mediaPath]: []
+                    }), 
+                    {} as Record<string, Honk.Media.BasicLibraryEntry[]>
+                )
+            );
+            let fileContent: Honk.Media.BasicLibraryEntry;
+
+            for await (const mediaPath of Object.keys(mediaPathYamlEntries)) {
+                await (
+                    this.FsService
+                        .shakeDirectoryFileTree(this.config.api.media_paths[mediaPath], ['yaml'])
+                        .then(async (shakeResult)=>{
+                            for await (const file of shakeResult) {
+                                fileContent = Yaml.parse(Fs.readFileSync(file, 'utf-8'));
+                                
+                                if (!fileContent || ValidationService.instance.permissibleMediaProperties(fileContent) instanceof Error) {
+                                    this.emit('error', new Error(`Invalid yaml configuration: ${file}`));
+                                    continue;
+                                } else {
+                                    await this.FsService.shakeDirectoryFileTree(
+                                        file.replace(file.split('/').at(-1) as string, ''),
+                                        Constants.includeExtensions
+                                    )
+                                    .then((entryResult)=>{
+                                        mediaPathYamlEntries[mediaPath].push({
+                                            ...fileContent,
+                                            coverUrl: entryResult.find((entryFile)=>{
+                                                for (const ext of Constants.imageExtensions) {
+                                                    if (entryFile.includes(ext)) return entryFile
+                                                }
+                                            }),
+                                            entries: FactoryService.instance.formatMediaEntries(
+                                                entryResult,
+                                                this.config.api.media_paths[mediaPath],
+                                                fileContent
+                                            )
+                                        });
+                                    })
+                                    .catch(err=>{
+                                        this.emit(
+                                            'error', 
+                                            err instanceof Error ? err : new Error(`Unhandled exception when parsing media entries: ${file}`)
+                                        );
+                                    })
+                                }
+                            }
+                        })
+                        .catch((err)=>{
+                            this.emit('error', {
+                                error: err,
+                                severity: 2
+                            })
+                        })
+                );
+            }
+            for await (const entry of Object.entries(mediaPathYamlEntries)) {
+                for await (const media of entry[1]) {
+                    if (media.entries.length === 0) continue;
+                    this.insertMediaEntry(media, overwrite);
+                }
+            }
+            return true;
         } catch (err) {
             this.emit('error', {
                 error: err,
                 severity: 1
             })
         }
+        return false
     }
+    
 
 }
 
-// type DerivedSchema<T extends Honk.DB.Schema = Honk.DB.Schema, K extends keyof T = keyof T> = (
-//     // K extends keyof T ? { tagName: K } & Partial<T[K]> : never
-//     K extends keyof T 
-//         ? T[K] extends (infer U)[] 
-//             ? U
-//             : T[K]
-//         : never
-// );
-
-// export interface AggreateFunctionPropsBase {
-//     /** Table name in the database to be queried against */
-//     tableName: keyof Honk.DB.Schema;
-//     /** 
-//      * - Data that should be evaluated against the resutling select statement on the above table
-//      * - Calls a `SELECT * FROM _tableName_` query and returns an array of those values for comparison
-//      */
-//     comparisonData: DerivedSchema;
-//     /**
-//      * The keys to be compared. Key __must__ be shared between the `table` and the `comparisonData`
-//      */
-//     comparisonKey: keyof DerivedSchema;
-//     /** If we need to overwrite the data */
-//     overwrite?: boolean;
-//     /** Factory function to take the provided data and format it for insert. Must return an object that will validate on insert */
-//     factoryCallback: (dataKey: string)=> any;
-// }
-// interface SourceEntryAggregateProps extends AggreateFunctionPropsBase {
-
-// }

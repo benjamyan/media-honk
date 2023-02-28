@@ -54,20 +54,27 @@ export class MediaHonkServerBase extends TypedEmitter<HonkServer.InternalEvents>
             
             this.emit('server.start');
         });
-        this.on('error', ({ error, severity, response })=>{
-            if (error instanceof Error || typeof(error) === 'string') {
-                console.warn(error)
+        this.on('error', (errorArgs)=>{
+            if (errorArgs instanceof Error) {
+                console.warn(errorArgs.message)
+            } else if (typeof(errorArgs) === 'string') {
+                console.warn(errorArgs)
             } else {
-                console.error('Unhandled exception')
-                console.trace();
-            }
-            
-            if (response !== undefined) {
-                response.sendStatus(500);
-            }
-            if (severity === undefined || severity === 1) {
-                this.db.destroy();
-                process.exit(2);
+                const { error, severity, response } = errorArgs;
+                if (error instanceof Error || typeof(error) === 'string') {
+                    console.warn(error)
+                } else {
+                    console.error('Unhandled exception')
+                    console.trace();
+                }
+                
+                if (response !== undefined) {
+                    response.sendStatus(500);
+                }
+                if (severity === undefined || severity === 1) {
+                    this.db.destroy();
+                    process.exit(2);
+                }
             }
         });
     }

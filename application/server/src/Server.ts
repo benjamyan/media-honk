@@ -1,10 +1,13 @@
 /// <reference path='../server.d.ts' />
 
-import { json, Router } from 'express';
+import { json } from 'express';
 
 import { MediaRoutes } from './routes';
 import { MediaHonkServerBase } from './_Base';
 import { AggregateService, MediaEntriesProxy } from './services';
+import { FileSystemService } from './services/common/FileSystemService';
+
+let AggregateServiceIntermediary: AggregateService = null!;
 
 export class MediaHonkServer extends MediaHonkServerBase {
     
@@ -12,10 +15,11 @@ export class MediaHonkServer extends MediaHonkServerBase {
         super();
         
         // this.enableLogging = true;
-        this.on('server.start', ()=> {
+        this.on('server.start', async ()=> {
             // console.log(process.env.AGGREGATE)
             if (process.env.AGGREGATE !== undefined) {
-                this.aggregateDatabase();
+                // this.databaseAggregate();
+                await this.Aggregate.handleAggregateRoutine(process.env.AGGREGATE)
             }
             this.initializeExpressServer();
             
@@ -44,57 +48,11 @@ export class MediaHonkServer extends MediaHonkServerBase {
         this.emit('init');
     }
 
-    private aggregateDatabase() {
-        this.logger('MediaHonkServer.aggregateDatabase -> ' + process.env.AGGREGATE)
-        try {
-            const Aggregate = new AggregateService();
-            
-            switch (process.env.AGGREGATE) {
-                case 'remake': {
-                    /** 
-                     * Create backup
-                     * Drop all tables
-                     * Run aggregate
-                     */
-
-                    break;
-                }
-                case 'update': {
-                    /** 
-                     * Add new entries
-                     * Overwrite existing entries 
-                     * Delete nonexistent entries
-                     */
-                    Aggregate.createDatabaseBackup()
-                    Aggregate.handleTableEntryAggregate({
-                        tableName: 'sources',
-                        comparisonKey: 'abs_url',
-                        comparisonData: this.config.api.media_paths,
-                        factoryCallback: (dataKey)=> ({
-                            abs_url: this.config.api.media_paths[dataKey],
-                            title: dataKey
-                        })
-                    })
-                    break;
-                }
-                case 'add': {
-                    /**
-                     * Adds new entries to database
-                     * Dont overwrite or delete existing entries
-                     */
-
-                    break;
-                }
-                default: {
-
-                }
-            }
-        } catch (err) {
-            this.emit('error', {
-                error: err instanceof Error ? err : new Error('Unable to establish database connection'),
-                severity: 1
-            })
+    get Aggregate() {
+        if (AggregateServiceIntermediary === null) {
+            AggregateServiceIntermediary = new AggregateService();
         }
+        return AggregateServiceIntermediary;
     }
 
     private initializeExpressServer() {

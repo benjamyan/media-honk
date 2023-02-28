@@ -1,65 +1,76 @@
 import { default as Fs, promises as Fsp } from 'fs';
-import { default as Yaml } from 'yaml';
 import { default as Path } from 'path';
 
 import { MediaHonkServerBase } from "../../_Base";
 
-let libraryDefinitionFileContents: Honk.Media.BaselineMediaProperties[] = null!;
+let FileSystemServiceIntermediary: FileSystemService = null!;
 
 export class FileSystemService extends MediaHonkServerBase {
-    constructor() {
+    private constructor() {
         super();
 
     }
 
-    get systemLibraryDefinitions(): typeof libraryDefinitionFileContents {
-        if (!Array.isArray(libraryDefinitionFileContents)) {
-            this.shakeMediaSourceDefinitionFiles();
+    static get instance() {
+        if (FileSystemServiceIntermediary === null) {
+            FileSystemServiceIntermediary = new FileSystemService();
         }
-        return libraryDefinitionFileContents
+        return FileSystemServiceIntermediary
     }
+    
+    /**
+     * @method shakeDirectoryFileTree 
+     * @description A generic method to shake a directory structure. Will recursively traverse a directory tree searching for files of a specific extension, and append those files to the result. 
+     * @param paths
+     * - An __absolute__ file path on the system which this service has access to
+     * @param fileType
+     * - Requires a __minimum__ of one entry.
+     * - An array containing the file with extensions you want to search for. 
+     * - Can accept just an extension, or an entire filename _including_ extension
+     * @returns An array of absolute file paths matching the given fileType parameter with entries of the following:
+     * - An absolute filepath to a specific file 
+     * - If an error has occured: A directory appended with an error indiciating something went wrong
+     */
+    public shakeDirectoryFileTree = async (pathname: string, fileType: string[]/*[string, ...string[]]*/): Promise<Array<string>> => {
+        let shakenFiles: string[] = [];
 
-    private shakeMediaSourceDefinitionFiles = async ()=> {
         try {
-            const userMediaPaths = this.config.api.media_paths;
-            for (const path in userMediaPaths) {
-                if (!Fs.existsSync(path)) {
-                    continue
-                }
-                
-            }
-
-            // if (!!userMediaPaths) {
-            //     const mediaLibraryEntries = Promise.all(
-            //         Object.entries(userMediaPaths as Record<string, string>)
-            //             .map( (path: [string, string])=> {
-            //                 Fsp.readdir(path[1])
-            //                     .then((children)=> [
-            //                         children
-            //                     ])
-            //                     .catch(err=> console.log(err))
-            //                         const entriesFromPath = await parseFilesForLibrary(path[0], path[1]);
-            //                         return entriesFromPath
-            //                     })
-            //             .filter(Boolean)
-            //             .flat(1)
-            //     );
-            //     if (Object.entries(mediaLibraryEntries).length > 0) {
-            //         return mediaLibraryEntries.flat(1)
-            //     } else {
-            //         throw new Error('No entries')
-            //     }
-            // } else {
-            //     throw new Error('Invalid path')
-            // }
-        } catch (err) {
-            if (err instanceof Error) {
-                console.log(err)
+            if (!Fs.existsSync(pathname)) {
+                this.emit('error', new Error(`FS_ERROR_FAILED_FILEPATH: ${pathname}`))
             } else {
-                console.log('Unhandled exception')
+                const shakeResult: string[] | Error = await new Promise(async (resolve, reject)=>{
+                    let traversalResult: string[] = [];
+
+                    try {
+                        const directoryEntries = await Fsp.readdir(pathname, { withFileTypes: true });
+                        
+                        for await (const entry of directoryEntries) {
+                            if (entry.isDirectory()) {
+                                traversalResult = traversalResult.concat(
+                                    await this.shakeDirectoryFileTree(Path.join(pathname, entry.name), fileType)
+                                );
+                            } else if (entry.isFile()) {
+                                if (fileType.some((file)=> entry.name.endsWith(file))) {
+                                    traversalResult.push(Path.join(pathname, entry.name));
+                                }
+                            }
+                        }
+                        resolve(traversalResult)
+                    } catch (err) {
+                        reject(err instanceof Error ? err : new Error(''))
+                    }
+                });
+                if (shakeResult instanceof Error) {
+                    this.emit('error', `FS_ERROR_TRAVERSAL_FAILURE: ${pathname}`)
+                } else if (shakeResult.length > 0) {
+                    shakenFiles = shakenFiles.concat(shakeResult)
+                }
+                // console.log(shakenFiles)
             }
-            return []
+        } catch (err) {
+            this.emit('error', new Error(`FS_ERROR_UNHANDLED: ${pathname}`))
         }
+        return shakenFiles;
     }
 
 }

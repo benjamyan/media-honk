@@ -90,8 +90,8 @@ declare global {
             interface BaselineMediaProperties {
                 title: string;
                 subtitle?: string;
-                artists: string[];
-                categories: string[];
+                artists?: string[];
+                categories?: string[];
                 type: Honk.Media.AcceptedMediaTypes;
             }
             interface MediaPropertyDefition extends BaselineMediaProperties {
@@ -106,8 +106,12 @@ declare global {
                 /** The found cover image (if any) */
                 // coverImageUri?: string;
                 /** The media items under this entry  */
-                entries: MediaEntryItem[];
-    
+                entries: Array<{
+                        index: number;
+                        filename: string;
+                        title: string;
+                    }>;
+                coverUrl?: string;
                 // mediaUrl: Record<string, string>;
                 // uuid: string;
                 // baseUrl: string;

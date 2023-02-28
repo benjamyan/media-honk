@@ -12,7 +12,7 @@ CREATE TABLE sources (
 
 CREATE TABLE covers (
     id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
-    file_url TEXT NOT NULL,
+    file_url TEXT NOT NULL UNIQUE,
     source_id INTEGER NOT NULL,
     FOREIGN KEY (source_id) REFERENCES sources(id)
 );
@@ -21,7 +21,7 @@ CREATE TABLE media (
     id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
     title TEXT NOT NULL,
     filename TEXT NOT NULL,
-    rel_url TEXT,
+    rel_url TEXT UNIQUE,
     rel_url_id INTEGER NOT NULL,
     cover_img_id INTEGER NOT NULL,
     source_id INTEGER NOT NULL,
@@ -32,7 +32,7 @@ CREATE TABLE media (
 
 CREATE TABLE bundles (
     id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
-    main_title TEXT NOT NULL,
+    main_title TEXT NOT NULL UNIQUE,
     sub_title TEXT,
     cover_img_id INTEGER NOT NULL,
     FOREIGN KEY (cover_img_id) REFERENCES media(id)
@@ -40,9 +40,9 @@ CREATE TABLE bundles (
 
 CREATE TABLE meta (
     id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
-    artist_name TEXT,
+    artist_name TEXT UNIQUE,
     artist_id INTEGER,
-    category_name TEXT,
+    category_name TEXT UNIQUE,
     category_id INTEGER,
     FOREIGN KEY (artist_id) REFERENCES meta(id),
     FOREIGN KEY (category_id) REFERENCES meta(id)

@@ -1,5 +1,6 @@
 import { default as Express } from 'express';
 import { ModelService } from '../services';
+import { MediaHonkServerBase } from '../_Base';
 
 type PermittedKeys = `permitted${Capitalize<'query' | 'body'>}`;
 type RequiredKeys = `required${Capitalize<'header'>}`;
@@ -33,7 +34,7 @@ export type RouterConfig = {
  * - `parseRequireElements` should happen on instanciation, not at request time
  */
 
-export class RouteBase extends ModelService {
+export class RouteBase extends MediaHonkServerBase {
     private routeConfig: RouterConfig = {
         permittedQuery: null!,
         permittedBody: null!,
