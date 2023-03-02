@@ -8,10 +8,10 @@ import { Constants } from '../utils';
 
 export class AggregateService extends ProcedureService {
     private FsService: FileSystemService = FileSystemService.instance;
-    public routine: Record<string, ()=> void> = {
+    public routine: Record<string, ()=> void | Promise<void>> = {
         backupDatabase: this.createDatabaseBackup,
         updateSourcesTable: async ()=> (
-            ModelService.instance.handleTableEntryComparison({
+            await ModelService.instance.handleTableEntryComparison({
                 tableName: 'sources',
                 comparisonKey: 'abs_url',
                 comparisonData: this.config.api.media_paths,
@@ -57,8 +57,10 @@ export class AggregateService extends ProcedureService {
                 //         title: dataKey
                 //     })
                 // });
-                this.routine.updateSourcesTable();
-                await this.handleMediaEntryAggregation();
+                await this.routine.updateSourcesTable();
+                await this.handleMediaEntryAggregation({
+                    overwrite: false
+                });
                 break;
             }
             case 'add': {
@@ -87,7 +89,9 @@ export class AggregateService extends ProcedureService {
 
     }
 
-    private async handleMediaEntryAggregation(overwrite?: boolean): Promise<boolean> {
+    private async handleMediaEntryAggregation(options?: {
+        overwrite?: boolean
+    }): Promise<boolean> {
         this.logger('AggregateService.handleMediaEntryAggregation()');
         try {
             const mediaPathYamlEntries = Object.assign(
@@ -153,7 +157,8 @@ export class AggregateService extends ProcedureService {
             for await (const entry of Object.entries(mediaPathYamlEntries)) {
                 for await (const media of entry[1]) {
                     if (media.entries.length === 0) continue;
-                    this.insertMediaEntry(media, overwrite);
+                    this.db.Bundles.insertBundleWithRelatedFields(media)
+                    // this.insertMediaEntry(media, overwrite);
                 }
             }
             return true;

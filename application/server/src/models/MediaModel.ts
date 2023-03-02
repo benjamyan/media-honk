@@ -1,10 +1,60 @@
 import { Model } from 'objection';
-import {BaseHonkModel} from './_BaseModel';
+import { CoversModel } from './CoversModel';
+import { MetaModel } from './MetaModel';
+import { SourcesModel } from './SourcesModel';
+import {BaseHonkModel} from './_ModelBase';
 
 export class MediaModel extends BaseHonkModel {
 
 	/** Table name is the only required property. */
 	static tableName = 'media';
+
+	title: string = null!;
+	filename: string = null!;
+	rel_url: string = null!;
+	cover_img_id: number = null!;
+
+	static async mountMediaTable() {
+		try {
+			await this.mountTable(this.tableName, (table)=> {
+				table.increments('id').primary();
+				table.string('title').notNullable();
+				table.string('filename').notNullable().unique();
+				table.string('rel_url');
+				table.integer('rel_url_id').references('id');
+				table.integer('cover_img_id').references('id').inTable(CoversModel.tableName);
+				table.integer('source_id').references('id').inTable(SourcesModel.tableName);
+			});
+			await this.mountTable(`${this.tableName}_${MetaModel.tableName}`, (table)=> {
+				table.integer('media_id').notNullable().references('id').inTable(this.tableName);
+				table.integer('meta_id').notNullable().references('id').inTable(MetaModel.tableName);
+			});
+		} catch (err) {
+			//
+		}
+
+			// this.knex()
+			// 	.schema
+			// 	.hasTable(this.tableName)
+			// 	.then(async (tableExists)=> {
+			// 		if (!tableExists) {
+						// await this.knex().schema.createTable(this.tableName, (table)=> {
+						// 	table.increments('id').primary();
+						// 	table.string('title').notNullable();
+						// 	table.string('filename').notNullable().unique();
+						// 	table.string('rel_url');
+						// 	table.integer('rel_url_id').references('id');
+						// 	table.integer('cover_img_id').references('id').inTable(CoversModel.tableName);
+						// 	table.integer('source_id').references('id').inTable(SourcesModel.tableName);
+						// })
+			// 		}
+			// 	})
+				
+				// .createTableIfNotExists(`${this.tableName}_${MetaModel.tableName}`, (table)=> {
+				// 	table.integer('media_id').notNullable().references('id').inTable(this.tableName);
+				// 	table.integer('meta_id').notNullable().references('id').inTable(MetaModel.tableName);
+				// })
+	}
 
 	/** Optional JSON schema. This is not the database schema!
 	* @see https://vincit.github.io/objection.js/api/model/static-properties.html#static-jsonschema
@@ -102,4 +152,5 @@ export class MediaModel extends BaseHonkModel {
 			},
 		}
 	}
+
 }

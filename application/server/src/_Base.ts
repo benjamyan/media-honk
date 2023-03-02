@@ -9,35 +9,31 @@ import { TypedEmitter } from 'tiny-typed-emitter';
 // https://github.com/TryGhost/node-sqlite3/wiki/API
 // import { default as SQLite } from 'sqlite3';
 import { default as Knex } from 'knex';
-import { default as Objection } from 'objection';
+import { default as Objection, Model } from 'objection';
+import { BundlesModel, CoversModel, MediaModel, MetaModel, SourcesModel } from './models';
 
 dotenv.config({ path: Path.resolve(__dirname, '../.env') });
-// const app = Express();
-// app.locals = {
-//     BASE_DIRECTORY: null!,
-//     CONFIG_FILE_PATH: null!,
-//     // DB_FILE_PATH: null!,
-//     // JOB_INFO_FILE: null!,
-//     // SNIPPET_FILE: null!,
-//     // API_DOMAIN: null!,
-//     // API_PORT: null!,
-//     API_TOKEN: null!
-// };
-// app.locals = null!;
-// const SQLiteVerbose = SQLite.verbose();
+
 let app = Express(),
-    databaseConnection: ReturnType<typeof Knex> = null!,
+    knexInstance: ReturnType<typeof Knex> = null!,
+    databaseConnection: {
+        Bundles: typeof BundlesModel,
+        Media: typeof MediaModel,
+        Meta: typeof MetaModel,
+        Covers: typeof CoversModel,
+        Sources: typeof SourcesModel
+    } = {
+        Bundles: BundlesModel,
+        Media: MediaModel,
+        Meta: MetaModel,
+        Covers: CoversModel,
+        Sources: SourcesModel
+    },
     localConfig: Honk.Configuration = null!,
     mediaEntries: Record<string, Honk.Media.BaselineMediaProperties> = {};
-
-// let MediaHonkServerBaseInstance: MediaHonkServerBaseActual;
-// const instances = {};
-
+    
 export class MediaHonkServerBase extends TypedEmitter<HonkServer.InternalEvents> {
     public enableLogging: boolean = true;
-    // public config: Honk.Configuration = null!;
-    // public app: Express.Application = app; 
-    // public db: typeof databaseConnection = null!;
     public mediaEntries: Record<string, Honk.Media.BaselineMediaProperties> = mediaEntries;
     
     static config: Honk.Configuration = null!;
@@ -46,11 +42,11 @@ export class MediaHonkServerBase extends TypedEmitter<HonkServer.InternalEvents>
     constructor() {
         super();
         
-        this.on('init', ()=> {
+        this.on('init', async ()=> {
             this.logger(`Init HonkServer in env: ${process.env.HONK_ENV}`)
 
-            this.mountEnvironmentalConfig();
-            this.establishDatabaseConnection();
+            await this.mountEnvironmentalConfig();
+            await this.establishDatabaseConnection();
             
             this.emit('server.start');
         });
@@ -72,7 +68,7 @@ export class MediaHonkServerBase extends TypedEmitter<HonkServer.InternalEvents>
                     response.sendStatus(500);
                 }
                 if (severity === undefined || severity === 1) {
-                    this.db.destroy();
+                    // this.db.destroy();
                     process.exit(2);
                 }
             }
@@ -88,7 +84,7 @@ export class MediaHonkServerBase extends TypedEmitter<HonkServer.InternalEvents>
         // console.log(localConfig)
         if (localConfig === null) {
             this.logger('MOUNT localConfig');
-            this.mountEnvironmentalConfig()
+            this.mountEnvironmentalConfig();
         }
         return localConfig;
     }
@@ -117,30 +113,38 @@ export class MediaHonkServerBase extends TypedEmitter<HonkServer.InternalEvents>
         }
     }
 
-    private establishDatabaseConnection() {
+    private async establishDatabaseConnection() {
+        this.logger('MediaHonkServerBase.establishDatabaseConnection()');
         try {
-            databaseConnection = Knex({
+            knexInstance = Knex({
                 client: 'sqlite3',
                 useNullAsDefault: true,
                 connection: {
                     filename: this.config.db.file
                 },
                 acquireConnectionTimeout: 5000,
-            });
-            // test the connection
-            // databaseConnection.raw('SELECT 1')
-            //     .then(()=>{
-            //         console.log('connected')
-            //     })
-            //     .catch(()=>{
-            //         console.log('no db')
-            //     })
-            Objection.Model.knex(databaseConnection);
+            })
+            Objection.Model.knex(knexInstance);
             
-            if (!this.db.schema.hasTable('sources')) {
-                /** Test the table present; if `sources` is not present, the tables need to be mounted */
-                console.log('TODO no schema available')
-            }
+            await Objection.Model
+                .knex().schema
+                .hasTable('media')
+                .then(async (tablePresent)=>{
+                    if (!tablePresent) {
+                        await SourcesModel.mountSourcesTable();
+                        await BundlesModel.mountBundlesTable();
+                        await CoversModel.mountCoversTable();
+                        await MetaModel.mountMetaTable();
+                        await MediaModel.mountMediaTable();
+                    }
+                })
+                .catch(err=>{
+                    console.error(err)
+                    this.emit('error', {
+                        error: err instanceof Error ? err : new Error('Unhandled exception. MediaHonkServerBase.establishDatabaseConnection()'),
+                        severity: 1
+                    })
+                });
 
         } catch (err) {
             this.emit('error', {
@@ -151,7 +155,7 @@ export class MediaHonkServerBase extends TypedEmitter<HonkServer.InternalEvents>
     }
 
     /** Mount and check the environmental variables for errors */
-    private mountEnvironmentalConfig() {
+    private async mountEnvironmentalConfig() {
         this.logger('MediaHonkServerBase.mountEnvironmentalConfig()');
         try {
             if (localConfig !== null) {
@@ -160,6 +164,7 @@ export class MediaHonkServerBase extends TypedEmitter<HonkServer.InternalEvents>
                 localConfig = (
                     Yaml.parse(Fs.readFileSync(Path.join(process.env.BASE_DIRECTORY, process.env.CONFIG_FILE_PATH), 'utf-8'))
                 );
+                return;
                 // this.config = localConfig;
             } else throw new Error('Failed to locate required configurations');
         } catch (err) {
@@ -176,28 +181,3 @@ export class MediaHonkServerBase extends TypedEmitter<HonkServer.InternalEvents>
     }
     
 }
-
-// export class MediaHonkServerBase {
-    
-//     constructor() {
-//         if (!MediaHonkServerBaseInstance) {
-//             MediaHonkServerBaseInstance = new MediaHonkServerBaseActual();
-//         }
-//         // this = MediaHonkServerBaseInstance;
-//         this.constructor.bind(MediaHonkServerBaseInstance);
-//         // return MediaHonkServerBaseInstance;
-//     }
-//     // private static _instance: MediaHonkServerBaseActual;
-    
-//     // private constructor() {}
-
-//     // static instance() {
-//     //     if (this._instance) {
-//     //         return this._instance
-//     //     }
-//     //     this._instance = new MediaHonkServerBaseActual();
-//     //     return this._instance
-//     // }
-
-// }
-

@@ -1,8 +1,39 @@
 import { Model } from 'objection';
-import {BaseHonkModel} from './_BaseModel';
+import { CoversModel } from './CoversModel';
+import { MediaModel } from './MediaModel';
+import { MetaModel } from './MetaModel';
+import {BaseHonkModel} from './_ModelBase';
 
 export class BundlesModel extends BaseHonkModel {
 	static tableName = 'bundles';
+
+	main_title: string = null!;
+	sub_title: string = null!;
+	cover_img_id: number = null!;
+	media_type: string = null!;
+
+	static async mountBundlesTable() {
+		await this.mountTable(this.tableName, (table)=> {
+			table.increments('id').primary();
+			table.string('main_title').notNullable().unique();
+			table.string('sub_title');
+			/** 
+				VU = video unique (movie) 
+				VS = video series (episodes)
+				AU = audio unique (singles)
+				AS = audio series (album)
+				GU = gallery unique (singles)
+				GS = gallery series (ebook)
+			*/
+			table.string('media_type').notNullable().checkBetween(['VU','VS','AU','AS','IU','IS']);
+			table.integer('cover_img_id').references('id').inTable('covers');
+		})
+		await this.mountTable(`${this.tableName}_${MediaModel.tableName}`, (table)=> {
+			table.increments('bundle_id').notNullable().references('id').inTable(this.tableName);
+			table.integer('media_id').notNullable().references('id').inTable(MediaModel.tableName);
+			table.integer('media_index').unique();
+		})
+	}
 
 	/** Optional JSON schema. This is not the database schema!
 	* @see https://vincit.github.io/objection.js/api/model/static-properties.html#static-jsonschema
@@ -46,40 +77,35 @@ export class BundlesModel extends BaseHonkModel {
 				  },
 				  to: 'media.id'
 				}
-			},
-			// sources: {
-			// 	relation: Model.ManyToManyRelation,
-			// 	modelClass: require('./Covers'), // Covers,
-			// 	join: {
-			// 		from: 'media.cover_img_id',
-			// 		to: 'covers.id'
-			// 	}
-			// },
-			// meta: {
-			// 	relation: Model.ManyToManyRelation,
-			// 	modelClass: require('./MetaModel'), // MetaModel,
-			// 	join: {
-			// 	  from: 'media.id',
-			// 	  // ManyToMany relation needs the `through` object
-			// 	  // to describe the join table.
-			// 	  through: {
-			// 		// If you have a model class for the join table
-			// 		// you need to specify it like this:
-			// 		// modelClass: PersonMovie,
-			// 		from: 'media_meta.media_id',
-			// 		to: 'media_meta.meta_id'
-			// 	  },
-			// 	  to: 'meta.id'
-			// 	}
-			// },
-			// relativeUrl: {
-			// 	relation: Model.HasManyRelation,
-			// 	modelClass: Media,
-			// 	join: {
-			// 			from: 'media.rel_url_id',
-			// 			to: 'media.id'
-			// 	}
-			// },
+			}
 		}
 	}
+
+	static async insertBundleWithRelatedFields(mediaEntry: Honk.Media.BasicLibraryEntry, options?: Record<string, any>) {
+		let { coverUrl, artists, categories } = mediaEntry;
+        try {
+            if (coverUrl) {
+                // await CoversModel.insertCoverEntry(coverUrl);
+            }
+            if (artists || categories) {
+				let base;
+				if (!artists) {
+					artists = [];
+				}
+				if (!categories) {
+					categories = [];
+				}
+				for (let i = 0; i < (categories.length > artists.length ? categories.length : artists.length) - 1; i++) {
+					await MetaModel.insertMetaEntry({
+						artistName: artists[i] || null,
+						categoryName: categories[i] || null
+					})
+				}
+				
+            }
+        } catch (err) {
+            console.log(err);
+        }
+	}
+
 }

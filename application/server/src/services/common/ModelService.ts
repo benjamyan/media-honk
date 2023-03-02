@@ -63,23 +63,15 @@ export class ModelService extends MediaHonkServerBase {
     public insertUniqueEntry(tableName: string, valuesToInsert: any): Promise<true | Error> {
         return new Promise((resolve, reject)=>{
             try {
-                this.db
-                    .insert(valuesToInsert)
-                    .into(tableName)
-                    .then(()=>{
-                        resolve(true)
-                    })
-                    .catch((err)=>{
-                        return reject(err)
-                    })
-                // this.db.run(
-                //     `INSERT OR IGNORE INTO ${tableName} ( ${Object.keys(valuesToInsert).join(', ')} ) VALUES ( ${this.formatInsertValues(valuesToInsert).join(', ')} )`,
-                //     function(error) {
-                //         if (error !== null) {
-                //             return reject(error)
-                //         };
-                //         return resolve(this.changes)
-                //     });
+                // this.db
+                //     .insert(valuesToInsert)
+                //     .into(tableName)
+                //     .then(()=>{
+                //         resolve(true)
+                //     })
+                //     .catch((err)=>{
+                //         return reject(err)
+                //     })
             } catch (err) {
                 return reject(err instanceof Error ? err : new Error(`Unhandled exception. ModelService.insertUniqueEntry`));
             }
@@ -104,30 +96,30 @@ export class ModelService extends MediaHonkServerBase {
         factoryCallback: (dataKey: string)=> any;
     }) {
         try {
-            await (
-                this.db
-                    .select(comparisonKey as string)
-                    .from(tableName)
-                    .then(async (selectRes: Array<X>)=> {
-                        let currentOperationResult: Awaited<ReturnType<typeof this.insertUniqueEntry>>;
-                        for (const path in comparisonData) {
-                            if (selectRes.some((queryValue)=>queryValue[comparisonKey] === comparisonData[path])) {
-                                continue;
-                            }
-                            // Convert this to use `insertMany` API
-                            currentOperationResult = await this.insertUniqueEntry(tableName, factoryCallback(path));
-                            if (currentOperationResult instanceof Error) {
-                                throw currentOperationResult;
-                            }
-                        }
-                    })
-                    .catch(err=>{
-                        this.emit('error', {
-                            error: err,
-                            severity: 2
-                        })
-                    })
-            );
+            // await (
+            //     this.db
+            //         .select(comparisonKey as string)
+            //         .from(tableName)
+            //         .then(async (selectRes: Array<X>)=> {
+            //             let currentOperationResult: Awaited<ReturnType<typeof this.insertUniqueEntry>>;
+            //             for (const path in comparisonData) {
+            //                 if (selectRes.some((queryValue)=>queryValue[comparisonKey] === comparisonData[path])) {
+            //                     continue;
+            //                 }
+            //                 // Convert this to use `insertMany` API
+            //                 currentOperationResult = await this.insertUniqueEntry(tableName, factoryCallback(path));
+            //                 if (currentOperationResult instanceof Error) {
+            //                     throw currentOperationResult;
+            //                 }
+            //             }
+            //         })
+            //         .catch(err=>{
+            //             this.emit('error', {
+            //                 error: err,
+            //                 severity: 2
+            //             })
+            //         })
+            // );
         } catch (err) {
             this.emit('error', {
                 error: err,

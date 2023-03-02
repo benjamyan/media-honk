@@ -1,10 +1,18 @@
 import { Model } from 'objection';
-import { BaseHonkModel } from './_BaseModel';
+import { BaseHonkModel } from './_ModelBase';
 
 export class SourcesModel  extends BaseHonkModel {
 
 	/** Table name is the only required property. */
 	static tableName = 'sources';
+
+	static async mountSourcesTable() {
+		await this.mountTable(this.tableName, (table)=> {
+			table.increments('id').primary();
+			table.string('title').notNullable().unique();
+			table.string('abs_url').notNullable().unique();
+		})
+	}
 
 	/** Optional JSON schema. This is not the database schema!
 	* @see https://vincit.github.io/objection.js/api/model/static-properties.html#static-jsonschema

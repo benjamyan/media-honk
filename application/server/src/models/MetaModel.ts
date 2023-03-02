@@ -1,5 +1,5 @@
 import { Model } from 'objection';
-import {BaseHonkModel} from "./_BaseModel";
+import {BaseHonkModel} from "./_ModelBase";
 
 type MetaRowContentProps = Record<'artist_name' | 'category_name', any[]>
 
@@ -8,6 +8,23 @@ export class MetaModel extends BaseHonkModel {
 	/** Table name is the only required property. */
 	static tableName = 'meta';
 
+	/** Type guard */
+	id: number = null!;
+	artist_name: string | null = null!;
+	artist_id: number | null = null!;
+	category_name: string | null = null!;
+	category_id: number | null = null!;
+
+	static async mountMetaTable() {
+		await this.mountTable(this.tableName, (table)=> {
+			table.increments('id');
+			table.string('artist_name').unique();
+			table.integer('artist_id').references('id').inTable(this.tableName);
+			table.string('category_name').unique();
+			table.integer('category_id').references('id').inTable(this.tableName);
+		});
+	}
+	
 	/** Optional JSON schema. This is not the database schema!
 	* @see https://vincit.github.io/objection.js/api/model/static-properties.html#static-jsonschema
 	* @see http://json-schema.org/ 
@@ -15,18 +32,18 @@ export class MetaModel extends BaseHonkModel {
 	static get jsonSchema() {
 		return {
 			type: 'object',
-			oneOf: [
-				{ required: [ 'artist_name' ] },
-				{ required: [ 'artist_id' ] },
-				{ required: [ 'category_name' ] },
-				{ required: [ 'category_id' ] }
-			],
-			minProperties: 1,
+			// oneOf: [
+			// 	{ required: [ 'artist_name' ] },
+			// 	{ required: [ 'artist_id' ] },
+			// 	{ required: [ 'category_name' ] },
+			// 	{ required: [ 'category_id' ] }
+			// ],
+			// minProperties: 1,
 			properties: {
 				id: { type: 'integer' },
-				artist_name: { type: ['text', 'null'] },
+				artist_name: { type: ['string', 'null'] },
 				artist_id: { type: ['integer', 'null'] },
-				category_name: { type: ['text', 'null'] },
+				category_name: { type: ['string', 'null'] },
 				category_id: { type: ['integer', 'null'] }
 			}
 		};
@@ -68,39 +85,7 @@ export class MetaModel extends BaseHonkModel {
 		}
 	}
 	
-	// static metaRowContent(values: MetaRowContentProps): Promise<string[] | Error> | Error {
-	// 	try {
-	// 		const valuesParsed = Object.keys(values);
-	// 		const queryValues = {
-	// 			columns: (
-	// 				valuesParsed.length === 0
-	// 					? [ 'artist_name', 'category_name' ]
-	// 					: valuesParsed
-	// 			)
-	// 		}
-	// 		return new Promise((resolve, reject)=> (
-	// 			MetaModel
-	// 				.query()
-	// 				.columns(queryValues.columns)
-	// 				// .select()
-	// 				.where((col)=>{
-	// 					return col. !== 'NULL'
-	// 				})
-	// 				// .whereNot(row, `NULL`)
-	// 				.then((res: any)=>{
-	// 					resolve(res.map((meta: any)=>meta[row]))
-	// 					return 
-	// 				})
-	// 				.catch((err)=>{
-	// 					reject(new Error(JSON.stringify(err)))
-	// 					return 
-	// 				})
-	// 		));
-	// 	}
-	// 	catch (err) {
-	// 		return err instanceof Error ? err : new Error('Unhandled exception.')
-	// 	}
-	// }
+
     static metaRowContent(row: 'artist_name' | 'category_name'): Promise<string[] | Error> | Error {
         try {
             return new Promise((resolve, reject)=> (
@@ -121,5 +106,59 @@ export class MetaModel extends BaseHonkModel {
             return err instanceof Error ? err : new Error('Unhandled exception.')
         }
     }
+
+	static async insertMetaEntry(rowContent: { artistName: string|null, categoryName: string|null }) {
+		const artistId = await (
+			!!rowContent.artistName
+				? this.query()
+					// .select('id')
+					.where({
+						artist_name: rowContent.artistName
+					})
+					.then((result)=>{
+						if (result.length > 0) {
+							return result[0].id
+						}
+						return null
+					})
+				: null
+		);
+		const categoryId = await (
+			!!rowContent.categoryName
+				? this.query()
+					// .select('id')
+					.where({
+						category_name: rowContent.categoryName
+					})
+					.then((result)=>{
+						if (result.length > 0) {
+							return result[0].id
+						}
+						return null
+					})
+				: null
+		);
+		await this.query()
+			.insert({
+				artist_name: artistId === null ? rowContent.artistName : null,
+				artist_id: artistId,// === null ? undefined : artistId,
+				category_name: categoryId === null ? rowContent.categoryName : null,
+				category_id: categoryId, //=== null ? undefined : categoryId
+				// category_name: rowContent.categoryName
+			})
+			.onConflict(['artist_name', 'category_name'])
+			.ignore()
+			.then((result)=>{
+				console.log(result)
+			})
+			.catch(err=>{
+				console.log(err)
+			})
+			// .insert({
+			// 	category_name: rowContent.categoryName
+			// })
+			// .where('artist_name', '=', rowContent.artistName)
+			
+	}
 
 }

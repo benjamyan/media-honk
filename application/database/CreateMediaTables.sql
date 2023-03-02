@@ -35,6 +35,15 @@ CREATE TABLE bundles (
     main_title TEXT NOT NULL UNIQUE,
     sub_title TEXT,
     cover_img_id INTEGER NOT NULL,
+    /** 
+        VU = video unique (movie) 
+        VS = video series (episodes)
+        AU = audio unique (singles)
+        AS = audio series (album)
+        GU = gallery unique (singles)
+        GS = gallery series (ebook)
+    */
+    media_type TEXT CHECK( media_type IN ('VU','VS','AU','AS','GU','GS') ) NOT NULL,
     FOREIGN KEY (cover_img_id) REFERENCES media(id)
 );
 
@@ -61,15 +70,6 @@ CREATE TABLE bundle_media (
     bundle_id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
     media_id INTEGER NOT NULL,
     media_index INTEGER,
-    /** 
-        VU = video unique (movie) 
-        VS = video series (episodes)
-        AU = audio unique (singles)
-        AS = audio series (album)
-        GU = gallery unique (singles)
-        GS = gallery series (ebook)
-    */
-    media_type TEXT CHECK( media_type IN ('VU','VS','AU','AS','GU','GS') ) NOT NULL,
     FOREIGN KEY (bundle_id) REFERENCES bundles(id),
     FOREIGN KEY (media_id) REFERENCES media(id)
 );

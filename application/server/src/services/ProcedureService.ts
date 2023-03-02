@@ -12,19 +12,7 @@ export class ProcedureService extends MediaHonkServerBase {
         // console.log(mediaEntry.entries)
         try {
             if (mediaEntry.coverUrl) {
-                // console.log(mediaEntry.coverUrl)
-                // console.log(this.db)
-                this.db
-                    .insert({
-                        file_url: mediaEntry.coverUrl,
-                        source_id: 1
-                    })
-                    .into('covers')
-                    .onConflict('file_url')
-                    .ignore()
-                    .catch(err=> {
-                        console.log(err)
-                    })
+                // await this.db.Covers.insertCoverEntry(mediaEntry.coverUrl);
             }
             if (mediaEntry.artists) {
                 // this.db

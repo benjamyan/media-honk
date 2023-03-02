@@ -71,24 +71,24 @@ export class MediaRoutes extends RouteBase {
                 }
                 return undefined
             })();
-            ModelInteractionService
-                .queryMetaColumns(queryType)
-                .then((result): void =>{
-                    if (result instanceof Error) {
-                        throw result
-                    } else if (Object.keys(result).length === 0) {
-                        res.sendStatus(204);
-                    } else {
-                        res.status(200).send(result);
-                    }
-                })
-                .catch((err): void =>{
-                    this.emit('error', {
-                        error: err,
-                        severity: 2,
-                        response: res
-                    })
-                });
+            // ModelInteractionService
+            //     .queryMetaColumns(queryType)
+            //     .then((result): void =>{
+            //         if (result instanceof Error) {
+            //             throw result
+            //         } else if (Object.keys(result).length === 0) {
+            //             res.sendStatus(204);
+            //         } else {
+            //             res.status(200).send(result);
+            //         }
+            //     })
+            //     .catch((err): void =>{
+            //         this.emit('error', {
+            //             error: err,
+            //             severity: 2,
+            //             response: res
+            //         })
+            //     });
         } catch (err) {
             this.emit('error', {
                 error: err,

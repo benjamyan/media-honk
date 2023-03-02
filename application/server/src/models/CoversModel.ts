@@ -1,8 +1,22 @@
 import { Model } from 'objection';
-import {BaseHonkModel} from './_BaseModel';
+import { MediaHonkServerBase } from '../_Base';
+import { SourcesModel } from './SourcesModel';
+import {BaseHonkModel} from './_ModelBase';
 
 export class CoversModel extends BaseHonkModel {
 	static tableName = 'covers';
+	
+	/** Declarative column  names for type guard */
+	file_url: string = null!;
+	source_id: number = null!;
+	
+	static async mountCoversTable() {
+		await this.mountTable(this.tableName, (table)=> {
+			table.increments('id').primary();
+			table.string('file_url').unique();
+			table.integer('source_id').references('id').inTable(SourcesModel.tableName);
+		});
+	}
 
 	/** Optional JSON schema. This is not the database schema!
 	* @see https://vincit.github.io/objection.js/api/model/static-properties.html#static-jsonschema
@@ -11,7 +25,7 @@ export class CoversModel extends BaseHonkModel {
 	static get jsonSchema() {
 		return {
 			type: 'object',
-			required: [ 'id','file_url','source_id' ],
+			required: [ 'file_url','source_id' ],
 			properties: {
 				id: { type: 'integer' },
 				file_url: { type: 'text' },
@@ -55,4 +69,22 @@ export class CoversModel extends BaseHonkModel {
 			// },
 		}
 	}
+
+	static async insertCoverEntry(fileName: string) {
+		try {
+			this.query()
+				.insert({
+					file_url: fileName,
+					source_id: 1
+				})
+				.onConflict('file_url')
+				.ignore()
+				.catch(err=> {
+					console.log(err.message)
+				})
+		} catch (err) {
+			MediaHonkServerBase.emitter('error', err instanceof Error ? err : new Error('Unhandled exception. CoversModel.insertCoverEntry'));
+		}
+	}
+
 }

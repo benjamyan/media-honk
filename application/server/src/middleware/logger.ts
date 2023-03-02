@@ -1,5 +1,5 @@
 import { NextFunction } from 'express';
-import { Serve } from '../types'
+import { Serve } from '../@types'
 
 interface LoggerPayload {
     // Username credential for requested source
