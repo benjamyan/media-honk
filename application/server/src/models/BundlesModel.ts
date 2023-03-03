@@ -88,24 +88,16 @@ export class BundlesModel extends BaseHonkModel {
                 // await CoversModel.insertCoverEntry(coverUrl);
             }
             if (artists || categories) {
-				let base;
-				if (!artists) {
-					artists = [];
-				}
-				if (!categories) {
-					categories = [];
-				}
-				for (let i = 0; i < (categories.length > artists.length ? categories.length : artists.length) - 1; i++) {
-					await MetaModel.insertMetaEntry({
-						artistName: artists[i] || null,
-						categoryName: categories[i] || null
-					})
-				}
+				await MetaModel.insertManyMetaRows({
+					artists: artists || [],
+					categories: categories || []
+				})
 				
             }
         } catch (err) {
-            console.log(err);
+            // console.log(err);
         }
+		// console.log(' - DONE 2')
 	}
 
 }

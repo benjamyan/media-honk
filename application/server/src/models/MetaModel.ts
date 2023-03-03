@@ -1,4 +1,5 @@
 import { Model } from 'objection';
+import { MediaHonkServerBase } from '../_Base';
 import {BaseHonkModel} from "./_ModelBase";
 
 type MetaRowContentProps = Record<'artist_name' | 'category_name', any[]>
@@ -14,7 +15,7 @@ export class MetaModel extends BaseHonkModel {
 	artist_id: number | null = null!;
 	category_name: string | null = null!;
 	category_id: number | null = null!;
-
+	
 	static async mountMetaTable() {
 		await this.mountTable(this.tableName, (table)=> {
 			table.increments('id');
@@ -23,6 +24,9 @@ export class MetaModel extends BaseHonkModel {
 			table.string('category_name').unique();
 			table.integer('category_id').references('id').inTable(this.tableName);
 		});
+		await this.knex().schema.alterTable(this.tableName, (table)=> {
+			table.unique(['artist_name', 'category_name']);
+		})
 	}
 	
 	/** Optional JSON schema. This is not the database schema!
@@ -107,58 +111,98 @@ export class MetaModel extends BaseHonkModel {
         }
     }
 
-	static async insertMetaEntry(rowContent: { artistName: string|null, categoryName: string|null }) {
-		const artistId = await (
-			!!rowContent.artistName
-				? this.query()
-					// .select('id')
-					.where({
-						artist_name: rowContent.artistName
-					})
-					.then((result)=>{
-						if (result.length > 0) {
-							return result[0].id
-						}
-						return null
-					})
-				: null
-		);
-		const categoryId = await (
-			!!rowContent.categoryName
-				? this.query()
-					// .select('id')
-					.where({
-						category_name: rowContent.categoryName
-					})
-					.then((result)=>{
-						if (result.length > 0) {
-							return result[0].id
-						}
-						return null
-					})
-				: null
-		);
-		await this.query()
-			.insert({
-				artist_name: artistId === null ? rowContent.artistName : null,
-				artist_id: artistId,// === null ? undefined : artistId,
-				category_name: categoryId === null ? rowContent.categoryName : null,
-				category_id: categoryId, //=== null ? undefined : categoryId
-				// category_name: rowContent.categoryName
-			})
-			.onConflict(['artist_name', 'category_name'])
-			.ignore()
-			.then((result)=>{
-				console.log(result)
-			})
-			.catch(err=>{
-				console.log(err)
-			})
-			// .insert({
-			// 	category_name: rowContent.categoryName
-			// })
-			// .where('artist_name', '=', rowContent.artistName)
+	static async insertSingleMetaRow(artist: string | null, category: string | null) {
+		let conflictArr: string[] = [],
+			insertValues: {
+				artist_name: string | null,
+				artist_id: number | null,
+				category_name: string | null,
+				category_id: number | null
+			} = {
+				artist_name: artist,
+				artist_id: null,
+				category_name: category,
+				category_id: null
+			};
+		
+		try {
+			if (!!insertValues.artist_name) {
+				await (
+					this.query()
+						.select()
+						.whereNotNull('artist_name')
+						.andWhere('artist_name', '=', insertValues.artist_name)
+						.then(result=>{
+							if (result.length > 0) {
+								insertValues.artist_name = null;
+								insertValues.artist_id = result[0].id;
+							} else {
+								conflictArr.push('artist_name')
+							}
+						})
+				)
+			}
+			if (!!insertValues.category_name) {
+				await (
+					this.query()
+						.select()
+						.whereNotNull('category_name')
+						.andWhere('category_name', '=', insertValues.category_name)
+						.then(result=>{
+							if (result.length > 0) {
+								insertValues.category_name = null;
+								insertValues.category_id = result[0].id;
+							} else {
+								conflictArr.push('category_name');
+							}
+						})
+				)
+			}
+			await this.query()
+				.select()
+				.where(insertValues)
+				.then(async (result)=>{
+					if (result.length === 0) {
+						await this.query().insert(insertValues).onConflict(conflictArr).ignore();
+					} else {
+						console.log('*** MetaModel.insertSingleMetaRow TODO OVERWRITE ***')
+					}
+				})
+		} catch (err) {
+			MediaHonkServerBase.emitter('error', {
+				error: new Error('Failed insert or select. MetaModel.insertSingleRow()'),
+				severity: 2
+			});
+		}
+	}
+
+	static async insertManyMetaRows(metaEntries: { artists: string[], categories: string[] }) {
+		try {
+			const { artists, categories } = metaEntries;
+			const longValueKey = (
+				artists.length > categories.length ? 'artists' : 'categories'
+			);
 			
+			let i: number = (metaEntries[longValueKey === 'artists' ? 'categories' : 'artists']).length - 1;
+			await metaEntries[longValueKey].reduce(async (initialPromise, value)=> {
+				await initialPromise;
+				
+				while (i >= 0) {
+					if (longValueKey === 'artists') {
+						await this.insertSingleMetaRow(value, categories[i])
+					} else {
+						await this.insertSingleMetaRow(artists[i], value)
+					}
+					i--;
+				}
+			}, Promise.resolve())
+		} catch (err) {
+			MediaHonkServerBase.emitter('error', {
+				error: new Error('Failed generic insert. MetaModel.insertManyMetaRows()'),
+				severity: 2
+			})
+		}
+		
 	}
 
 }

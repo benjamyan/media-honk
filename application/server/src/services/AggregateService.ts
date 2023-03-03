@@ -154,13 +154,15 @@ export class AggregateService extends ProcedureService {
                         })
                 );
             }
-            for await (const entry of Object.entries(mediaPathYamlEntries)) {
-                for await (const media of entry[1]) {
-                    if (media.entries.length === 0) continue;
-                    this.db.Bundles.insertBundleWithRelatedFields(media)
-                    // this.insertMediaEntry(media, overwrite);
+            
+            Object.values(mediaPathYamlEntries).flat(1).reduce(async (initialPromise, media)=>{
+                await initialPromise;
+
+                if (media.entries.length !== 0) {
+                    await this.db.Bundles.insertBundleWithRelatedFields(media)
                 }
-            }
+            }, Promise.resolve())
+            
             return true;
         } catch (err) {
             this.emit('error', {
