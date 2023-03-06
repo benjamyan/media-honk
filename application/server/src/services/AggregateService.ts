@@ -1,10 +1,11 @@
 import { default as Yaml } from 'yaml';
 import { default as Fs } from 'fs';
 
-import { FactoryService, FileSystemService, ModelService } from "./common";
+import { FileSystemService, ModelService } from "./common";
 import { ValidationService } from './ValidationService';
 import { ProcedureService } from './ProcedureService';
-import { Constants } from '../utils';
+import { MediaFactory } from '../factories';
+import { Constants } from '../config';
 
 export class AggregateService extends ProcedureService {
     private FsService: FileSystemService = FileSystemService.instance;
@@ -130,7 +131,7 @@ export class AggregateService extends ProcedureService {
                                                     if (entryFile.includes(ext)) return entryFile
                                                 }
                                             }),
-                                            entries: FactoryService.instance.formatMediaEntries(
+                                            entries: MediaFactory.formatMediaEntries(
                                                 entryResult,
                                                 this.config.api.media_paths[mediaPath],
                                                 fileContent
@@ -159,7 +160,16 @@ export class AggregateService extends ProcedureService {
                 await initialPromise;
 
                 if (media.entries.length !== 0) {
-                    await this.db.Bundles.insertBundleWithRelatedFields(media)
+                    await (
+                        this.db.Bundles
+                            .handleBundleEntryWithRelatedFields(media)
+                            .then((result)=> {
+                                // console.log(result)
+                            })
+                            .catch((err)=> {
+                                console.log(err)
+                            })
+                    )
                 }
             }, Promise.resolve())
             

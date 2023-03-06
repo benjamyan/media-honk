@@ -24,3 +24,4 @@ export const excludeExtensions: string[] = ['txt', 'nfo','DS_Store','ini'];
 export const includeExtensions: string[] = [ ...audioExtensions, ...imageExtensions, ...videoExtensions ];
 
 export const permittedMediaTypes: string[] = ['album','gallery','movie','series','singles'];
+export const databaseMediaTypes: string[] = ['VU','VS','AU','AS','IU','IS'];

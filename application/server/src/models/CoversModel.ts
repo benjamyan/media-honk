@@ -7,6 +7,7 @@ export class CoversModel extends BaseHonkModel {
 	static tableName = 'covers';
 	
 	/** Declarative column  names for type guard */
+	id?: number = null!;
 	file_url: string = null!;
 	source_id: number = null!;
 	
@@ -28,7 +29,7 @@ export class CoversModel extends BaseHonkModel {
 			required: [ 'file_url','source_id' ],
 			properties: {
 				id: { type: 'integer' },
-				file_url: { type: 'text' },
+				file_url: { type: 'string' },
 				source_id: { type: 'integer' }
 			}
 		};
@@ -71,7 +72,7 @@ export class CoversModel extends BaseHonkModel {
 	}
 
 	static async insertCoverEntry(fileName: string) {
-		try {
+		return await (
 			this.query()
 				.insert({
 					file_url: fileName,
@@ -79,12 +80,39 @@ export class CoversModel extends BaseHonkModel {
 				})
 				.onConflict('file_url')
 				.ignore()
-				.catch(err=> {
-					console.log(err.message)
+				.then((insertedCover)=> {
+					if (insertedCover.id !== undefined && insertedCover.id !== 0) {
+						return insertedCover.id;
+					}
 				})
-		} catch (err) {
-			MediaHonkServerBase.emitter('error', err instanceof Error ? err : new Error('Unhandled exception. CoversModel.insertCoverEntry'));
-		}
+				.then(async (coverId)=>{
+					if (coverId !== undefined) {
+						return coverId
+					}
+					return await (
+						this.query()
+							.select()
+							.where('file_url','=',fileName)
+							.then((findCoverResult)=> {
+								if (findCoverResult.length === 0) {
+									return undefined
+								} else if (findCoverResult.length > 1) {
+									return undefined
+								} else {
+									return findCoverResult[0].id
+								}
+							})
+					)
+				})
+				.catch(err=> {
+					MediaHonkServerBase.emitter(
+						'error', 
+						err instanceof Error 
+							? err 
+							: new Error('Unhandled exception. CoversModel.insertCoverEntry'));
+					return undefined;
+				})
+		);
 	}
 
 }

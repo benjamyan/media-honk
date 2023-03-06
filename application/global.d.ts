@@ -40,6 +40,7 @@ declare global {
                 main_title: string;
                 sub_title?: string;
                 cover_img_id?: number;
+                media_type: 'VU','VS','AU','AS','GU','GS';
             }
             interface media {
                 title: string;
@@ -67,7 +68,6 @@ declare global {
                 bundle_id: number;
                 media_id: number;
                 media_index?: number;
-                media_type: 'VU','VS','AU','AS','GU','GS';
             }
             interface Schema {
                 // [key: keyof Schema]: Honk.DB.Schema[keyof Schema];
@@ -82,7 +82,7 @@ declare global {
         }
         namespace Media {
             type AcceptedMediaTypes = 'movie' | 'series' | 'gallery' | 'album'
-            interface MediaEntryItem {
+            interface MediaItemEntry {
                 index: number;
                 filename: string;
                 title: string;
@@ -106,11 +106,7 @@ declare global {
                 /** The found cover image (if any) */
                 // coverImageUri?: string;
                 /** The media items under this entry  */
-                entries: Array<{
-                        index: number;
-                        filename: string;
-                        title: string;
-                    }>;
+                entries: Array<MediaItemEntry>;
                 coverUrl?: string;
                 // mediaUrl: Record<string, string>;
                 // uuid: string;

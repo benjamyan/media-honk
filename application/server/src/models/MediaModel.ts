@@ -18,12 +18,12 @@ export class MediaModel extends BaseHonkModel {
 		try {
 			await this.mountTable(this.tableName, (table)=> {
 				table.increments('id').primary();
-				table.string('title').notNullable();
-				table.string('filename').notNullable().unique();
-				table.string('rel_url');
-				table.integer('rel_url_id').references('id');
+				table.string('title').notNullable().unique();
+				table.string('abs_url').notNullable().unique();
+				// table.string('rel_url');
+				// table.integer('rel_url_id').references('id');
 				table.integer('cover_img_id').references('id').inTable(CoversModel.tableName);
-				table.integer('source_id').references('id').inTable(SourcesModel.tableName);
+				// table.integer('source_id').references('id').inTable(SourcesModel.tableName);
 			});
 			await this.mountTable(`${this.tableName}_${MetaModel.tableName}`, (table)=> {
 				table.integer('media_id').notNullable().references('id').inTable(this.tableName);
@@ -45,12 +45,13 @@ export class MediaModel extends BaseHonkModel {
 
 			properties: {
 				id: { type: 'integer' },
-				title: { type: 'text' },
-				filename: { type: 'text' },
-				rel_url: { type: ['text', 'null'] },
-				rel_url_id: { type: ['integer', 'null'] },
+				title: { type: 'string' },
+				abs_url: { type: ['string', 'null'] },
+				// filename: { type: 'string' },
+				// rel_url: { type: ['string', 'null'] },
+				// rel_url_id: { type: ['integer', 'null'] },
 				cover_img_id: { type: ['integer', 'null'] },
-				source_id: { type: [ 'integer' ] }
+				// source_id: { type: [ 'integer' ] }
 
 				// Properties defined as objects or arrays are
 				// automatically converted to JSON strings when
@@ -129,6 +130,18 @@ export class MediaModel extends BaseHonkModel {
 				}
 			},
 		}
+	}
+
+	static async insertSingleMediaEntryRow(mediaEntryProps: any) {
+
+	}
+
+	static async insertManyMediaEntryRows(entriesProps: Pick<Parameters<typeof this.insertMediaEntriesWithRelationalFields>[0], 'entries' | 'coverId'>) {
+		console.log(entriesProps)
+	}
+
+	static async insertMediaEntriesWithRelationalFields(mediaProps: {entries: Honk.Media.BasicLibraryEntry['entries'], metaRowIds: number[], coverId: number}) {
+		// console.log(mediaProps)
 	}
 
 }

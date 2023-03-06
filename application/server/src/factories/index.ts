@@ -1,1 +1,1 @@
-export * from './mediaEntry';
+export * as MediaFactory from './mediaFactories';

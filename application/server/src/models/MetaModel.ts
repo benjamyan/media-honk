@@ -26,6 +26,9 @@ export class MetaModel extends BaseHonkModel {
 		});
 		await this.knex().schema.alterTable(this.tableName, (table)=> {
 			table.unique(['artist_name', 'category_name']);
+			table.unique(['artist_id','category_name']);
+			table.unique(['artist_name','category_id']);
+			table.unique(['artist_id','category_id']);
 		})
 	}
 	
@@ -123,8 +126,8 @@ export class MetaModel extends BaseHonkModel {
 				artist_id: null,
 				category_name: category,
 				category_id: null
-			};
-		
+			},
+			metaRowId: number = 0;
 		try {
 			if (!!insertValues.artist_name) {
 				await (
@@ -158,49 +161,102 @@ export class MetaModel extends BaseHonkModel {
 						})
 				)
 			}
-			await this.query()
-				.select()
-				.where(insertValues)
-				.then(async (result)=>{
-					if (result.length === 0) {
-						await this.query().insert(insertValues).onConflict(conflictArr).ignore();
-					} else {
-						console.log('*** MetaModel.insertSingleMetaRow TODO OVERWRITE ***')
-					}
-				})
+			
+			if (insertValues.artist_id !== null || insertValues.category_id !== null) {
+				if (insertValues.artist_id === insertValues.category_id) {
+					return insertValues.artist_id
+				}
+			}
+			await (
+				this.query()
+					.select()
+					.where(insertValues)
+					.orWhereNotNull('artist_id')
+					.andWhere('artist_id', '=', insertValues.artist_id)
+					.orWhereNotNull('category_id')
+					.andWhere('category_id', '=', insertValues.category_id)
+					// .whereNotExists(
+					// 	this.query()
+					// 		.select('*')
+					// 		.where({
+					// 			id: insertValues.artist_id,
+					// 			category_id: insertValues.category_id
+					// 		})
+					// 		.orWhere({
+					// 			id: insertValues.category_id,
+					// 			artist_id: insertValues.artist_id
+					// 		})
+					// )
+					.then(async (result)=>{
+						if (result.length > 0 ) {
+							if (!!insertValues.artist_id && !!insertValues.category_id) {
+								// if (insertValues.artist_id == 13 && insertValues.category_id === 1) {
+								// 	console.log(result)
+								// 	console.log({...insertValues})
+								// }
+
+								const superfluousResult = result.find((row)=>row.category_name === category || row.artist_name === artist);
+								if (superfluousResult) {
+									return metaRowId = superfluousResult.id;
+								}
+							}
+						}
+						await (
+							this.query()
+								.insert(insertValues)
+								.onConflict([ 'artist_name', 'category_name' ])
+								.ignore()
+								.then(insertedMetaRow=>{
+									return metaRowId = insertedMetaRow.id;
+								})
+						);
+					})
+			)
 		} catch (err) {
-			MediaHonkServerBase.emitter('error', {
-				error: new Error('Failed insert or select. MetaModel.insertSingleRow()'),
-				severity: 2
-			});
+			// console.log(err)
+			// MediaHonkServerBase.emitter('error', {
+			// 	error: new Error('Failed insert or select. MetaModel.insertSingleRow()'),
+			// 	severity: 2
+			// });
 		}
+		return metaRowId
 	}
 
 	static async insertManyMetaRows(metaEntries: { artists: string[], categories: string[] }) {
 		try {
 			const { artists, categories } = metaEntries;
 			const longValueKey = (
-				artists.length > categories.length ? 'artists' : 'categories'
+				artists.length >= categories.length ? 'artists' : 'categories'
 			);
+			const newMetaRowIds: Awaited<ReturnType<typeof this.insertSingleMetaRow>>[] = [];
 			
-			let i: number = (metaEntries[longValueKey === 'artists' ? 'categories' : 'artists']).length - 1;
+			// let promiseArr: Promise<any>[] = [];
+			
 			await metaEntries[longValueKey].reduce(async (initialPromise, value)=> {
 				await initialPromise;
-				
-				while (i >= 0) {
+				for await (const element of (longValueKey === 'artists' ? categories : artists)) {
 					if (longValueKey === 'artists') {
-						await this.insertSingleMetaRow(value, categories[i])
+						await this.insertSingleMetaRow(value, element)
 					} else {
-						await this.insertSingleMetaRow(artists[i], value)
+						await this.insertSingleMetaRow(element, value)
 					}
-					i--;
 				}
-			}, Promise.resolve())
+				// promiseArr = [];
+				// await Promise.all(
+				// 	longValueKey === 'artists'
+				// 		? categories.map(async (category)=> await this.insertSingleMetaRow(value, category).then(()=> { return }))
+				// 		: artists.map(async (artist)=> await this.insertSingleMetaRow(artist, value).then(()=> { return }))
+				// ).then(()=> { return });
+				// await Promise.all(promiseArr);
+			}, Promise.resolve());
+			
+			return newMetaRowIds as number[];
 		} catch (err) {
-			MediaHonkServerBase.emitter('error', {
-				error: new Error('Failed generic insert. MetaModel.insertManyMetaRows()'),
-				severity: 2
-			})
+			// console.log(err)
+			// MediaHonkServerBase.emitter('error', {
+			// 	error: new Error('Failed generic insert. MetaModel.insertManyMetaRows()'),
+			// 	severity: 2
+			// })
 		}
 		
 	}

@@ -5,7 +5,7 @@ import { default as Path } from 'path';
 import { default as Fs } from 'fs';
 
 import { RouteBase } from './_RouteBase';
-import { ModelInteractionService, FactoryService } from '../services';
+import { ModelInteractionService } from '../services';
 
 export class MediaRoutes extends RouteBase {
     // public router!: Express.Router;

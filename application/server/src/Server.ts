@@ -16,9 +16,8 @@ export class MediaHonkServer extends MediaHonkServerBase {
         
         // this.enableLogging = true;
         this.on('server.start', async ()=> {
-            // console.log(process.env.AGGREGATE)
+            
             if (process.env.AGGREGATE !== undefined) {
-                // this.databaseAggregate();
                 await this.Aggregate.handleAggregateRoutine(process.env.AGGREGATE)
             }
             this.initializeExpressServer();

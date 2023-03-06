@@ -1,4 +1,4 @@
-import { permittedMediaTypes } from "../utils/constants";
+import { permittedMediaTypes } from "../config/constants";
 
 let ValidationServiceIntermediary: ValidationService = null!;
 
