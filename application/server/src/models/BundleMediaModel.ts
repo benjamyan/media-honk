@@ -1,0 +1,96 @@
+import { Model } from 'objection';
+import { MediaModel } from './MediaModel';
+// import { MetaModel } from './MetaModel';
+import { BaseHonkModel } from './_ModelBase';
+import { BundlesModel } from './BundlesModel';
+
+export class BundleMediaModel extends BaseHonkModel {
+
+	/** Table name is the only required property. */
+	static get tableName() {
+        return `${BundlesModel.tableName}_${MediaModel.tableName}`
+    };
+
+	bundle_id: number = null!;
+    media_id: number = null!;
+    media_index?: number | null = null!;
+
+	static async mountBundleMediaTable() {
+        await this.mountTable(this.tableName, (table)=> {
+            // table.integer('bundle_id').notNullable();
+            // table.integer('media_id').notNullable();
+            table.integer('bundle_id').notNullable().references('id').inTable(BundlesModel.tableName);
+            table.integer('media_id').notNullable().references('id').inTable(MediaModel.tableName);
+			table.integer('media_index');
+        });
+        await this.knex().schema.alterTable(this.tableName, (table)=> {
+            table.unique(['media_id','bundle_id','media_index']);
+        });
+	}
+
+	/** Optional JSON schema. This is not the database schema!
+	* @see https://vincit.github.io/objection.js/api/model/static-properties.html#static-jsonschema
+	* @see http://json-schema.org/ 
+	*/
+	static get jsonSchema() {
+		return {
+			type: 'object',
+			required: [ 'bundle_id', 'media_id' ],
+			properties: {
+				bundle_id: { type: 'integer' },
+				media_id: { type: 'integer' },
+				media_index: { type: ['integer', 'null'] }
+			}
+		};
+	}
+
+	/** This object defines the relations to other models. 
+	* @see https://vincit.github.io/objection.js/api/model/static-properties.html#static-relationmappings
+	*/
+	static get relationMappings() {
+		return {
+			media: {
+				relation: Model.HasManyRelation,
+				modelClass: MediaModel,
+				join: {
+					from: `${MediaModel.tableName}.id`,
+					to: `${this.tableName}.media_id`
+				}
+			},
+			meta: {
+				relation: Model.HasManyRelation,
+				modelClass: BundlesModel,
+				join: {
+					from: `${BundlesModel.tableName}.id`,
+					to: `${this.tableName}.bundle_id`
+				}
+			}
+		}
+	}
+
+    static async insertBundleMediaRelationRow(bundleMedia: { bundleId: number, mediaId: number, mediaIndex: number | null }) {
+        try {
+			const bundleMediaRelationshipRow = {
+				bundle_id: bundleMedia.bundleId,
+				media_id: bundleMedia.mediaId,
+				media_index: bundleMedia.mediaIndex
+			}
+			// console.log(bundleMediaRelationshipRow)
+			await (
+				this.query()
+					.insert(bundleMediaRelationshipRow)
+					// .whereNot(bundleMediaRelationshipRow)
+					.onConflict(['media_id','bundle_id','media_index'])
+					.ignore()
+					// .catch(err=>{
+					// 	console.log(err)
+					// 	console.log({...bundleMedia})
+					// })
+			)
+        } catch (err) {
+            console.log(err)
+			// console.log({...bundleMedia})
+        }
+    }
+
+}

@@ -4,8 +4,12 @@ import { StringUtil } from "../utils";
 export const formatMediaEntries = (entries: string[], pathname: string, properties: Honk.Media.BaselineMediaProperties): Honk.Media.BasicLibraryEntry['entries'] => {
     let entryFile: string = null!,
         formattedEntries: Honk.Media.BasicLibraryEntry['entries'] = [];
+    
+        // if (properties.title.indexOf('uturama') > -1) {
+        //     console.log([...entries])
+        // }
 
-    for (let i = 0; i < entries.length - 1; i++) {
+    for (let i = 0; i <= entries.length - 1; i++) {
         entryFile = (
             entries[i]
                 .replace(pathname, '')
@@ -36,5 +40,8 @@ export const formatMediaEntries = (entries: string[], pathname: string, properti
             formattedEntries[i].title = `${properties.title} item ${String(i + 1)}`
         }
     }
+    // if (properties.title.indexOf('uturama') > -1) {
+    //     console.log([...formattedEntries])
+    // }
     return formattedEntries
 }

@@ -44,11 +44,12 @@ declare global {
             }
             interface media {
                 title: string;
-                filename: string;
-                rel_url?: string,
-                rel_url_id?: number;
+                abs_url: string;
+                // filename: string;
+                // rel_url?: string,
+                // rel_url_id?: number;
                 cover_img_id?: number;
-                source_id: number
+                // source_id: number
             }
             interface meta {
                 artist_name?: string;

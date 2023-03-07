@@ -1,6 +1,7 @@
 import Objection, { Model } from 'objection';
 import { Constants } from '../config';
 import { MediaHonkServerBase } from '../_Base';
+import { BundleMediaModel } from './BundleMediaModel';
 import { CoversModel } from './CoversModel';
 import { MediaModel } from './MediaModel';
 import { MetaModel } from './MetaModel';
@@ -9,7 +10,7 @@ import {BaseHonkModel} from './_ModelBase';
 export class BundlesModel extends BaseHonkModel {
 	static tableName = 'bundles';
 
-	id?: number = null!;
+	id: number = null!;
 	main_title: string = null!;
 	sub_title: string = null!;
 	media_type: string | null = null!;
@@ -18,7 +19,7 @@ export class BundlesModel extends BaseHonkModel {
 	static async mountBundlesTable() {
 		await this.mountTable(this.tableName, (table)=> {
 			table.increments('id');
-			table.string('main_title').notNullable().unique();
+			table.string('main_title').notNullable();
 			table.string('sub_title');
 			/** 
 				VU = video unique (movie) 
@@ -31,11 +32,9 @@ export class BundlesModel extends BaseHonkModel {
 			table.string('media_type')// .checkBetween(['VU','VS','AU','AS','IU','IS']);
 			// table.integer('cover_img_id').references('id').inTable('covers');
 		})
-		await this.mountTable(`${this.tableName}_${MediaModel.tableName}`, (table)=> {
-			table.increments('bundle_id').notNullable().references('id').inTable(this.tableName);
-			table.integer('media_id').notNullable().references('id').inTable(MediaModel.tableName);
-			table.integer('media_index').unique();
-		})
+		await this.knex().schema.alterTable(this.tableName, (table)=> {
+			table.unique(['main_title', 'sub_title']);
+		});
 	}
 
 	/** Optional JSON schema. This is not the database schema!
@@ -129,50 +128,98 @@ export class BundlesModel extends BaseHonkModel {
 		return json;
 	}
 
-	static async insertSingleBundleRow(bundleRowContent: Pick<Honk.Media.BasicLibraryEntry, 'title' | 'subtitle' | 'type'>) {
-		return await (
-			this.query()
-				.insert({
-					main_title: bundleRowContent.title,
-					sub_title: bundleRowContent.subtitle,
-					// cover_img_id: bundleRowContent.coverRowId,
-					media_type: bundleRowContent.type
-				})
-				.onConflict(['main_title'])
-				.ignore()
-				.then(async (bundleInsertResult)=>{
-					if (bundleInsertResult.id === 0) {
-						return await (
+	static async insertSingleBundleRow(bundleRowContent: Pick<Honk.Media.BasicLibraryEntry, 'title' | 'subtitle' | 'type'>): Promise<number | null> {
+		let newBundleRowId: number | null = null!;
+		try {
+			await (
+				this.query()
+					.select()
+					.where('main_title', '=', bundleRowContent.title)
+					.then(async (selectResult)=>{
+						// if (bundleRowContent.title.indexOf('uturama') > -1) {
+						// 	console.log(selectResult)
+						// 	console.log(bundleRowContent)
+						// }
+						if (selectResult.length > 0) {
+							const matchingRowIndex = selectResult.findIndex(
+								(row)=>row.sub_title === (bundleRowContent.subtitle || null)
+							);
+							if (matchingRowIndex > -1) {
+								return newBundleRowId = selectResult[0].id;
+							}
+						}
+						// if (bundleRowContent.title.indexOf('uturama') > -1) {
+						// 	console.log('insert!')
+						// }
+						await (
 							this.query()
-								.select()
-								.where('main_title', '=', bundleRowContent.title)
-								.then((selectResult)=>{
-									if (selectResult.length > 1) {
-										return selectResult[0].id
+								.insert({
+									main_title: bundleRowContent.title,
+									sub_title: bundleRowContent.subtitle,
+									media_type: bundleRowContent.type
+								})
+								.onConflict(['main_title', 'sub_title'])
+								.ignore()
+								.then((bundleInsertResult)=>{
+									if (bundleInsertResult.id !== 0) {
+										return newBundleRowId = bundleInsertResult.id;
 									}
-									return undefined;
+								})
+								.catch(err=>{
+									console.log(err)
 								})
 						)
-					}
-					return bundleInsertResult.id
-				})
-				.catch(err=> {
-					MediaHonkServerBase.emitter('error', err);
-					return undefined;
-				})
-		)
+					})
+					// .catch(err=> {
+					// 	MediaHonkServerBase.emitter('error', err);
+					// 	return undefined;
+					// })
+			)
+			// await (
+			// 	this.query()
+			// 		.insert({
+			// 			main_title: bundleRowContent.title,
+			// 			sub_title: bundleRowContent.subtitle,
+			// 			// cover_img_id: bundleRowContent.coverRowId,
+			// 			media_type: bundleRowContent.type
+			// 		})
+			// 		.onConflict(['main_title'])
+			// 		.ignore()
+			// 		.then(async (bundleInsertResult)=>{
+			// 			console.log('\n')
+			// 			console.log(bundleInsertResult)
+			// 			if (bundleInsertResult.id !== 0) {
+			// 				return newBundleRowId = bundleInsertResult.id;
+			// 			}
+			// 			await (
+			// 				this.query()
+			// 					.select()
+			// 					.where('main_title', '=', bundleRowContent.title)
+			// 					.then((selectResult)=>{
+			// 						console.log(selectResult)
+			// 						if (selectResult.length > 0) {
+			// 							newBundleRowId = selectResult[0].id
+			// 						}
+			// 					})
+			// 			)
+			// 		})
+			// 		.catch(err=> {
+			// 			MediaHonkServerBase.emitter('error', err);
+			// 			return undefined;
+			// 		})
+			// )
+		} catch (err) {
+			console.log(err)
+		}
+		return newBundleRowId
 	}
-
-	static async insertBundleMediaRelationalRow() {
-
-	}
-
+	
 	static async handleBundleEntryWithRelatedFields(mediaEntry: Honk.Media.BasicLibraryEntry, options?: Record<string, any>) {
 		let { coverUrl, artists, categories } = mediaEntry;
 		let coverRowId: number = -1,
 			bundleRowId: number = -1,
 			metaRowIds: number[] = [],
-			mediaEntryRowIds: Awaited<ReturnType<typeof MediaModel.insertManyMediaEntryRows>> = undefined
+			mediaEntryRowIds: Awaited<ReturnType<typeof MediaModel.insertMediaEntriesWithRelationalFields>> = [];
         try {
             if (coverUrl) {
                 await CoversModel.insertCoverEntry(coverUrl).then(newCoverId=>{
@@ -197,8 +244,7 @@ export class BundlesModel extends BaseHonkModel {
 			await this.insertSingleBundleRow({
 					title: mediaEntry.title,
 					subtitle: mediaEntry.subtitle,
-					type: mediaEntry.type,
-					// coverRowId: coverRowId
+					type: mediaEntry.type
 				})
 				.then(newBundleRowId=>{
 					if (typeof(newBundleRowId) === 'number') {
@@ -206,14 +252,46 @@ export class BundlesModel extends BaseHonkModel {
 					}
 				});
 			await MediaModel.insertMediaEntriesWithRelationalFields({
-				entries: mediaEntry.entries,
-				metaRowIds: metaRowIds,
-				coverId: coverRowId
-			})
+					entries: mediaEntry.entries.filter((entry)=>{
+						// console.log(entry)
+						return entry.filename !== coverUrl
+					}),
+					metaRowIds: metaRowIds,
+					coverId: coverRowId
+				})
+				.then(insertedMediaEntries=>{
+					if (Array.isArray(insertedMediaEntries)) {
+						mediaEntryRowIds = insertedMediaEntries;
+					}
+				});
+
+			// if (bundleRowId === -1) {
+			// 	console.log({...mediaEntry})
+			// 	throw new Error(`Unable to set row with value of -1`);
+			// }
+			/**
+			 * @todo 
+			 * - running into where promises arent fulfilling and leaving some entries dangling, and then added on second aggregation. see entry 'Gallery 2' for example
+			 * - bug where some bundles are adding media items that are not present, but relevent based on title/subtitle mismatch - see 'Futurama/season-2'
+			 * - the second aggregation causes both of the above.
+			 */
+			for await (const mediaId of mediaEntryRowIds) {
+				// console.log(bundleRowId)
+				if (mediaEntry.title.indexOf('futurama') > -1) {
+					console.log({...mediaEntry})
+				}
+				await BundleMediaModel.insertBundleMediaRelationRow({
+					bundleId: bundleRowId,
+					mediaId,
+					mediaIndex: mediaEntryRowIds.findIndex(id=> id === mediaId)
+				})
+			}
+			
         } catch (err) {
             console.log(err);
         }
 		// console.log(' - DONE 2')
+		return;
 	}
 
 }

@@ -11,6 +11,8 @@ import { TypedEmitter } from 'tiny-typed-emitter';
 import { default as Knex } from 'knex';
 import { default as Objection, Model } from 'objection';
 import { BundlesModel, CoversModel, MediaModel, MetaModel, SourcesModel } from './models';
+import { MediaMetaModel } from './models/MediaMetaModel';
+import { BundleMediaModel } from './models/BundleMediaModel';
 
 dotenv.config({ path: Path.resolve(__dirname, '../.env') });
 
@@ -55,7 +57,7 @@ export class MediaHonkServerBase extends TypedEmitter<HonkServer.InternalEvents>
                 console.warn(errorArgs.message)
             } else if (typeof(errorArgs) === 'string') {
                 console.warn(errorArgs)
-            } else {
+            } else if (typeof(errorArgs) === 'object') {
                 const { error, severity, response } = errorArgs;
                 if (error instanceof Error || typeof(error) === 'string') {
                     console.warn(error)
@@ -67,7 +69,7 @@ export class MediaHonkServerBase extends TypedEmitter<HonkServer.InternalEvents>
                 if (response !== undefined) {
                     response.sendStatus(500);
                 }
-                if (severity === undefined || severity === 1) {
+                if (severity === 1) {
                     // this.db.destroy();
                     process.exit(2);
                 }
@@ -136,6 +138,8 @@ export class MediaHonkServerBase extends TypedEmitter<HonkServer.InternalEvents>
                         await CoversModel.mountCoversTable();
                         await MetaModel.mountMetaTable();
                         await MediaModel.mountMediaTable();
+                        await MediaMetaModel.mountMediaMetaTable();
+                        await BundleMediaModel.mountBundleMediaTable();
                     }
                 })
                 .catch(err=>{

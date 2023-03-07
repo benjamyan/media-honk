@@ -124,6 +124,11 @@ export class AggregateService extends ProcedureService {
                                         Constants.includeExtensions
                                     )
                                     .then((entryResult)=>{
+                                        const coverUrl = entryResult.find((entryFile)=>{
+                                            for (const ext of Constants.imageExtensions) {
+                                                if (entryFile.includes(ext)) return entryFile
+                                            }
+                                        });
                                         mediaPathYamlEntries[mediaPath].push({
                                             ...fileContent,
                                             coverUrl: entryResult.find((entryFile)=>{
@@ -132,11 +137,16 @@ export class AggregateService extends ProcedureService {
                                                 }
                                             }),
                                             entries: MediaFactory.formatMediaEntries(
-                                                entryResult,
+                                                entryResult.filter(
+                                                    (mediaEntry)=>mediaEntry !== coverUrl
+                                                ),
                                                 this.config.api.media_paths[mediaPath],
                                                 fileContent
                                             )
                                         });
+                                        // if (fileContent.title.indexOf('uturama') > -1) {
+                                        //     console.log({...entryResult})
+                                        // }
                                     })
                                     .catch(err=>{
                                         this.emit(
@@ -158,8 +168,10 @@ export class AggregateService extends ProcedureService {
             
             Object.values(mediaPathYamlEntries).flat(1).reduce(async (initialPromise, media)=>{
                 await initialPromise;
-
-                if (media.entries.length !== 0) {
+                if (media.title.indexOf('uturama') > -1) {
+                    console.log({...media})
+                }
+                if (media.entries.length > 0) {
                     await (
                         this.db.Bundles
                             .handleBundleEntryWithRelatedFields(media)

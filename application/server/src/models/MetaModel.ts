@@ -1,5 +1,6 @@
 import { Model } from 'objection';
 import { MediaHonkServerBase } from '../_Base';
+import { MediaModel } from './MediaModel';
 import {BaseHonkModel} from "./_ModelBase";
 
 type MetaRowContentProps = Record<'artist_name' | 'category_name', any[]>
@@ -76,19 +77,7 @@ export class MetaModel extends BaseHonkModel {
 					from: 'meta.catgory_id',
 					to: 'meta.id'
 				}
-			},
-			media: {
-				relation: Model.ManyToManyRelation,
-				modelClass: require('./MediaModel'),
-				join: {
-					from: 'meta.id',
-					through: {
-						from: 'media_meta.meta_id',
-						to: 'media_meta.media_id'
-					},
-					to: 'media.id'
-				}
-			},
+			}
 		}
 	}
 	
@@ -114,8 +103,21 @@ export class MetaModel extends BaseHonkModel {
         }
     }
 
+	/**
+	 * @method insertSingleMetaRow
+	 * @description 
+	 * - Helper function to insert single rows containg both artist and category. 
+	 * - Will reference the database and check if one of the parameters provided are already present
+	 * - If one (or both) are, theyll be referenced instead and appended to the row as an ID
+	 * - If a row containg both (either string or ID value) exists, its ID will be returned and an insert will not be performed
+	 * @todo
+	 * - Optimize the query. Currently running multiple selects before the insert
+	 * @param artist `string | null` 
+	 * @param category `string | null` 
+	 * @returns Either the insrted rows ID or the existing rows ID that matches the given parameters
+	 */
 	static async insertSingleMetaRow(artist: string | null, category: string | null) {
-		let conflictArr: string[] = [],
+		let /*conflictArr: string[] = [],*/
 			insertValues: {
 				artist_name: string | null,
 				artist_id: number | null,
@@ -127,8 +129,87 @@ export class MetaModel extends BaseHonkModel {
 				category_name: category,
 				category_id: null
 			},
-			metaRowId: number = 0;
+			metaRowId: number = null!;
 		try {
+			// await (
+			// 	this.query()
+			// 		.select()
+			// 		.modify(function(qb){
+			// 			if (!!insertValues.artist_name) {
+			// 				qb.whereNotNull('artist_name').andWhere('artist_name', '=', insertValues.artist_name)
+			// 			}
+			// 			if (!!insertValues.category_name) {
+			// 				if (!!insertValues.artist_name) {
+			// 					qb.orWhereNotNull('category_name').andWhere('category_name', '=', insertValues.category_name)
+			// 				} else {
+			// 					qb.whereNotNull('category_name').andWhere('category_name', '=', insertValues.category_name)
+			// 				}
+			// 			}
+			// 		})
+			// 		.then(result=>{
+			// 			if (result.length === 1) {
+			// 				if (result[0].artist_name === insertValues.artist_name && result[0].category_name === insertValues.category_name) {
+			// 					metaRowId = result[0].id;
+			// 				}
+			// 			} else if (result.length > 0) {
+			// 				insertValues.artist_id = (
+			// 					result.find((row)=>row.artist_name === insertValues.artist_name)?.id || null
+			// 				);
+			// 				insertValues.category_id = (
+			// 					result.find((row)=>row.category_name === insertValues.category_name)?.id || null
+			// 				);
+			// 			}
+			// 			console.log({...insertValues})
+			// 		})
+			// 		.then(async ()=> {
+			// 			console.log({...insertValues})
+			// 			if (metaRowId !== null) {
+			// 				return metaRowId;
+			// 			} else if (insertValues.artist_id !== null && insertValues.artist_id === insertValues.category_id) {
+			// 				return metaRowId = insertValues.artist_id;
+			// 			}
+			// 			await (
+			// 				this.query()
+			// 					.select()
+			// 					.where(insertValues)
+			// 					.orWhereNotNull('artist_id')
+			// 					.andWhere('artist_id', '=', insertValues.artist_id)
+			// 					.orWhereNotNull('category_id')
+			// 					.andWhere('category_id', '=', insertValues.category_id)
+			// 					.then(async (selectedMetaRows)=>{
+			// 						if (selectedMetaRows.length > 0 && !!insertValues.artist_id && !!insertValues.category_id) {
+			// 							/** 
+			// 							 * If both the artist and category ID have been defined on the current row to be inserted
+			// 							 * then it is possible were adding a self-referencing field for either the artist or category.
+			// 							 * Compare the string values for either artist or category from the select result, and 
+			// 							 * return its ID if it passed filtering.
+			// 							 */
+			// 							const superfluousResult = selectedMetaRows.find(
+			// 								(meta)=> meta.category_name === category || meta.artist_name === artist
+			// 							);
+			// 							if (superfluousResult) {
+			// 								metaRowId = superfluousResult.id;
+			// 							}
+			// 						}
+			// 					})
+			// 			);
+			// 		})
+			// 		.then(async ()=>{
+			// 			if (metaRowId !== null) {
+			// 				return metaRowId;
+			// 			}
+			// 			await (
+			// 				this.query()
+			// 					.insert(insertValues)
+			// 					.onConflict([ 'artist_name', 'category_name' ])
+			// 					.ignore()
+			// 					.then(insertedMetaRow=>{
+			// 						metaRowId = insertedMetaRow.id;
+			// 					})
+			// 			);
+			// 		})
+			// )
+
 			if (!!insertValues.artist_name) {
 				await (
 					this.query()
@@ -140,7 +221,7 @@ export class MetaModel extends BaseHonkModel {
 								insertValues.artist_name = null;
 								insertValues.artist_id = result[0].id;
 							} else {
-								conflictArr.push('artist_name')
+								// conflictArr.push('artist_name')
 							}
 						})
 				)
@@ -156,7 +237,7 @@ export class MetaModel extends BaseHonkModel {
 								insertValues.category_name = null;
 								insertValues.category_id = result[0].id;
 							} else {
-								conflictArr.push('category_name');
+								// conflictArr.push('category_name');
 							}
 						})
 				)
@@ -164,6 +245,7 @@ export class MetaModel extends BaseHonkModel {
 			
 			if (insertValues.artist_id !== null || insertValues.category_id !== null) {
 				if (insertValues.artist_id === insertValues.category_id) {
+					/** Odd edge case where IDs were duplicating; just return a single ID and go no further */
 					return insertValues.artist_id
 				}
 			}
@@ -175,27 +257,18 @@ export class MetaModel extends BaseHonkModel {
 					.andWhere('artist_id', '=', insertValues.artist_id)
 					.orWhereNotNull('category_id')
 					.andWhere('category_id', '=', insertValues.category_id)
-					// .whereNotExists(
-					// 	this.query()
-					// 		.select('*')
-					// 		.where({
-					// 			id: insertValues.artist_id,
-					// 			category_id: insertValues.category_id
-					// 		})
-					// 		.orWhere({
-					// 			id: insertValues.category_id,
-					// 			artist_id: insertValues.artist_id
-					// 		})
-					// )
-					.then(async (result)=>{
-						if (result.length > 0 ) {
+					.then(async (selectedMetaRows)=>{
+						if (selectedMetaRows.length > 0 ) {
 							if (!!insertValues.artist_id && !!insertValues.category_id) {
-								// if (insertValues.artist_id == 13 && insertValues.category_id === 1) {
-								// 	console.log(result)
-								// 	console.log({...insertValues})
-								// }
-
-								const superfluousResult = result.find((row)=>row.category_name === category || row.artist_name === artist);
+								/** 
+								 * If both the artist and category ID have been defined on the current row to be inserted
+								 * then it is possible were adding a self-referencing field for either the artist or category.
+								 * Compare the string values for either artist or category from the select result, and 
+								 * return its ID if it passed filtering.
+								 */
+								const superfluousResult = selectedMetaRows.find(
+									(meta)=> meta.category_name === category || meta.artist_name === artist
+								);
 								if (superfluousResult) {
 									return metaRowId = superfluousResult.id;
 								}
@@ -213,15 +286,23 @@ export class MetaModel extends BaseHonkModel {
 					})
 			)
 		} catch (err) {
-			// console.log(err)
-			// MediaHonkServerBase.emitter('error', {
-			// 	error: new Error('Failed insert or select. MetaModel.insertSingleRow()'),
-			// 	severity: 2
-			// });
+			if (!(err instanceof Error) || (err as Error).name !== 'UniqueViolationError') {
+				/** Expect UniqueViolations since were using .ignore() above. Ignore them and move on */
+				MediaHonkServerBase.emitter('error', {
+					error: err instanceof Error ? err : new Error('Unhandled exception. MetaModel.insertSingleRow()'),
+					severity: 2
+				});
+			}
 		}
 		return metaRowId
 	}
 
+	/**
+	 * @method insertManyMetaRows
+	 * @description Method will take two given arrays that are permitted datatypes in the meta table. Will loop through the longest array, and on each iteration loop through the other array, assigning the values necessary to call `insertSingleMetaRow`.
+	 * @param metaEntries Object containing both `artists` and `categories` as string arrays.
+	 * @returns An index containing the newly inserted _or_ already present row IDs  
+	 */
 	static async insertManyMetaRows(metaEntries: { artists: string[], categories: string[] }) {
 		try {
 			const { artists, categories } = metaEntries;
@@ -230,33 +311,24 @@ export class MetaModel extends BaseHonkModel {
 			);
 			const newMetaRowIds: Awaited<ReturnType<typeof this.insertSingleMetaRow>>[] = [];
 			
-			// let promiseArr: Promise<any>[] = [];
-			
 			await metaEntries[longValueKey].reduce(async (initialPromise, value)=> {
 				await initialPromise;
 				for await (const element of (longValueKey === 'artists' ? categories : artists)) {
 					if (longValueKey === 'artists') {
-						await this.insertSingleMetaRow(value, element)
+						await this.insertSingleMetaRow(value, element).then((rowId)=>newMetaRowIds.push(rowId))
 					} else {
-						await this.insertSingleMetaRow(element, value)
+						await this.insertSingleMetaRow(element, value).then((rowId)=>newMetaRowIds.push(rowId))
 					}
 				}
-				// promiseArr = [];
-				// await Promise.all(
-				// 	longValueKey === 'artists'
-				// 		? categories.map(async (category)=> await this.insertSingleMetaRow(value, category).then(()=> { return }))
-				// 		: artists.map(async (artist)=> await this.insertSingleMetaRow(artist, value).then(()=> { return }))
-				// ).then(()=> { return });
-				// await Promise.all(promiseArr);
 			}, Promise.resolve());
 			
 			return newMetaRowIds as number[];
 		} catch (err) {
 			// console.log(err)
-			// MediaHonkServerBase.emitter('error', {
-			// 	error: new Error('Failed generic insert. MetaModel.insertManyMetaRows()'),
-			// 	severity: 2
-			// })
+			MediaHonkServerBase.emitter('error', {
+				error: err instanceof Error ? err :new Error('Unhandled exception. MetaModel.insertManyMetaRows()'),
+				severity: 2
+			})
 		}
 		
 	}
