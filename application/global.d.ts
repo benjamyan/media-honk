@@ -39,8 +39,9 @@ declare global {
             interface bundles {
                 main_title: string;
                 sub_title?: string;
-                cover_img_id?: number;
-                media_type: 'VU','VS','AU','AS','GU','GS';
+                custom_cover_id?: number;
+                // cover_img_id?: number;
+                // media_type: 'VU','VS','AU','AS','GU','GS';
             }
             interface media {
                 title: string;
@@ -50,6 +51,7 @@ declare global {
                 // rel_url_id?: number;
                 cover_img_id?: number;
                 // source_id: number
+                media_type: 'V' | 'A' | 'I' | 'UNKNOWN';
             }
             interface meta {
                 artist_name?: string;
@@ -82,7 +84,7 @@ declare global {
             }
         }
         namespace Media {
-            type AcceptedMediaTypes = 'movie' | 'series' | 'gallery' | 'album'
+            type AcceptedMediaTypes = 'movie' | 'series' | 'gallery' | 'album' | 'singles';
             interface MediaItemEntry {
                 index: number;
                 filename: string;

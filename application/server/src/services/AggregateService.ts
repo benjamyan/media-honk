@@ -114,47 +114,45 @@ export class AggregateService extends ProcedureService {
                         .then(async (shakeResult)=>{
                             for await (const file of shakeResult) {
                                 fileContent = Yaml.parse(Fs.readFileSync(file, 'utf-8'));
+                                // this.logger(`\n- START ${fileContent.title} ${fileContent.subtitle || ''}`);
                                 
                                 if (!fileContent || ValidationService.instance.permissibleMediaProperties(fileContent) instanceof Error) {
                                     this.emit('error', new Error(`Invalid yaml configuration: ${file}`));
                                     continue;
-                                } else {
-                                    await this.FsService.shakeDirectoryFileTree(
-                                        file.replace(file.split('/').at(-1) as string, ''),
-                                        Constants.includeExtensions
-                                    )
-                                    .then((entryResult)=>{
-                                        const coverUrl = entryResult.find((entryFile)=>{
-                                            for (const ext of Constants.imageExtensions) {
-                                                if (entryFile.includes(ext)) return entryFile
-                                            }
-                                        });
-                                        mediaPathYamlEntries[mediaPath].push({
-                                            ...fileContent,
-                                            coverUrl: entryResult.find((entryFile)=>{
-                                                for (const ext of Constants.imageExtensions) {
-                                                    if (entryFile.includes(ext)) return entryFile
-                                                }
-                                            }),
-                                            entries: MediaFactory.formatMediaEntries(
-                                                entryResult.filter(
-                                                    (mediaEntry)=>mediaEntry !== coverUrl
-                                                ),
-                                                this.config.api.media_paths[mediaPath],
-                                                fileContent
-                                            )
-                                        });
-                                        // if (fileContent.title.indexOf('uturama') > -1) {
-                                        //     console.log({...entryResult})
-                                        // }
-                                    })
-                                    .catch(err=>{
-                                        this.emit(
-                                            'error', 
-                                            err instanceof Error ? err : new Error(`Unhandled exception when parsing media entries: ${file}`)
-                                        );
-                                    })
                                 }
+                                await this.FsService.shakeDirectoryFileTree(
+                                    file.replace(file.split('/').at(-1) as string, ''),
+                                    Constants.includeExtensions
+                                )
+                                .then((entryResult)=>{
+                                    fileContent.coverUrl = entryResult.find((entryFile)=>{
+                                        for (const ext of Constants.imageExtensions) {
+                                            if (entryFile.includes(ext)) return entryFile
+                                        }
+                                    });
+                                    fileContent.entries = MediaFactory.formatMediaEntries(
+                                        entryResult.filter(
+                                            (mediaEntry)=> mediaEntry !== fileContent.coverUrl
+                                        ),
+                                        this.config.api.media_paths[mediaPath],
+                                        fileContent
+                                    );
+                                })
+                                .then(async ()=>{
+                                    if (fileContent.entries.length === 0) {
+                                        throw new Error(`No entries for media: ${fileContent.title}`);
+                                    }
+                                    await this.db.Bundles.handleBundleEntryWithRelatedFields(fileContent);
+                                })
+                                .catch(err=>{
+                                    this.emit(
+                                        'error', 
+                                        err instanceof Error ? err : new Error(`Unhandled exception when parsing media entries: ${file}`)
+                                    );
+                                })
+                                .finally(()=>{
+                                    // this.logger(`- DONE ${fileContent.title} ${fileContent.subtitle || ''}`)
+                                })
                             }
                         })
                         .catch((err)=>{
@@ -166,24 +164,24 @@ export class AggregateService extends ProcedureService {
                 );
             }
             
-            Object.values(mediaPathYamlEntries).flat(1).reduce(async (initialPromise, media)=>{
-                await initialPromise;
-                if (media.title.indexOf('uturama') > -1) {
-                    console.log({...media})
-                }
-                if (media.entries.length > 0) {
-                    await (
-                        this.db.Bundles
-                            .handleBundleEntryWithRelatedFields(media)
-                            .then((result)=> {
-                                // console.log(result)
-                            })
-                            .catch((err)=> {
-                                console.log(err)
-                            })
-                    )
-                }
-            }, Promise.resolve())
+            // Object.values(mediaPathYamlEntries).flat(1).reduce(async (initialPromise, media)=>{
+            //     await initialPromise;
+            //     if (media.title.indexOf('uturama') > -1) {
+            //         console.log({...media})
+            //     }
+            //     if (media.entries.length > 0) {
+            //         await (
+            //             this.db.Bundles
+            //                 .handleBundleEntryWithRelatedFields(media)
+            //                 .then((result)=> {
+            //                     // console.log(result)
+            //                 })
+            //                 .catch((err)=> {
+            //                     console.log(err)
+            //                 })
+            //         )
+            //     }
+            // }, Promise.resolve())
             
             return true;
         } catch (err) {

@@ -45,3 +45,34 @@ export const formatMediaEntries = (entries: string[], pathname: string, properti
     // }
     return formattedEntries
 }
+
+export const mediaEntryToDbMediaEntry = (entry: { title: string, absUrl: string, coverImgId: number, mediaType: Honk.Media.AcceptedMediaTypes }) => {
+    const mediaEntry: Honk.DB.media = {
+        title: entry.title,
+        abs_url: entry.absUrl,
+        cover_img_id: entry.coverImgId,
+        media_type: 'UNKNOWN'
+    }
+
+    switch (entry.mediaType) {
+        case 'album':
+        case 'singles': {
+            mediaEntry.media_type = 'A';
+            break;
+        }
+        case 'movie': 
+        case 'series': {
+            mediaEntry.media_type = 'V';
+            break;
+        }
+        case 'gallery': {
+            mediaEntry.media_type = 'I';
+            break;
+        }
+        default: {
+            //
+        }
+    }
+
+    return mediaEntry
+}

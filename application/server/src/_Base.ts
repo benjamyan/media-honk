@@ -16,6 +16,14 @@ import { BundleMediaModel } from './models/BundleMediaModel';
 
 dotenv.config({ path: Path.resolve(__dirname, '../.env') });
 
+const logger = (msg: string, tracing?: boolean)=> {
+    if (!!tracing) {
+        console.trace(msg);
+    } else {
+        console.log(msg);
+    }
+}
+
 let app = Express(),
     knexInstance: ReturnType<typeof Knex> = null!,
     databaseConnection: {
@@ -40,6 +48,7 @@ export class MediaHonkServerBase extends TypedEmitter<HonkServer.InternalEvents>
     
     static config: Honk.Configuration = null!;
     static emitter: TypedEmitter<HonkServer.InternalEvents>['emit'] = null!;
+    static logger: any = null!;
     
     constructor() {
         super();
@@ -80,6 +89,7 @@ export class MediaHonkServerBase extends TypedEmitter<HonkServer.InternalEvents>
     static {
         this.emitter = super.prototype.emit;
         this.config =  localConfig;
+        this.logger = logger;
     }
     
     get config() {
@@ -104,16 +114,19 @@ export class MediaHonkServerBase extends TypedEmitter<HonkServer.InternalEvents>
         }
         return app;
     }
-
-    public logger(msg: string, tracing?: boolean) {
-        if (!this.enableLogging) {
-            return;
-        } else if (!!tracing) {
-            console.trace(msg);
-        } else {
-            console.log(msg);
-        }
+    get logger() {
+        return logger;
     }
+
+    // public logger(msg: string, tracing?: boolean) {
+    //     if (!this.enableLogging) {
+    //         return;
+    //     } else if (!!tracing) {
+    //         console.trace(msg);
+    //     } else {
+    //         console.log(msg);
+    //     }
+    // }
 
     private async establishDatabaseConnection() {
         this.logger('MediaHonkServerBase.establishDatabaseConnection()');

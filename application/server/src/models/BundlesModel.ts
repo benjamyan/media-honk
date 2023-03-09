@@ -13,9 +13,9 @@ export class BundlesModel extends BaseHonkModel {
 	id: number = null!;
 	main_title: string = null!;
 	sub_title: string = null!;
-	media_type: string | null = null!;
-	// cover_img_id: number = null!;
-
+	custom_cover_id?: number = null!;
+	// media_type: string | null = null!;
+	
 	static async mountBundlesTable() {
 		await this.mountTable(this.tableName, (table)=> {
 			table.increments('id');
@@ -29,7 +29,8 @@ export class BundlesModel extends BaseHonkModel {
 				GU = gallery unique (singles)
 				GS = gallery series (ebook)
 			*/
-			table.string('media_type')// .checkBetween(['VU','VS','AU','AS','IU','IS']);
+			table.string('custom_cover_id').references('id').inTable('covers');
+			// table.string('media_type')// .checkBetween(['VU','VS','AU','AS','IU','IS']);
 			// table.integer('cover_img_id').references('id').inTable('covers');
 		})
 		await this.knex().schema.alterTable(this.tableName, (table)=> {
@@ -50,12 +51,13 @@ export class BundlesModel extends BaseHonkModel {
 				id: { type: 'integer' },
 				main_title: { type: 'string' },
 				sub_title: { type: ['string', 'null'] },
+				custom_cover_id: { type: ['integer', 'null'] },
 				// cover_img_id: { type: ['integer', 'null'] },
-				media_type: {
-					type: ['string', 'null'],
-					enum: ['VU','VS','AU','AS','IU','IS' ]
-					// : ['VU','VS','AU','AS','IU','IS']
-				}
+				// media_type: {
+				// 	type: ['string', 'null'],
+				// 	enum: ['VU','VS','AU','AS','IU','IS' ]
+				// 	// : ['VU','VS','AU','AS','IU','IS']
+				// }
 			}
 		};
 	}  
@@ -73,18 +75,18 @@ export class BundlesModel extends BaseHonkModel {
 			// 		to: 'covers.id'
 			// 	}
 			// },
-			media: {
-				relation: Model.ManyToManyRelation,
-				modelClass: require('./MediaModel'),
-				join: {
-				  from: 'bundles.id',
-				  through: {
-					from: 'bundle_media.bundle_id',
-					to: 'bundle_media.media_id'
-				  },
-				  to: 'media.id'
-				}
-			}
+			// media: {
+			// 	relation: Model.ManyToManyRelation,
+			// 	modelClass: require('./MediaModel'),
+			// 	join: {
+			// 	  from: 'bundles.id',
+			// 	  through: {
+			// 		from: 'bundles_media.bundle_id',
+			// 		to: 'bundles_media.media_id'
+			// 	  },
+			// 	  to: 'media.id'
+			// 	}
+			// }
 		}
 	}
 	
@@ -96,39 +98,39 @@ export class BundlesModel extends BaseHonkModel {
 			json.sub_title = null;
 		}
 
-		if (!json.media_type || !Constants.databaseMediaTypes.includes(json.media_type)) {
-			switch (json.media_type) {
-				case 'movie': {
-					json.media_type = 'VU';
-					break;
-				}
-				case 'series': {
-					json.media_type = 'VS';
-					break;
-				}
-				case 'gallery': {
-					json.media_type = 'IS';
-					break;
-				}
-				case 'album': {
-					json.media_type = 'AS';
-					break;
-				}	
-				case 'singles': {
-					json.media_type = 'AU';
-					break;
-				}	
-				default: {
-					json.media_type = null;
-					// TODO parse the entries associated with this bundle and determine the media type
-				}
-			}
-		}
+		// if (!json.media_type || !Constants.databaseMediaTypes.includes(json.media_type)) {
+		// 	switch (json.media_type) {
+		// 		case 'movie': {
+		// 			json.media_type = 'VU';
+		// 			break;
+		// 		}
+		// 		case 'series': {
+		// 			json.media_type = 'VS';
+		// 			break;
+		// 		}
+		// 		case 'gallery': {
+		// 			json.media_type = 'IS';
+		// 			break;
+		// 		}
+		// 		case 'album': {
+		// 			json.media_type = 'AS';
+		// 			break;
+		// 		}	
+		// 		case 'singles': {
+		// 			json.media_type = 'AU';
+		// 			break;
+		// 		}	
+		// 		default: {
+		// 			json.media_type = null;
+		// 			// TODO parse the entries associated with this bundle and determine the media type
+		// 		}
+		// 	}
+		// }
 		
 		return json;
 	}
 
-	static async insertSingleBundleRow(bundleRowContent: Pick<Honk.Media.BasicLibraryEntry, 'title' | 'subtitle' | 'type'>): Promise<number | null> {
+	static async insertSingleBundleRow(bundleRowContent: Pick<Honk.Media.BasicLibraryEntry, 'title' | 'subtitle'>): Promise<number | null> {
 		let newBundleRowId: number | null = null!;
 		try {
 			await (
@@ -136,27 +138,20 @@ export class BundlesModel extends BaseHonkModel {
 					.select()
 					.where('main_title', '=', bundleRowContent.title)
 					.then(async (selectResult)=>{
-						// if (bundleRowContent.title.indexOf('uturama') > -1) {
-						// 	console.log(selectResult)
-						// 	console.log(bundleRowContent)
-						// }
 						if (selectResult.length > 0) {
 							const matchingRowIndex = selectResult.findIndex(
-								(row)=>row.sub_title === (bundleRowContent.subtitle || null)
+								(row)=> row.sub_title === (bundleRowContent.subtitle || null)
 							);
 							if (matchingRowIndex > -1) {
-								return newBundleRowId = selectResult[0].id;
+								return newBundleRowId = selectResult[matchingRowIndex].id;
 							}
 						}
-						// if (bundleRowContent.title.indexOf('uturama') > -1) {
-						// 	console.log('insert!')
-						// }
 						await (
 							this.query()
 								.insert({
 									main_title: bundleRowContent.title,
 									sub_title: bundleRowContent.subtitle,
-									media_type: bundleRowContent.type
+									// media_type: bundleRowContent.type
 								})
 								.onConflict(['main_title', 'sub_title'])
 								.ignore()
@@ -170,44 +165,7 @@ export class BundlesModel extends BaseHonkModel {
 								})
 						)
 					})
-					// .catch(err=> {
-					// 	MediaHonkServerBase.emitter('error', err);
-					// 	return undefined;
-					// })
 			)
-			// await (
-			// 	this.query()
-			// 		.insert({
-			// 			main_title: bundleRowContent.title,
-			// 			sub_title: bundleRowContent.subtitle,
-			// 			// cover_img_id: bundleRowContent.coverRowId,
-			// 			media_type: bundleRowContent.type
-			// 		})
-			// 		.onConflict(['main_title'])
-			// 		.ignore()
-			// 		.then(async (bundleInsertResult)=>{
-			// 			console.log('\n')
-			// 			console.log(bundleInsertResult)
-			// 			if (bundleInsertResult.id !== 0) {
-			// 				return newBundleRowId = bundleInsertResult.id;
-			// 			}
-			// 			await (
-			// 				this.query()
-			// 					.select()
-			// 					.where('main_title', '=', bundleRowContent.title)
-			// 					.then((selectResult)=>{
-			// 						console.log(selectResult)
-			// 						if (selectResult.length > 0) {
-			// 							newBundleRowId = selectResult[0].id
-			// 						}
-			// 					})
-			// 			)
-			// 		})
-			// 		.catch(err=> {
-			// 			MediaHonkServerBase.emitter('error', err);
-			// 			return undefined;
-			// 		})
-			// )
 		} catch (err) {
 			console.log(err)
 		}
@@ -234,7 +192,6 @@ export class BundlesModel extends BaseHonkModel {
 						categories: categories || []
 					})
 					.then(insertMetaResult=>{
-						// console.log(insertMetaResult)
 						if (Array.isArray(insertMetaResult)) {
 							metaRowIds = insertMetaResult;
 						}
@@ -243,43 +200,30 @@ export class BundlesModel extends BaseHonkModel {
 
 			await this.insertSingleBundleRow({
 					title: mediaEntry.title,
-					subtitle: mediaEntry.subtitle,
-					type: mediaEntry.type
+					subtitle: mediaEntry.subtitle
 				})
 				.then(newBundleRowId=>{
 					if (typeof(newBundleRowId) === 'number') {
+						// MediaHonkServerBase.logger(`- - PROCESSING bundle for ${mediaEntry.title} ${mediaEntry.subtitle || ''}`)
 						bundleRowId = newBundleRowId;
 					}
 				});
 			await MediaModel.insertMediaEntriesWithRelationalFields({
-					entries: mediaEntry.entries.filter((entry)=>{
-						// console.log(entry)
-						return entry.filename !== coverUrl
-					}),
+					entries: mediaEntry.entries.filter(
+						(entry)=> entry.filename !== coverUrl
+					),
 					metaRowIds: metaRowIds,
-					coverId: coverRowId
+					coverId: coverRowId,
+					mediaType: mediaEntry.type
 				})
 				.then(insertedMediaEntries=>{
 					if (Array.isArray(insertedMediaEntries)) {
+						// MediaHonkServerBase.logger(`- - PROCESSING ${ mediaEntry.entries.length } entries`)
 						mediaEntryRowIds = insertedMediaEntries;
 					}
 				});
-
-			// if (bundleRowId === -1) {
-			// 	console.log({...mediaEntry})
-			// 	throw new Error(`Unable to set row with value of -1`);
-			// }
-			/**
-			 * @todo 
-			 * - running into where promises arent fulfilling and leaving some entries dangling, and then added on second aggregation. see entry 'Gallery 2' for example
-			 * - bug where some bundles are adding media items that are not present, but relevent based on title/subtitle mismatch - see 'Futurama/season-2'
-			 * - the second aggregation causes both of the above.
-			 */
+				
 			for await (const mediaId of mediaEntryRowIds) {
-				// console.log(bundleRowId)
-				if (mediaEntry.title.indexOf('futurama') > -1) {
-					console.log({...mediaEntry})
-				}
 				await BundleMediaModel.insertBundleMediaRelationRow({
 					bundleId: bundleRowId,
 					mediaId,

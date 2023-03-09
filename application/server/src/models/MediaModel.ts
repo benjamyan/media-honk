@@ -1,4 +1,6 @@
 import Objection, { Model, ModelOptions, Pojo } from 'objection';
+import { Constants } from '../config';
+import { MediaFactory } from '../factories';
 import { MediaHonkServerBase } from '../_Base';
 import { CoversModel } from './CoversModel';
 import { MediaMetaModel } from './MediaMetaModel';
@@ -15,43 +17,17 @@ export class MediaModel extends BaseHonkModel {
 	id: number = null!;
 	title: string = null!;
 	abs_url: string = null!;
-	// filename: string = null!;
-	// rel_url: string = null!;
 	cover_img_id?: number = null!;
-
-	// media_id: number = null!;
-	// meta_id: number = null!;
-
-	// media_meta: {
-	// 	media_id: number;
-	// 	meta_id: number;
-	// } = null!;
-
+	media_type: string = null!;
+	
 	static async mountMediaTable() {
-		try {
-			await this.mountTable(this.tableName, (table)=> {
-				table.increments('id');
-				table.string('title').unique().notNullable();
-				table.string('abs_url').unique().notNullable();
-				// table.string('rel_url');
-				// table.integer('rel_url_id').references('id');
-				table.integer('cover_img_id').references('id').inTable(CoversModel.tableName);
-				// table.integer('source_id').references('id').inTable(SourcesModel.tableName);
-			});
-			await this.knex().schema.alterTable(this.tableName, (table)=> {
-				table.unique(['title', 'abs_url']);
-			});
-
-			// await this.mountTable(this.mediaMetaRelationTableName, (table)=> {
-			// 	table.integer('media_id').notNullable().references('id').inTable(this.tableName);
-			// 	table.integer('meta_id').notNullable().references('id').inTable(MetaModel.tableName);
-			// });
-			// await this.knex().schema.alterTable(this.mediaMetaRelationTableName, (table)=> {
-			// 	table.unique(['media_id', 'meta_id']);
-			// });
-		} catch (err) {
-			//
-		}
+		await this.mountTable(this.tableName, (table)=> {
+			table.increments('id');
+			table.string('title').notNullable();
+			table.string('abs_url').unique().notNullable();
+			table.string('media_type').notNullable().checkBetween(Constants.databaseMediaTypes);
+			table.integer('cover_img_id').references('id').inTable(CoversModel.tableName);
+		});
 	}
 
 	/** Optional JSON schema. This is not the database schema!
@@ -61,18 +37,18 @@ export class MediaModel extends BaseHonkModel {
 	static get jsonSchema() {
 		return {
 			type: 'object',
-			required: [ 'title', 'abs_url' ],
+			required: [ 'title', 'abs_url', 'media_type' ],
 
 			properties: {
 				id: { type: 'integer' },
 				title: { type: 'string' },
-				abs_url: { type: ['string', 'null'] },
+				abs_url: { type: 'string' },
 				// filename: { type: 'string' },
 				// rel_url: { type: ['string', 'null'] },
 				// rel_url_id: { type: ['integer', 'null'] },
 				cover_img_id: { type: ['integer', 'null'] },
 				// source_id: { type: [ 'integer' ] }
-
+				media_type: { type: 'string' }
 				// Properties defined as objects or arrays are
 				// automatically converted to JSON strings when
 				// writing to database and back to objects and arrays
@@ -109,11 +85,12 @@ export class MediaModel extends BaseHonkModel {
 	
 	static async insertSingleMediaEntryRow(mediaEntry: Honk.DB.media): Promise<number | null> {
 		let mediaEntryId: number | null = null!;
+		
 		try {
 			await (
 				this.query()
 					.insert(mediaEntry)
-					.onConflict(['title', 'abs_url'])
+					.onConflict([ 'abs_url' ])
 					.ignore()
 					.then((insertMediaEntryResult)=>{
 						if (insertMediaEntryResult.id > 0) {
@@ -137,6 +114,14 @@ export class MediaModel extends BaseHonkModel {
 								})
 						)
 					})
+					// .catch(err=>{
+					// 	if (err instanceof Error && err.name === 'UniqueViolationError') {
+					// 		MediaHonkServerBase.emitter(
+					// 			'error', 
+					// 			new Error(`Duplicate media entry with title: ${mediaEntry.title}`)
+					// 		);
+					// 	}
+					// })
 			)
 		} catch (err) {
 			MediaHonkServerBase.emitter(
@@ -156,18 +141,19 @@ export class MediaModel extends BaseHonkModel {
 	 * @param mediaProps 
 	 * @returns An array of tuples where _tuple[0]_ is the `index` attribute of a media entry, and _tuple[1]_ is the row ID in the `media` table
 	 */
-	static async insertMediaEntriesWithRelationalFields(mediaProps: {entries: Honk.Media.BasicLibraryEntry['entries'], metaRowIds: number[], coverId: number}) {
+	static async insertMediaEntriesWithRelationalFields(mediaProps: {entries: Honk.Media.BasicLibraryEntry['entries'], metaRowIds: number[], coverId: number, mediaType: Honk.Media.BasicLibraryEntry['type']}) {
 		const mediaEntryIds: number[] = [];
+
 		try {
 			for await (const entry of mediaProps.entries) {
-				// if (entry.filename.indexOf('futurama') > -1) {
-				// 	console.log({...mediaProps})
-				// }
-				await this.insertSingleMediaEntryRow({
-					title: entry.title,
-					abs_url: entry.filename,
-					cover_img_id: mediaProps.coverId
-				})
+				await this.insertSingleMediaEntryRow(
+					MediaFactory.mediaEntryToDbMediaEntry({
+						title: entry.title,
+						absUrl: entry.filename,
+						coverImgId: mediaProps.coverId,
+						mediaType: mediaProps.mediaType
+					})
+				)
 				.then(function(rowId){
 					if (rowId !== null) {
 						mediaEntryIds.push(rowId);
