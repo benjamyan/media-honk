@@ -82,7 +82,7 @@ export class ModelService extends MediaHonkServerBase {
      * @method handleTableEntryComparison
      * @description A generic utility fn to compare entries in the DB against the `comparisonData` provided. If an entry does not exist, it will call `INSERT INTO` and append to the DB.
      * @param param0 
-     * - `tableName` an explicit tables name in the database
+     * - `tableName` an explicit table name in the database
      * - `comparisonKey` is an singular and explicit key of the database table to compare the query results
      * - `comparisonData` is an implicitely defined set of data to compare the values of the select result against
      * - `factoryCallback` should be a handler function for a `comparisonData` entry to be formatted for insertion into the datbase 

@@ -18,7 +18,7 @@ Any file that does not contain required fields will be ignored completely (media
 - type: the media classification
   > @required
   > @type String literal
-  > @options `series` | `movie` | `singles` | `album` | `podcast` | `gallery`
+  > @options `series` | `movie` | `singles` | `album` | `gallery`
 - artists: any associated artists/actors/singers exactly
   > @optional 
   > @type String list

@@ -39,6 +39,7 @@ let app = Express(),
         Covers: CoversModel,
         Sources: SourcesModel
     },
+    localSettings: HonkServer.EnvSettings = null!,
     localConfig: Honk.Configuration = null!,
     mediaEntries: Record<string, Honk.Media.BaselineMediaProperties> = {};
     
@@ -46,7 +47,8 @@ export class MediaHonkServerBase extends TypedEmitter<HonkServer.InternalEvents>
     public enableLogging: boolean = true;
     public mediaEntries: Record<string, Honk.Media.BaselineMediaProperties> = mediaEntries;
     
-    static config: Honk.Configuration = null!;
+    static settings: typeof localSettings = null!;
+    static config: typeof localConfig = null!;
     static emitter: TypedEmitter<HonkServer.InternalEvents>['emit'] = null!;
     static logger: any = null!;
     
@@ -89,27 +91,35 @@ export class MediaHonkServerBase extends TypedEmitter<HonkServer.InternalEvents>
     static {
         this.emitter = super.prototype.emit;
         this.config =  localConfig;
+        this.settings = localSettings;
         this.logger = logger;
     }
     
+    get settings() {
+        if (localSettings === null) {
+            this.logger('! MOUNT process env settings');
+            this.mountProcessEnvSettings();
+        }
+        return localSettings
+    }
     get config() {
         // console.log(localConfig)
         if (localConfig === null) {
-            this.logger('MOUNT localConfig');
+            this.logger('! MOUNT local config');
             this.mountEnvironmentalConfig();
         }
         return localConfig;
     }
     get db() {
         if (databaseConnection === null) {
-            this.logger('MOUNT localConfig');
+            this.logger('! SET database connection');
             this.establishDatabaseConnection();
         }
         return databaseConnection
     }
     get app() {
         if (app === null) {
-            this.logger('MOUNT app');
+            this.logger('! MOUNT app');
             app = Express();
         }
         return app;
@@ -140,12 +150,14 @@ export class MediaHonkServerBase extends TypedEmitter<HonkServer.InternalEvents>
                 acquireConnectionTimeout: 5000,
             })
             Objection.Model.knex(knexInstance);
+            this.logger('- Connected to DB');
             
             await Objection.Model
                 .knex().schema
                 .hasTable('media')
                 .then(async (tablePresent)=>{
                     if (!tablePresent) {
+                        this.logger('- Creating database tables');
                         await SourcesModel.mountSourcesTable();
                         await BundlesModel.mountBundlesTable();
                         await CoversModel.mountCoversTable();
@@ -153,7 +165,12 @@ export class MediaHonkServerBase extends TypedEmitter<HonkServer.InternalEvents>
                         await MediaModel.mountMediaTable();
                         await MediaMetaModel.mountMediaMetaTable();
                         await BundleMediaModel.mountBundleMediaTable();
+                    } else {
+                        this.logger('- Tables already exist');
                     }
+                })
+                .then(()=>{
+                    this.logger('- DB good to go');
                 })
                 .catch(err=>{
                     console.error(err)
@@ -171,18 +188,56 @@ export class MediaHonkServerBase extends TypedEmitter<HonkServer.InternalEvents>
         }
     }
 
+    private mountProcessEnvSettings() {
+        this.logger('MediaHonkServerBase.mountProcessEnvSettings()');
+        const requiredEnv = [ 'HONK_ENV', 'BASE_DIRECTORY', 'CONFIG_FILE_PATH' ];
+        const optionalEnv = [ 'AGGREGATION_TYPE', 'ENABLE_LOOSE_AGGREGATION', 'DEPRECATED_DEFS' ];
+        localSettings = requiredEnv.concat(optionalEnv).reduce((envAccumulator, keyname)=> {
+            let currentEnvValue = process.env[keyname],
+                newLocalSetting;
+            switch (keyname) {
+                case 'LOOSE_AGGREGATE':
+                case 'DEPRECATED_DEFS': {
+                    currentEnvValue = currentEnvValue as HonkServer.ProcessEnv['DEPRECATED_DEFS'];
+                    if (currentEnvValue.toLowerCase() === 'true') {
+                        newLocalSetting = true;
+                    } else {
+                        newLocalSetting = false;
+                    }
+                    break;
+                }
+                default: newLocalSetting = currentEnvValue;
+            }
+            return {
+                ...envAccumulator,
+                [keyname]: newLocalSetting
+            }
+        }, {} as HonkServer.EnvSettings);
+            
+        requiredEnv.forEach((requiredVar)=>{
+            if (requiredVar === undefined) {
+                this.emit('error', {
+                    error: new Error(`Required env variable not set: ${requiredVar}`),
+                    severity: 1
+                })
+            }
+        })
+
+        this.logger('- Env settings loaded');
+    }
+
     /** Mount and check the environmental variables for errors */
     private async mountEnvironmentalConfig() {
         this.logger('MediaHonkServerBase.mountEnvironmentalConfig()');
         try {
-            if (localConfig !== null) {
-                return;
-            } else if (Fs.existsSync(Path.join(process.env.BASE_DIRECTORY, process.env.CONFIG_FILE_PATH))) {
+            if (localConfig !== null) return;
+
+            
+            if (Fs.existsSync(Path.join(this.settings.BASE_DIRECTORY, this.settings.CONFIG_FILE_PATH))) {
                 localConfig = (
-                    Yaml.parse(Fs.readFileSync(Path.join(process.env.BASE_DIRECTORY, process.env.CONFIG_FILE_PATH), 'utf-8'))
+                    Yaml.parse(Fs.readFileSync(Path.join(this.settings.BASE_DIRECTORY, this.settings.CONFIG_FILE_PATH), 'utf-8'))
                 );
                 return;
-                // this.config = localConfig;
             } else throw new Error('Failed to locate required configurations');
         } catch (err) {
             this.emit('error', {
@@ -194,6 +249,8 @@ export class MediaHonkServerBase extends TypedEmitter<HonkServer.InternalEvents>
                 severity: 1
             })
             return;
+        } finally {
+            this.logger('- Env config loaded')
         }
     }
     

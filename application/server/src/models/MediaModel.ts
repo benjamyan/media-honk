@@ -1,11 +1,10 @@
-import Objection, { Model, ModelOptions, Pojo } from 'objection';
+import { Model } from 'objection';
 import { Constants } from '../config';
 import { MediaFactory } from '../factories';
 import { MediaHonkServerBase } from '../_Base';
 import { CoversModel } from './CoversModel';
 import { MediaMetaModel } from './MediaMetaModel';
 import { MetaModel } from './MetaModel';
-import { SourcesModel } from './SourcesModel';
 import {BaseHonkModel} from './_ModelBase';
 
 export class MediaModel extends BaseHonkModel {

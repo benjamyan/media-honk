@@ -29,7 +29,7 @@ export class AggregateService extends ProcedureService {
         
     }
     
-    public async handleAggregateRoutine(aggregationType: typeof process.env.AGGREGATE) {
+    public async handleAggregateRoutine(aggregationType: typeof process.env.AGGREGATION_TYPE) {
         this.logger('AggregateService.handleAggregateRoutine()');
         switch (aggregationType) {
             case 'remake': {
@@ -116,10 +116,32 @@ export class AggregateService extends ProcedureService {
                                 fileContent = Yaml.parse(Fs.readFileSync(file, 'utf-8'));
                                 // this.logger(`\n- START ${fileContent.title} ${fileContent.subtitle || ''}`);
                                 
-                                if (!fileContent || ValidationService.instance.permissibleMediaProperties(fileContent) instanceof Error) {
-                                    this.emit('error', new Error(`Invalid yaml configuration: ${file}`));
-                                    continue;
+                                if (this.settings.DEPRECATED_DEFS) {
+                                    if ((fileContent as any).actors) {
+                                        if (Array.isArray((fileContent as any).actors)) {
+                                            fileContent.artists = [...(fileContent as any).actors];
+                                        } else {
+                                            fileContent.artists = [(fileContent as any).actors];
+                                        }
+                                        delete (fileContent as any).actors;
+                                    }
                                 }
+
+                                if (!fileContent) {
+                                    this.emit('error', new Error(`- No yaml configuration: ${file}`));
+                                    continue;
+                                } else {
+                                    const isFileContentValid = (
+                                        ValidationService.instance.permissibleMediaProperties(fileContent)
+                                    )
+                                    if (isFileContentValid instanceof Error) {
+                                        this.emit('error', new Error(`- Invalid yaml configuration: ${file}`));
+                                        this.emit('error', `-- ${isFileContentValid.message}`)
+                                        continue;
+                                    }
+                                }
+                                
+
                                 await this.FsService.shakeDirectoryFileTree(
                                     file.replace(file.split('/').at(-1) as string, ''),
                                     Constants.includeExtensions
@@ -147,7 +169,9 @@ export class AggregateService extends ProcedureService {
                                 .catch(err=>{
                                     this.emit(
                                         'error', 
-                                        err instanceof Error ? err : new Error(`Unhandled exception when parsing media entries: ${file}`)
+                                        err instanceof Error 
+                                            ? `${fileContent.title}\n${err}` 
+                                            : new Error(`Unhandled exception when parsing media entries: ${file}`)
                                     );
                                 })
                                 .finally(()=>{
@@ -155,10 +179,9 @@ export class AggregateService extends ProcedureService {
                                 })
                             }
                         })
-                        .catch((err)=>{
+                        .catch((error)=>{
                             this.emit('error', {
-                                error: err,
-                                severity: 2
+                                error, severity: 2
                             })
                         })
                 );

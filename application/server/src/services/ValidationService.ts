@@ -21,11 +21,8 @@ export class ValidationService {
     }
 
     public permissibleMediaProperties(mediaEntry: Honk.Media.BaselineMediaProperties & Partial<Honk.Media.MediaPropertyDefition>): boolean | Error {
-        // const { title, type, subtitle, artists, categories, _guid } = mediaEntry;
-        
         let currentProperty: Parameters<typeof this.permissibleMediaProperties>[0][keyof Parameters<typeof this.permissibleMediaProperties>[0]] = null!;
 
-        // validateMediaEntry:
         for (const property in mediaEntry) {
             currentProperty = mediaEntry[property as keyof typeof mediaEntry];
             switch(property) {
@@ -37,7 +34,7 @@ export class ValidationService {
                         return new Error(`Invalid typeof property provided: ${property}`)
                     } else if (property === 'type') {
                         if (!permittedMediaTypes.includes(currentProperty as string)) {
-                            return new Error(`Expected one of permitted types, but got: ${currentProperty}`)
+                            return new Error(`Expected one of permitted types in ${property}, but got: ${currentProperty}`)
                         }
                     }
                     break;
@@ -55,11 +52,12 @@ export class ValidationService {
                     if (!currentProperty || Array.isArray(currentProperty)) {
                         break;
                     } else {
-                        return new Error(`Expected undefined or array type, but got: ${typeof currentProperty}`);
+                        return new Error(`Expected undefined or array in ${property}, but got: ${typeof currentProperty}`);
                     }
                 }
                 default: {
-                    return new Error(`Explicit property found: ${property}`)
+                    /** its got bad wordz HAUHAUAHHAUAHAU HAAA */
+                    return new Error(`Unknown property found: ${property}`)
                 }
             }
         }

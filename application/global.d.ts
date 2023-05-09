@@ -12,8 +12,6 @@ declare global {
             api: {
                 dev_http_port: number;
                 dev_https_port: number;
-                // dev_http: string;
-                // dev_https: string;
                 use_https: boolean;
                 permitted_origins: string[];
                 users: string[];
@@ -22,12 +20,6 @@ declare global {
             };
             db: {
                 file: string;
-                // host: string;
-                // port: number;
-                // username: string;
-                // password: string;
-                // db_name: string;
-                // allow_insecure: boolean;
             };
         }
         namespace DB {

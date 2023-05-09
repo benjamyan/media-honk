@@ -4,8 +4,7 @@ import { json } from 'express';
 
 import { MediaRoutes } from './routes';
 import { MediaHonkServerBase } from './_Base';
-import { AggregateService, MediaEntriesProxy } from './services';
-import { FileSystemService } from './services/common/FileSystemService';
+import { AggregateService } from './services';
 
 let AggregateServiceIntermediary: AggregateService = null!;
 
@@ -16,26 +15,16 @@ export class MediaHonkServer extends MediaHonkServerBase {
         
         // this.enableLogging = true;
         this.on('server.start', async ()=> {
-            
-            if (process.env.AGGREGATE !== undefined) {
-                await this.Aggregate.handleAggregateRoutine(process.env.AGGREGATE)
+            this.logger('EV server.start');
+            console.log({...this.settings})
+            if (this.settings.AGGREGATION_TYPE !== undefined) {
+                await this.Aggregate.handleAggregateRoutine(this.settings.AGGREGATION_TYPE)
             }
             this.initializeExpressServer();
-            
         });
         this.on('server.listening', ()=> {
+            this.logger('EV server.listening');
             try {
-                // this.db.all('SELECT * FROM jobs', (error, rows)=> {
-                //     if (error !== null) {
-                //         this.emit('error', {
-                //             error,
-                //             severity: 1
-                //         })
-                //         return;
-                //     }
-                //     Object.assign( this.mediaEntries, MediaEntriesProxy(rows) );
-                // });
-                
                 this.setupServerMiddleware();
             } catch (err) {
                 this.emit('error', {
@@ -55,7 +44,7 @@ export class MediaHonkServer extends MediaHonkServerBase {
     }
 
     private initializeExpressServer() {
-        this.logger('JobPostServer.initializeExpressServer()');
+        this.logger('MediaHonkServer.initializeExpressServer()');
         try {
             let connectionPort: string = null!,
                 listeningNamespace: string = null!;
@@ -68,10 +57,12 @@ export class MediaHonkServer extends MediaHonkServerBase {
 
             if (process.env.HONK_ENV === 'dev' || process.env.HONK_ENV === 'stage') {
                 listeningNamespace = `${this.config.api.use_https ? 'https' : 'http'}://localhost:${connectionPort}`
+            } else {
+                //
             }
 
             this.app.listen(connectionPort, ()=> {
-                console.log(`Listening on ${listeningNamespace}`);
+                console.log(`- Listening on ${listeningNamespace}\n`);
                 this.emit('server.listening');
             })
             // this.app.listen((
@@ -91,7 +82,8 @@ export class MediaHonkServer extends MediaHonkServerBase {
     }
     
     /**
-     * @method setupServerMiddleware is called after the server is started, a sets up the middleware/routing we need
+     * @method setupServerMiddleware 
+     * Called after the server is started, sets up the middleware/routing we need
      */
     private setupServerMiddleware() {
         this.app.use(json());
