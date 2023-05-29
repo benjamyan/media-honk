@@ -1,16 +1,3 @@
 {
-    "folders": [
-		{
-			"path": "../deps"
-		},
-		{
-			"path": "server"
-		},
-		{
-			"path": "client"
-		},
-		{
-			"path": "client-react"
-		}
-	]
+    "folders": []
 }

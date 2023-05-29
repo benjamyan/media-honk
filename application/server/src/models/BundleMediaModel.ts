@@ -17,8 +17,6 @@ export class BundleMediaModel extends BaseHonkModel {
 
 	static async mountBundleMediaTable() {
         await this.mountTable(this.tableName, (table)=> {
-            // table.integer('bundle_id').notNullable();
-            // table.integer('media_id').notNullable();
             table.integer('bundle_id').notNullable().references('id').inTable(BundlesModel.tableName);
             table.integer('media_id').notNullable().references('id').inTable(MediaModel.tableName);
 			table.integer('media_index');
@@ -57,7 +55,7 @@ export class BundleMediaModel extends BaseHonkModel {
 					to: `${this.tableName}.media_id`
 				}
 			},
-			meta: {
+			bundles: {
 				relation: Model.HasManyRelation,
 				modelClass: BundlesModel,
 				join: {
@@ -70,23 +68,29 @@ export class BundleMediaModel extends BaseHonkModel {
 
     static async insertBundleMediaRelationRow(bundleMedia: { bundleId: number, mediaId: number, mediaIndex: number | null }) {
         try {
-			const bundleMediaRelationshipRow = {
-				bundle_id: bundleMedia.bundleId,
-				media_id: bundleMedia.mediaId,
-				media_index: bundleMedia.mediaIndex
-			}
-			// console.log(bundleMediaRelationshipRow)
-			await (
-				this.query()
-					.insert(bundleMediaRelationshipRow)
-					// .whereNot(bundleMediaRelationshipRow)
-					.onConflict(['media_id','bundle_id','media_index'])
-					.ignore()
-					// .catch(err=>{
-					// 	console.log(err)
-					// 	console.log({...bundleMedia})
-					// })
-			)
+			// const doesBundleExist = await (
+			// 	BundleMediaModel
+			// 		.query()
+			// 		.select()
+			// 		.where('bundle_id', bundleMedia.bundleId)
+			// 		.andWhere('media_id', bundleMedia.mediaId)
+			// 		.andWhere('media_index', bundleMedia.mediaIndex)
+			// );
+			// if (doesBundleExist.length == 0) {
+				await (
+					this.query()
+						.insert({
+							bundle_id: bundleMedia.bundleId,
+							media_id: bundleMedia.mediaId,
+							media_index: bundleMedia.mediaIndex
+						})
+						// .whereNot(bundleMediaRelationshipRow)
+						.onConflict(['media_id','bundle_id','media_index'])
+						.ignore()
+						.catch(err=>console.log(err))
+				)
+			// }
+			
         } catch (err) {
             console.log(err)
 			// console.log({...bundleMedia})

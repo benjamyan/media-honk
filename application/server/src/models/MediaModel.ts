@@ -81,7 +81,7 @@ export class MediaModel extends BaseHonkModel {
 			}
 		}
 	}
-	
+
 	static async insertSingleMediaEntryRow(mediaEntry: Honk.DB.media): Promise<number | null> {
 		let mediaEntryId: number | null = null!;
 		
@@ -140,7 +140,7 @@ export class MediaModel extends BaseHonkModel {
 	 * @param mediaProps 
 	 * @returns An array of tuples where _tuple[0]_ is the `index` attribute of a media entry, and _tuple[1]_ is the row ID in the `media` table
 	 */
-	static async insertMediaEntriesWithRelationalFields(mediaProps: {entries: Honk.Media.BasicLibraryEntry['entries'], metaRowIds: number[], coverId: number, mediaType: Honk.Media.BasicLibraryEntry['type']}) {
+	static async insertMediaEntriesWithRelationalFields(mediaProps: {entries: Honk.Media.BasicLibraryEntry['entries'], metaArtistIds: (number|null)[], metaCategoryIds: (number|null)[], coverId: number, mediaType: Honk.Media.BasicLibraryEntry['type']}) {
 		const mediaEntryIds: number[] = [];
 
 		try {
@@ -154,15 +154,19 @@ export class MediaModel extends BaseHonkModel {
 					})
 				)
 				.then(function(rowId){
-					if (rowId !== null) {
+					if (typeof(rowId) == 'number') {
 						mediaEntryIds.push(rowId);
 					}
 					return rowId
 				})
 				.then(async (mediaId)=>{
-					if (mediaId !== null) {
-						for await (const metaId of mediaProps.metaRowIds) {
-							if (typeof(metaId) === 'number') await MediaMetaModel.insertNewMediaMetaRelationRow(mediaId, metaId);
+					if (typeof(mediaId) == 'number') {
+						const longestMetaIdList = (
+							mediaProps.metaArtistIds.length >= mediaProps.metaCategoryIds.length
+								? 'metaArtistIds' : 'metaCategoryIds'
+						)
+						for (let i = 0; i < mediaProps[longestMetaIdList].length; i++) {
+							await MediaMetaModel.insertNewMediaMetaRelationRow(mediaId, mediaProps.metaCategoryIds[i], mediaProps.metaArtistIds[i]);
 						}
 					}
 				})

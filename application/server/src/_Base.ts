@@ -13,17 +13,11 @@ import { default as Objection, Model } from 'objection';
 import { BundlesModel, CoversModel, MediaModel, MetaModel, SourcesModel } from './models';
 import { MediaMetaModel } from './models/MediaMetaModel';
 import { BundleMediaModel } from './models/BundleMediaModel';
+import { cmdLogger } from './helpers'
 
 dotenv.config({ path: Path.resolve(__dirname, '../.env') });
 
-const logger = (msg: string, tracing?: boolean)=> {
-    if (!!tracing) {
-        console.trace(msg);
-    } else {
-        console.log(msg);
-    }
-}
-
+const logger = cmdLogger;
 let app = Express(),
     knexInstance: ReturnType<typeof Knex> = null!,
     databaseConnection: {
@@ -51,6 +45,7 @@ export class MediaHonkServerBase extends TypedEmitter<HonkServer.InternalEvents>
     static config: typeof localConfig = null!;
     static emitter: TypedEmitter<HonkServer.InternalEvents>['emit'] = null!;
     static logger: any = null!;
+    static on: any = null!;
     
     constructor() {
         super();
@@ -90,6 +85,7 @@ export class MediaHonkServerBase extends TypedEmitter<HonkServer.InternalEvents>
     
     static {
         this.emitter = super.prototype.emit;
+        this.on = super.prototype.on;
         this.config =  localConfig;
         this.settings = localSettings;
         this.logger = logger;
@@ -103,7 +99,6 @@ export class MediaHonkServerBase extends TypedEmitter<HonkServer.InternalEvents>
         return localSettings
     }
     get config() {
-        // console.log(localConfig)
         if (localConfig === null) {
             this.logger('! MOUNT local config');
             this.mountEnvironmentalConfig();
@@ -127,17 +122,7 @@ export class MediaHonkServerBase extends TypedEmitter<HonkServer.InternalEvents>
     get logger() {
         return logger;
     }
-
-    // public logger(msg: string, tracing?: boolean) {
-    //     if (!this.enableLogging) {
-    //         return;
-    //     } else if (!!tracing) {
-    //         console.trace(msg);
-    //     } else {
-    //         console.log(msg);
-    //     }
-    // }
-
+    
     private async establishDatabaseConnection() {
         this.logger('MediaHonkServerBase.establishDatabaseConnection()');
         try {
@@ -188,6 +173,7 @@ export class MediaHonkServerBase extends TypedEmitter<HonkServer.InternalEvents>
         }
     }
 
+    /** Captures CLI variables and adds them to the local settings obj */
     private mountProcessEnvSettings() {
         this.logger('MediaHonkServerBase.mountProcessEnvSettings()');
         const requiredEnv = [ 'HONK_ENV', 'BASE_DIRECTORY', 'CONFIG_FILE_PATH' ];
@@ -226,7 +212,7 @@ export class MediaHonkServerBase extends TypedEmitter<HonkServer.InternalEvents>
         this.logger('- Env settings loaded');
     }
 
-    /** Mount and check the environmental variables for errors */
+    /** Mount and check the configuation in the local YAML file */
     private async mountEnvironmentalConfig() {
         this.logger('MediaHonkServerBase.mountEnvironmentalConfig()');
         try {

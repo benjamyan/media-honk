@@ -7,7 +7,7 @@ export class CoversModel extends BaseHonkModel {
 	static tableName = 'covers';
 	
 	/** Declarative column  names for type guard */
-	id?: number = null!;
+	id: number = null!;
 	file_url: string = null!;
 	source_id: number = null!;
 	
@@ -17,6 +17,9 @@ export class CoversModel extends BaseHonkModel {
 			table.string('file_url').unique();
 			table.integer('source_id').references('id').inTable(SourcesModel.tableName);
 		});
+		// await this.knex().schema.alterTable(this.tableName, (table)=> {
+		// 	table.unique(['file_url']);
+		// })
 	}
 
 	/** Optional JSON schema. This is not the database schema!
@@ -69,6 +72,10 @@ export class CoversModel extends BaseHonkModel {
 			// 	}
 			// },
 		}
+	}
+
+	static async getCoverByMediaId(mediaId: number) {
+		
 	}
 
 	static async insertCoverEntry(fileName: string) {

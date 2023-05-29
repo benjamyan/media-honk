@@ -11,15 +11,25 @@ export class MediaMetaModel  extends BaseHonkModel {
     };
 
     media_id: number = null!;
-    meta_id: number = null!;
+	meta_artist_id?: number | null = null!;
+	meta_category_id?: number | null = null!;
+    // meta_id: number = null!;
 
 	static async mountMediaMetaTable() {
         await this.mountTable(this.tableName, (table)=> {
             table.integer('media_id').notNullable().references('id').inTable(MediaModel.tableName);
-            table.integer('meta_id').notNullable().references('id').inTable(MetaModel.tableName);
+            table.integer('meta_artist_id').references('id').inTable(MetaModel.tableName);
+            table.integer('meta_category_id').references('id').inTable(MetaModel.tableName);
         });
+        // await this.mountTable(this.tableName, (table)=> {
+        //     table.integer('media_id').notNullable().references('id').inTable(MediaModel.tableName);
+        //     table.integer('meta_artist_id').unique().references('id').inTable(MetaModel.tableName);
+        //     table.integer('meta_category_id').unique().references('id').inTable(MetaModel.tableName);
+        // });
         await this.knex().schema.alterTable(this.tableName, (table)=> {
-            table.unique(['media_id', 'meta_id']);
+            // table.unique(['media_id', 'meta_artist_id']);
+            // table.unique(['media_id', 'meta_category_id']);
+            table.unique(['media_id', 'meta_artist_id', 'meta_category_id']);
         });
 	}
 
@@ -30,10 +40,15 @@ export class MediaMetaModel  extends BaseHonkModel {
 	static get jsonSchema() {
 		return {
 			type: 'object',
-			required: [ 'media_id', 'meta_id' ],
+			required: [ 'media_id' ],
+			// oneOf: [
+			// 	{ required: [ 'meta_artist_id' ] },
+			// 	{ required: [ 'meta_category_id' ] }
+			// ],
 			properties: {
 				media_id: { type: 'integer' },
-				meta_id: { type: 'integer' }
+				meta_artist_id: { type: ['integer', 'null'] },
+				meta_category_id: { type: ['integer', 'null'] }
 			}
 		};
 	}
@@ -51,30 +66,59 @@ export class MediaMetaModel  extends BaseHonkModel {
 					to: `${this.tableName}.media_id`
 				}
 			},
-			meta: {
+			category_id: {
 				relation: Model.HasManyRelation,
 				modelClass: MetaModel,
 				join: {
 					from: `${MetaModel.tableName}.id`,
-					to: `${this.tableName}.meta_id`
+					to: `${this.tableName}.meta_artist_id`
+				}
+			},
+			artist_id: {
+				relation: Model.HasManyRelation,
+				modelClass: MetaModel,
+				join: {
+					from: `${MetaModel.tableName}.id`,
+					to: `${this.tableName}.meta_category_id`
 				}
 			}
 		}
 	}
-
-    static async insertNewMediaMetaRelationRow(mediaId: number, metaId: number) {
+	
+	static async insertNewMediaMetaRelationRow(mediaId: number, metaCategoryId: number | null, metaArtistId: number | null) {
         try {
-            this.query()
-                .insert({
-                    media_id: mediaId,
-                    meta_id: metaId
-                })
-                .onConflict(['media_id', 'meta_id'])
-                .ignore()
-                .catch(err=>console.log(err))
+			if (metaCategoryId == null && metaArtistId == null) {
+				return;
+			}
+			const mediaIdExists = await MediaModel.query().select().findById(mediaId);
+			if (mediaIdExists) {
+				this.query()
+					.insert({
+						media_id: mediaId,
+						meta_category_id: metaCategoryId,
+						meta_artist_id: metaArtistId
+					})
+					.onConflict(true)
+					.ignore()
+					.catch(err=>console.log(err));
+			}
         } catch (err) {
             console.log(err)
         }
     }
+    // static async insertNewMediaMetaRelationRow(mediaId: number, metaId: number) {
+    //     try {
+    //         this.query()
+    //             .insert({
+    //                 media_id: mediaId,
+    //                 meta_id: metaId
+    //             })
+    //             .onConflict(['media_id', 'meta_id'])
+    //             .ignore()
+    //             .catch(err=>console.log(err))
+    //     } catch (err) {
+    //         console.log(err)
+    //     }
+    // }
 
 }

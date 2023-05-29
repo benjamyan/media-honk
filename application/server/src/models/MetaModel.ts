@@ -1,9 +1,29 @@
-import { Model } from 'objection';
+import { default as knex } from 'knex';
+import { Model, QueryBuilder, raw, ref } from 'objection';
+import { AtleastOneOf } from '../types/utils';
 import { MediaHonkServerBase } from '../_Base';
-import { MediaModel } from './MediaModel';
 import {BaseHonkModel} from "./_ModelBase";
-
-type MetaRowContentProps = Record<'artist_name' | 'category_name', any[]>
+/**
+	 * 
+	 * @param param0 
+	 * -
+	 * - Requires one of (but accepts both):
+	 *     - `artist`
+	 *    - `category`
+	 * - `includeRefs` include rows that have a reference to the `artist` or `category` (or both)
+	 * 
+	 * @todo 
+	 * - 
+	 * - `explicit` if both provided; all rows must have either both the param, or their respective rows ID
+	 * 
+	 */
+type GetRowMethodProps = (
+	AtleastOneOf<{artist: string | undefined, category: string | undefined}, 'category' | 'artist'> & { 
+		includeRefs?: Array<'category_name' | 'artist_name'>;
+		explicit?: boolean; 
+		column?: (keyof MetaModel)[]; 
+	}
+);
 
 export class MetaModel extends BaseHonkModel {
 
@@ -80,29 +100,137 @@ export class MetaModel extends BaseHonkModel {
 			}
 		}
 	}
-	
 
-    static metaRowContent(row: 'artist_name' | 'category_name'): Promise<string[] | Error> | Error {
-        try {
-            return new Promise((resolve, reject)=> (
-                this.query()
-                    .whereNot(row, `NULL`)
-                    .select(row)
-                    .then((res: any)=>{
-                        resolve(res.map((meta: any)=>meta[row]))
-                        return 
-                    })
-                    .catch((err)=>{
-                        reject(new Error(JSON.stringify(err)))
-                        return 
-                    })
-            ));
-        }
-        catch (err) {
-            return err instanceof Error ? err : new Error('Unhandled exception.')
-        }
+	static getAssociatedColumnsById(params: GetRowMethodProps & { metaQuery: ()=> QueryBuilder<MetaModel, MetaModel[]> }) {
+		let { column, includeRefs, metaQuery } = params;
+
+		const releventRows = ()=> (
+			this.query()
+				.select('id')
+				.from('meta')
+				.whereIn('id', metaQuery().select('id'))
+				.orWhereIn('artist_id', metaQuery().select('id'))
+				.orWhereIn('category_id', metaQuery().select('id'))
+		);
+		const totalRows = ()=> {
+			const qb = this.query()
+			if (includeRefs?.includes('category_name')) {
+				qb.select('category_id').from('meta').whereIn('id', releventRows())
+			}
+			if (includeRefs?.includes('artist_name')) {
+				qb.select('artist_id').from('meta').whereIn('id', releventRows())
+			}
+
+			return qb // this.query().select('category_id').from('meta').whereIn('id', releventRows())
+		};
+		
+		return ()=> (
+			this.query()
+				.select(column || [])
+				.whereIn('id', totalRows())
+				.orWhereIn('id', releventRows())
+		)
+	}
+
+	static getRowsById(params: GetRowMethodProps & { metaQuery: ()=> QueryBuilder<MetaModel, MetaModel[]> }) {
+		let { artist, category, metaQuery, column } = params;
+		// if (column == undefined) column = [];
+		// if (column.length == 0) column = ['id','artist_id','artist_name','category_id','category_name'];
+		console.log()
+
+		return ()=> (
+			this.query()
+				.select(column || [])
+				.modify((qb) => {
+					if (!!artist) {
+						qb.where('artist_id', metaQuery().select('id'));
+						qb.orWhere('id', `curr.artist_id`);
+					}
+					if (!!category) {
+						if (!!artist) qb.orWhere('category_id', metaQuery().select('id'));
+						else qb.where('category_id', metaQuery().select('id'));
+						qb.orWhere('id', `curr.category_id`)
+					}
+					return qb
+				})
+				.unionAll(function() {
+					this.select(column || []).from(metaQuery());
+				})
+		)
+	}
+
+	static getRowsByColumn(params: GetRowMethodProps) {
+		let { artist, category, column } = params;
+		// if (column == undefined) column = [];
+		// if (column.length == 0) column = ['id','artist_id','artist_name','category_id','category_name'];
+		const rowsByColumn = ()=> (
+			this.query()
+				.column(
+					params.includeRefs 
+						? []
+						: column || []
+				)
+				.select()
+				.modify((qb)=> {
+					if (!!artist) {
+						qb.where('artist_name', artist)
+					};
+					if (!!category) {
+						if (!artist) {
+							qb.where('category_name', category)
+						} else {
+							qb.orWhere('category_name', category)
+						}
+					}
+					return qb;
+				})
+		)
+		if (!params.includeRefs) {
+			return rowsByColumn
+		}
+		return this.getAssociatedColumnsById({ 
+			...params, 
+			metaQuery: rowsByColumn 
+		});
+	}
+
+    static getAllMetaRowContent(row: 'artist_name' | 'category_name' | undefined): Promise<Record<string, string[]> | Error> {
+		const queryRow = (
+			row === undefined 
+				? ['artist_name', 'category_name']
+				: row
+		)
+        return new Promise((resolve, reject)=> (
+			MetaModel.query()
+				.select(queryRow)
+				.skipUndefined()
+				.then((res: MetaModel[])=>{
+					const parsedQueryResults: Record<string, string[]> = {};
+					const setQueryResult = (rowName: string, value: string)=> {
+						if (parsedQueryResults[rowName] == undefined) {
+							parsedQueryResults[rowName] = []
+						}
+						parsedQueryResults[rowName].push(value)
+					}
+					for (const row of res) {
+						if (Array.isArray(queryRow)) {
+							if (row.artist_name !== null) setQueryResult('artist_name', row.artist_name)
+							if (row.category_name !== null) setQueryResult('category_name', row.category_name)
+						} else {
+							if (row[queryRow] !== null) setQueryResult(queryRow, row[queryRow] as string)
+						}
+					}
+					resolve(parsedQueryResults);
+					return 
+				})
+				.catch((err)=>{
+					console.log(err)
+					reject(new Error(JSON.stringify(err)))
+					return 
+				})
+		));
     }
-
+	
 	/**
 	 * @method insertSingleMetaRow
 	 * @description 
@@ -117,8 +245,7 @@ export class MetaModel extends BaseHonkModel {
 	 * @returns Either the insrted rows ID or the existing rows ID that matches the given parameters
 	 */
 	static async insertSingleMetaRow(artist: string | null, category: string | null) {
-		let /*conflictArr: string[] = [],*/
-			insertValues: {
+		let insertValues: {
 				artist_name: string | null,
 				artist_id: number | null,
 				category_name: string | null,
@@ -131,85 +258,6 @@ export class MetaModel extends BaseHonkModel {
 			},
 			metaRowId: number = null!;
 		try {
-			// await (
-			// 	this.query()
-			// 		.select()
-			// 		.modify(function(qb){
-			// 			if (!!insertValues.artist_name) {
-			// 				qb.whereNotNull('artist_name').andWhere('artist_name', '=', insertValues.artist_name)
-			// 			}
-			// 			if (!!insertValues.category_name) {
-			// 				if (!!insertValues.artist_name) {
-			// 					qb.orWhereNotNull('category_name').andWhere('category_name', '=', insertValues.category_name)
-			// 				} else {
-			// 					qb.whereNotNull('category_name').andWhere('category_name', '=', insertValues.category_name)
-			// 				}
-			// 			}
-			// 		})
-			// 		.then(result=>{
-			// 			if (result.length === 1) {
-			// 				if (result[0].artist_name === insertValues.artist_name && result[0].category_name === insertValues.category_name) {
-			// 					metaRowId = result[0].id;
-			// 				}
-			// 			} else if (result.length > 0) {
-			// 				insertValues.artist_id = (
-			// 					result.find((row)=>row.artist_name === insertValues.artist_name)?.id || null
-			// 				);
-			// 				insertValues.category_id = (
-			// 					result.find((row)=>row.category_name === insertValues.category_name)?.id || null
-			// 				);
-			// 			}
-			// 			console.log({...insertValues})
-			// 		})
-			// 		.then(async ()=> {
-			// 			console.log({...insertValues})
-			// 			if (metaRowId !== null) {
-			// 				return metaRowId;
-			// 			} else if (insertValues.artist_id !== null && insertValues.artist_id === insertValues.category_id) {
-			// 				return metaRowId = insertValues.artist_id;
-			// 			}
-			// 			await (
-			// 				this.query()
-			// 					.select()
-			// 					.where(insertValues)
-			// 					.orWhereNotNull('artist_id')
-			// 					.andWhere('artist_id', '=', insertValues.artist_id)
-			// 					.orWhereNotNull('category_id')
-			// 					.andWhere('category_id', '=', insertValues.category_id)
-			// 					.then(async (selectedMetaRows)=>{
-			// 						if (selectedMetaRows.length > 0 && !!insertValues.artist_id && !!insertValues.category_id) {
-			// 							/** 
-			// 							 * If both the artist and category ID have been defined on the current row to be inserted
-			// 							 * then it is possible were adding a self-referencing field for either the artist or category.
-			// 							 * Compare the string values for either artist or category from the select result, and 
-			// 							 * return its ID if it passed filtering.
-			// 							 */
-			// 							const superfluousResult = selectedMetaRows.find(
-			// 								(meta)=> meta.category_name === category || meta.artist_name === artist
-			// 							);
-			// 							if (superfluousResult) {
-			// 								metaRowId = superfluousResult.id;
-			// 							}
-			// 						}
-			// 					})
-			// 			);
-			// 		})
-			// 		.then(async ()=>{
-			// 			if (metaRowId !== null) {
-			// 				return metaRowId;
-			// 			}
-			// 			await (
-			// 				this.query()
-			// 					.insert(insertValues)
-			// 					.onConflict([ 'artist_name', 'category_name' ])
-			// 					.ignore()
-			// 					.then(insertedMetaRow=>{
-			// 						metaRowId = insertedMetaRow.id;
-			// 					})
-			// 			);
-			// 		})
-			// )
-
 			if (!!insertValues.artist_name) {
 				await (
 					this.query()
@@ -304,25 +352,44 @@ export class MetaModel extends BaseHonkModel {
 	 * @returns An index containing the newly inserted _or_ already present row IDs  
 	 */
 	static async insertManyMetaRows(metaEntries: { artists: string[], categories: string[] }) {
+		const { artists, categories } = metaEntries;
+		const newMetaRowIds: Record<keyof typeof metaEntries, number[]> & {
+			mutate: (value: number | null) => void;
+		} = {
+			artists: [],
+			categories: [],
+			mutate(value) {
+				if (value == null) return;
+				Object.keys(metaEntries).forEach((name)=> {
+					name = name as keyof typeof metaEntries;
+					if (metaEntries[name as keyof typeof metaEntries].length > this[name as keyof typeof metaEntries].length) {
+						if (value !== null) this[name as keyof typeof metaEntries].push(value);
+					}
+				})
+			}
+		};
 		try {
-			const { artists, categories } = metaEntries;
 			const longValueKey = (
 				artists.length >= categories.length ? 'artists' : 'categories'
 			);
-			const newMetaRowIds: Awaited<ReturnType<typeof this.insertSingleMetaRow>>[] = [];
-			
+			// const newMetaRowIds: Awaited<ReturnType<typeof this.insertSingleMetaRow>>[] = [];
 			await metaEntries[longValueKey].reduce(async (initialPromise, value)=> {
 				await initialPromise;
 				for await (const element of (longValueKey === 'artists' ? categories : artists)) {
 					if (longValueKey === 'artists') {
-						await this.insertSingleMetaRow(value, element).then((rowId)=>newMetaRowIds.push(rowId))
+						await this.insertSingleMetaRow(value, element).then((rowId)=>{
+							newMetaRowIds.mutate(rowId);
+						})
+						// await this.insertSingleMetaRow(value, element).then((rowId)=>newMetaRowIds.push(rowId))
 					} else {
-						await this.insertSingleMetaRow(element, value).then((rowId)=>newMetaRowIds.push(rowId))
+						await this.insertSingleMetaRow(element, value).then((rowId)=>{
+							newMetaRowIds.mutate(rowId);
+						})
+						// await this.insertSingleMetaRow(element, value).then((rowId)=>newMetaRowIds.push(rowId))
 					}
 				}
 			}, Promise.resolve());
 			
-			return newMetaRowIds as number[];
 		} catch (err) {
 			// console.log(err)
 			MediaHonkServerBase.emitter('error', {
@@ -330,6 +397,10 @@ export class MetaModel extends BaseHonkModel {
 				severity: 2
 			})
 		}
+		return {
+			artists: newMetaRowIds.artists,
+			categories: newMetaRowIds.categories
+		};
 		
 	}
 

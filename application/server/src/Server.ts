@@ -46,6 +46,20 @@ export class MediaHonkServer extends MediaHonkServerBase {
     private initializeExpressServer() {
         this.logger('MediaHonkServer.initializeExpressServer()');
         try {
+            const establishServer = (port: number)=> {
+                console.warn(' > Attempting connection on port: ' + port)
+                this.app
+                    .listen(port, ()=> {
+                        console.log(` < Listening on ${listeningNamespace}:${port}\n`);
+                        this.emit('server.listening');
+                    })
+                    .on('error', (err)=> {
+                        if (err.message.indexOf('EADDRINUSE') > -1) {
+                            console.warn(' < ' + err.message)
+                        }
+                        establishServer(port + 1)
+                    })
+            }
             let connectionPort: string = null!,
                 listeningNamespace: string = null!;
 
@@ -56,28 +70,21 @@ export class MediaHonkServer extends MediaHonkServerBase {
             }
 
             if (process.env.HONK_ENV === 'dev' || process.env.HONK_ENV === 'stage') {
-                listeningNamespace = `${this.config.api.use_https ? 'https' : 'http'}://localhost:${connectionPort}`
+                listeningNamespace = `${this.config.api.use_https ? 'https' : 'http'}://localhost`
             } else {
                 //
             }
 
-            this.app.listen(connectionPort, ()=> {
-                console.log(`- Listening on ${listeningNamespace}\n`);
-                this.emit('server.listening');
-            })
-            // this.app.listen((
-            //     process.env.API_DOMAIN !== undefined && process.env.API_DOMAIN.length > 0
-            //         ? `${process.env.API_DOMAIN}:${process.env.API_PORT}`
-            //         : process.env.API_PORT
-            // ), ()=> {
-            //     console.log(`Listening on ${process.env.API_PORT}`);
+            establishServer(parseInt(connectionPort))
+            // this.app.listen(connectionPort, ()=> {
+            //     console.log(`- Listening on ${listeningNamespace}\n`);
             //     this.emit('server.listening');
             // })
         } catch (err) {
             this.emit('error', {
                 error: err instanceof Error ? err : new Error('Unhandled error: JobPostServer.initializeExpressServer()'),
                 severity: 1
-            })
+            });
         }
     }
     

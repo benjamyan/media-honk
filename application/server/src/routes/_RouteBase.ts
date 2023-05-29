@@ -150,12 +150,14 @@ export class RouteBase extends MediaHonkServerBase {
                     /** Parse the request queries for fields marked as required */
                     if (methodConfig.required.some((key)=> req[currentField][key] === undefined)) {
                         console.log(methodConfig)
-                        return res.status(400).send(`Missing required ${config} fields`);
+                        res.status(400).send(`Missing required ${config} fields`);
+                        return 
                     }
 
                     for (const reqQuery of Object.keys(req[currentField])) {
                         if (!methodConfig.permitted.includes(reqQuery)) {
-                            return res.status(400).send(`Invalid ${config} fields provided`);
+                            res.status(400).send(`Invalid ${config} fields provided`);
+                            return 
                         }
                     }  
                 }

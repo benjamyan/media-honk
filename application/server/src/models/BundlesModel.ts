@@ -1,4 +1,5 @@
 import Objection, { Model } from 'objection';
+import { default as Express } from 'express';
 import { Constants } from '../config';
 import { MediaHonkServerBase } from '../_Base';
 import { BundleMediaModel } from './BundleMediaModel';
@@ -6,6 +7,8 @@ import { CoversModel } from './CoversModel';
 import { MediaModel } from './MediaModel';
 import { MetaModel } from './MetaModel';
 import {BaseHonkModel} from './_ModelBase';
+import { MediaMetaModel } from './MediaMetaModel';
+import { transaction } from 'objection';
 
 export class BundlesModel extends BaseHonkModel {
 	static tableName = 'bundles';
@@ -130,6 +133,43 @@ export class BundlesModel extends BaseHonkModel {
 		return json;
 	}
 
+	static async getBundlesByMeta(params: Pick<Express.Request['query'], 'artist' | 'category'>) {
+		try {
+			const metaParamId = ()=> (
+				MetaModel
+					.query()
+					.select('id')
+					.where('artist_name', '=', params.artist as string)
+			);
+			const metaId = ()=> (
+				MetaModel.query()
+					.select('id')
+					.where('artist_name', '=', params.artist as string)
+					.orWhere('artist_id', '=', metaParamId())
+			);
+			const mediaMetaId = async ()=> (
+				MediaMetaModel
+					.query()
+					.select('media_id')
+					.where('meta_artist_id', '=', metaId())
+			);
+			const mediaIdList = await (
+				mediaMetaId()
+					.then((res)=>res.map(row=>row.media_id))
+			)
+			const bundleMediaId = ()=> (
+				BundleMediaModel
+					.query()
+					.select()
+					.whereRaw("media_id = " + mediaIdList.map(_ => '?').join(' OR media_id = '), [...mediaIdList])
+					.then((res)=>res.map((row)=>row.bundle_id))
+			);
+			return await BundlesModel.query().findByIds(await bundleMediaId())
+		} catch (err) {
+			console.log(err)
+		}
+	}
+
 	static async insertSingleBundleRow(bundleRowContent: Pick<Honk.Media.BasicLibraryEntry, 'title' | 'subtitle'>): Promise<number | null> {
 		let newBundleRowId: number | null = null!;
 		try {
@@ -137,6 +177,7 @@ export class BundlesModel extends BaseHonkModel {
 				this.query()
 					.select()
 					.where('main_title', '=', bundleRowContent.title)
+					.skipUndefined()
 					.then(async (selectResult)=>{
 						if (selectResult.length > 0) {
 							const matchingRowIndex = selectResult.findIndex(
@@ -167,16 +208,21 @@ export class BundlesModel extends BaseHonkModel {
 					})
 			)
 		} catch (err) {
-			console.log(err)
+			if (err instanceof Error) {
+				console.log(err.message)
+			} else {
+				console.log(err)
+			}
 		}
 		return newBundleRowId
 	}
 	
 	static async handleBundleEntryWithRelatedFields(mediaEntry: Honk.Media.BasicLibraryEntry, options?: Record<string, any>) {
+		// MediaHonkServerBase.logger(`- - PROCESSING bundle for ${mediaEntry.title} ${mediaEntry.subtitle || ''}`)
 		let { coverUrl, artists, categories } = mediaEntry;
 		let coverRowId: number = -1,
 			bundleRowId: number = -1,
-			metaRowIds: number[] = [],
+			metaRowIds: Awaited<ReturnType<typeof MetaModel.insertManyMetaRows>> = null!,
 			mediaEntryRowIds: Awaited<ReturnType<typeof MediaModel.insertMediaEntriesWithRelationalFields>> = [];
         try {
             if (coverUrl) {
@@ -192,12 +238,12 @@ export class BundlesModel extends BaseHonkModel {
 						categories: categories || []
 					})
 					.then(insertMetaResult=>{
-						if (Array.isArray(insertMetaResult)) {
+						if (insertMetaResult !== undefined) {
 							metaRowIds = insertMetaResult;
 						}
 					})
             }
-
+			
 			await this.insertSingleBundleRow({
 					title: mediaEntry.title,
 					subtitle: mediaEntry.subtitle
@@ -208,17 +254,18 @@ export class BundlesModel extends BaseHonkModel {
 						bundleRowId = newBundleRowId;
 					}
 				});
+				
 			await MediaModel.insertMediaEntriesWithRelationalFields({
 					entries: mediaEntry.entries.filter(
 						(entry)=> entry.filename !== coverUrl
 					),
-					metaRowIds: metaRowIds,
+					metaArtistIds: metaRowIds.artists,
+					metaCategoryIds: metaRowIds.categories,
 					coverId: coverRowId,
 					mediaType: mediaEntry.type
 				})
 				.then(insertedMediaEntries=>{
 					if (Array.isArray(insertedMediaEntries)) {
-						// MediaHonkServerBase.logger(`- - PROCESSING ${ mediaEntry.entries.length } entries`)
 						mediaEntryRowIds = insertedMediaEntries;
 					}
 				});
@@ -232,7 +279,11 @@ export class BundlesModel extends BaseHonkModel {
 			}
 			
         } catch (err) {
-            console.log(err);
+			if (err instanceof Error) {
+				console.log(err.message);
+			} else {
+				console.log(err);
+			}
         }
 		// console.log(' - DONE 2')
 		return;
