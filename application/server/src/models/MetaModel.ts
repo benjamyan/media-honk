@@ -319,6 +319,8 @@ export class MetaModel extends BaseHonkModel {
 								);
 								if (superfluousResult) {
 									return metaRowId = superfluousResult.id;
+								} else if (selectedMetaRows.length == 1) {
+									return metaRowId = selectedMetaRows[0].id;
 								}
 							}
 						}
@@ -369,9 +371,7 @@ export class MetaModel extends BaseHonkModel {
 			}
 		};
 		try {
-			const longValueKey = (
-				artists.length >= categories.length ? 'artists' : 'categories'
-			);
+			const longValueKey = artists.length >= categories.length ? 'artists' : 'categories';
 			// const newMetaRowIds: Awaited<ReturnType<typeof this.insertSingleMetaRow>>[] = [];
 			await metaEntries[longValueKey].reduce(async (initialPromise, value)=> {
 				await initialPromise;

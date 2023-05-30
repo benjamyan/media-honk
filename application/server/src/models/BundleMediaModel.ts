@@ -17,6 +17,7 @@ export class BundleMediaModel extends BaseHonkModel {
 
 	static async mountBundleMediaTable() {
         await this.mountTable(this.tableName, (table)=> {
+			table.increments('id');
             table.integer('bundle_id').notNullable().references('id').inTable(BundlesModel.tableName);
             table.integer('media_id').notNullable().references('id').inTable(MediaModel.tableName);
 			table.integer('media_index');

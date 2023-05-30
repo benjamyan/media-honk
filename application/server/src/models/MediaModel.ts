@@ -146,33 +146,33 @@ export class MediaModel extends BaseHonkModel {
 		try {
 			for await (const entry of mediaProps.entries) {
 				await this.insertSingleMediaEntryRow(
-					MediaFactory.mediaEntryToDbMediaEntry({
-						title: entry.title,
-						absUrl: entry.filename,
-						coverImgId: mediaProps.coverId,
-						mediaType: mediaProps.mediaType
-					})
-				)
-				.then(function(rowId){
-					if (typeof(rowId) == 'number') {
-						mediaEntryIds.push(rowId);
-					}
-					return rowId
-				})
-				.then(async (mediaId)=>{
-					if (typeof(mediaId) == 'number') {
-						const longestMetaIdList = (
-							mediaProps.metaArtistIds.length >= mediaProps.metaCategoryIds.length
-								? 'metaArtistIds' : 'metaCategoryIds'
-						)
-						for (let i = 0; i < mediaProps[longestMetaIdList].length; i++) {
-							await MediaMetaModel.insertNewMediaMetaRelationRow(mediaId, mediaProps.metaCategoryIds[i], mediaProps.metaArtistIds[i]);
+						MediaFactory.mediaEntryToDbMediaEntry({
+							title: entry.title,
+							absUrl: entry.filename,
+							coverImgId: mediaProps.coverId,
+							mediaType: mediaProps.mediaType
+						})
+					)
+					.then(function(rowId){
+						if (typeof(rowId) == 'number') {
+							mediaEntryIds.push(rowId);
 						}
-					}
-				})
-				.catch(err=>{
-					// console.log(err)
-				})
+						return rowId
+					})
+					.then(async (mediaId)=>{
+						if (typeof(mediaId) == 'number') {
+							const longestMetaIdList = (
+								mediaProps.metaArtistIds.length >= mediaProps.metaCategoryIds.length
+									? 'metaArtistIds' : 'metaCategoryIds'
+							)
+							for (let i = 0; i < mediaProps[longestMetaIdList].length; i++) {
+								await MediaMetaModel.insertNewMediaMetaRelationRow(mediaId, mediaProps.metaCategoryIds[i], mediaProps.metaArtistIds[i]);
+							}
+						}
+					})
+					.catch(err=>{
+						// console.log(err)
+					})
 			}
 		} catch (err) {
 			// console.log(err)

@@ -10,6 +10,7 @@ export class MediaMetaModel  extends BaseHonkModel {
         return `${MediaModel.tableName}_${MetaModel.tableName}`
     };
 
+	id: number = null!;
     media_id: number = null!;
 	meta_artist_id?: number | null = null!;
 	meta_category_id?: number | null = null!;
@@ -17,6 +18,7 @@ export class MediaMetaModel  extends BaseHonkModel {
 
 	static async mountMediaMetaTable() {
         await this.mountTable(this.tableName, (table)=> {
+			table.increments('id');
             table.integer('media_id').notNullable().references('id').inTable(MediaModel.tableName);
             table.integer('meta_artist_id').references('id').inTable(MetaModel.tableName);
             table.integer('meta_category_id').references('id').inTable(MetaModel.tableName);
@@ -46,6 +48,7 @@ export class MediaMetaModel  extends BaseHonkModel {
 			// 	{ required: [ 'meta_category_id' ] }
 			// ],
 			properties: {
+				id: { type: 'integer' },
 				media_id: { type: 'integer' },
 				meta_artist_id: { type: ['integer', 'null'] },
 				meta_category_id: { type: ['integer', 'null'] }

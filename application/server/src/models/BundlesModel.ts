@@ -222,7 +222,10 @@ export class BundlesModel extends BaseHonkModel {
 		let { coverUrl, artists, categories } = mediaEntry;
 		let coverRowId: number = -1,
 			bundleRowId: number = -1,
-			metaRowIds: Awaited<ReturnType<typeof MetaModel.insertManyMetaRows>> = null!,
+			metaRowIds: Awaited<ReturnType<typeof MetaModel.insertManyMetaRows>> = {
+				artists: [],
+				categories: []
+			},
 			mediaEntryRowIds: Awaited<ReturnType<typeof MediaModel.insertMediaEntriesWithRelationalFields>> = [];
         try {
             if (coverUrl) {
@@ -239,7 +242,14 @@ export class BundlesModel extends BaseHonkModel {
 					})
 					.then(insertMetaResult=>{
 						if (insertMetaResult !== undefined) {
-							metaRowIds = insertMetaResult;
+							metaRowIds.artists = insertMetaResult.artists.reduce((acc, current)=>{
+								if (!acc.includes(current)) acc.push(current);
+								return acc;
+							}, [] as number[])
+							metaRowIds.categories = insertMetaResult.categories.reduce((acc, current)=>{
+								if (!acc.includes(current)) acc.push(current);
+								return acc;
+							}, [] as number[])
 						}
 					})
             }
@@ -250,7 +260,6 @@ export class BundlesModel extends BaseHonkModel {
 				})
 				.then(newBundleRowId=>{
 					if (typeof(newBundleRowId) === 'number') {
-						// MediaHonkServerBase.logger(`- - PROCESSING bundle for ${mediaEntry.title} ${mediaEntry.subtitle || ''}`)
 						bundleRowId = newBundleRowId;
 					}
 				});
