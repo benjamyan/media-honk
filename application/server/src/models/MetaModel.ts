@@ -1,5 +1,6 @@
 import { default as knex } from 'knex';
 import { Model, QueryBuilder, raw, ref } from 'objection';
+import { MetaModelColumns } from '.';
 import { AtleastOneOf } from '../types/utils';
 import { MediaHonkServerBase } from '../_Base';
 import {BaseHonkModel} from "./_ModelBase";
@@ -24,8 +25,16 @@ type GetRowMethodProps = (
 		column?: (keyof MetaModel)[]; 
 	}
 );
+// type AssociatedColumn<C extends keyof Omit<MetaModelColumns, 'id'>> = (
+//     C extends keyof Pick<MetaModelColumns, 'artist_name' | 'category_name'> 
+// 		? keyof Pick<MetaModelColumns, 'artist_id' | 'category_id'> 
+// 		: keyof Pick<MetaModelColumns, 'artist_name' | 'category_name'> 
+// )
+type AssociatedColumn<C extends keyof Omit<MetaModelColumns, 'id'>> = (
+    C extends `${'artist'|'category'}_name` ? `${'artist'|'category'}_id` : `${'artist'|'category'}_name`
+)
 
-export class MetaModel extends BaseHonkModel {
+export class MetaModel extends BaseHonkModel implements MetaModelColumns {
 
 	/** Table name is the only required property. */
 	static tableName = 'meta';
@@ -99,6 +108,40 @@ export class MetaModel extends BaseHonkModel {
 				}
 			}
 		}
+	}
+	
+	static associatedColumn<T extends keyof Omit<MetaModelColumns, 'id'>>(column:T) {
+		let associatedColumn;
+		switch (column) {
+			case 'artist_id': {
+				associatedColumn = "artist_name";
+				break;
+			}
+			case 'artist_name': {
+				associatedColumn = `artist_id`
+				break;
+			}
+			case 'category_id': {
+				associatedColumn = 'category_name'
+				break;
+			}
+			case 'category_name': {
+				associatedColumn = 'category_id'
+				break;
+			}
+		}
+		return associatedColumn as AssociatedColumn<T>
+	}
+
+	static async getAssociatedRowsByValue(params: { column: keyof Pick<MetaModelColumns, 'artist_name' | 'category_name'>, value: string }) {
+		const { column, value } = params;
+		const initialMetaColumn = this.query().select('id').where(column, value);
+		return (
+			this.query()
+				.select()
+				.where('id', initialMetaColumn)
+				.orWhere(this.associatedColumn(column), initialMetaColumn)
+		)
 	}
 
 	static getAssociatedColumnsById(params: GetRowMethodProps & { metaQuery: ()=> QueryBuilder<MetaModel, MetaModel[]> }) {

@@ -3,8 +3,9 @@
 import { default as Express } from 'express';
 
 import { RouteBase } from './_RouteBase';
-import { BundleMediaModel, BundlesModel, CoversModel, MediaMetaModel, MediaModel, MetaModel, MetaModelColumn } from '../models';
+import { BundleMediaModel, BundlesModel, CoversModel, MediaMetaModel, MediaModel, MetaModel, MetaModelColumns } from '../models';
 import { resolve } from 'path';
+import { ProcedureService } from '../services/ProcedureService';
 
 export class MediaRoutes extends RouteBase {
     
@@ -109,285 +110,27 @@ export class MediaRoutes extends RouteBase {
      */
     private getBundles = async ({ query, ...req }: Express.Request, res: Express.Response) => {
         try {
-            type BundleIntermediaryBucket = {
-                resolved: Array<{
-                    bundle_id: number;
-                    main_title: string;
-                    sub_title: string | undefined;
-                    category: string[];
-                    artist: string[];
-                    cover_img_url: string | undefined;
-                    length: number;
-                    type: string;
-                }>;
-                associations: Array<{
-                    metaId: number;
-                    _ids: {
-                        bundles: Set<number>;
-                        media_meta: Set<number>;
-                        covers: Set<number>;
-                        meta: Set<number>;
-                        artists: Set<number>;
-                        categories: Set<number>;
-                    };
-                    _related: {
-                        rows: MetaModel[];
-                        type: keyof MetaModelColumn;
-                    };
-                }>;
-                _cache: {
-                    meta: Map<number, MetaModel>;
-                    media_meta: Map<number, MediaMetaModel>;
-                    media: Map<number, MediaModel>;
-                    bundles: Map<number, BundlesModel>;
-                    bundles_media: Map<number, BundleMediaModel>;
-                    covers: Map<number, CoversModel>;
-                };
-                _idList: Partial<Record<keyof BundleIntermediaryBucket['associations'][any]['_ids'], Set<number>>>,
-                listId: (name: keyof typeof BundleIntermediary._idList)=> Array<number>;
-            };
-            const BundleIntermediary: BundleIntermediaryBucket = {
-                resolved: [],
-                associations: [],
-                _idList: {},
-                _cache: {
-                    meta: new Map(),
-                    media: new Map(),
-                    media_meta: new Map(),
-                    bundles: new Map(),
-                    bundles_media: new Map(),
-                    covers: new Map()
-                },
-                listId(name) {
-                    let idList: Set<number>;
-                    if (this._idList[name] === undefined) {
-                        idList = new Set();
-                        for (const entry of Object.values(this.associations)) {
-                            entry._ids[name].forEach((id)=> idList.add(id));
-                        }
-                        this._idList[name] = idList;
-                    }
-                    return Array.from((this._idList[name] as Set<number>).values());
-                }
-            };
-            const getInitialMetaRows = async ({
-                queryMetaFields,
-                columnName
-            }:{
-                queryMetaFields: string;
-                columnName: keyof MetaModelColumn;
-            })=> {
-                const foundRows: typeof BundleIntermediary.associations = [];
-                const relatedIdColumn = columnName == 'artist_name' ? 'artist_id' : 'category_id';
-                for await (const columnValue of queryMetaFields.split(',')) {
-                    const metaQuery = await MetaModel.query().select().where(columnName, columnValue);
-                    if (metaQuery.length == 0) {
-                        continue;
-                    } else if (metaQuery.length > 1) {
-                        throw new Error('More than one field found.')
-                    }
+            const Bundles = await ProcedureService.instance.getBundlesByMetaField({
+                artist: query.artist || '',
+                category: query.category || ''
+            });
 
-                    const metaRow = metaQuery[0];
-                    
-                    const _associationEntry: typeof BundleIntermediary.associations[any] = {
-                        metaId: metaRow.id,
-                        _ids: {
-                            media_meta: new Set(),
-                            bundles: new Set(),
-                            meta: new Set(),
-                            covers: new Set(),
-                            artists: new Set(),
-                            categories: new Set()
-                        },
-                        _related: {
-                            rows: await MetaModel.query().select().where(relatedIdColumn, metaRow.id), 
-                            type: relatedIdColumn
-                        }
-                    };
-                    _associationEntry._ids.meta.add(metaRow.id);
-                    BundleIntermediary._cache.meta.set(metaRow.id, metaRow);
-
-                    foundRows.push(_associationEntry);
-                }
-                return foundRows
-            };
-            
-            if (!!query.artist) {
-                BundleIntermediary.associations = [
-                    ...BundleIntermediary.associations,
-                    ...await getInitialMetaRows({
-                        queryMetaFields: query.artist,
-                        columnName: 'artist_name'
-                    })
-                ]
-            }
-            if (!!query.category) {
-                BundleIntermediary.associations = [
-                    ...BundleIntermediary.associations,
-                    ...await getInitialMetaRows({
-                        queryMetaFields: query.category,
-                        columnName: 'category_name'
-                    })
-                ]
-            }
-            
-            for await (const entry of BundleIntermediary.associations) {
-                const mediaIds: number[] = [];
-                await (
-                    MediaMetaModel
-                        .query()
-                        .select()
-                        .modify((qb)=>{
-                            const mediaMetaCol = entry._related.type == 'artist_id' ? 'meta_artist_id' : 'meta_category_id';
-                            const metaRowIds = entry._related.rows.flatMap(({id})=> id);
-                            metaRowIds.push(entry.metaId);
-                            qb.whereRaw(`${mediaMetaCol} = ` + metaRowIds.map(_ => '?').join(` OR ${mediaMetaCol} = `), [...metaRowIds]);
-                        })
-                        .then((mediaMeta)=>{
-                            for (const media of mediaMeta) {
-                                mediaIds.push(media.media_id);
-                                BundleIntermediary._cache.media_meta.set(media.id, media);
-                                entry._ids.media_meta.add(media.id);
-                            }
-                        })
-                );
-                await (
-                    MediaMetaModel
-                        .query()
-                        .select()
-                        .modify((qb)=>{
-                            qb.whereRaw(`media_id = ` + mediaIds.map(_ => '?').join(` OR media_id = `), [...mediaIds]);
-                        })
-                        .then((mediaMeta)=>{
-                            for (const media of mediaMeta) {
-                                BundleIntermediary._cache.media_meta.set(media.id, media);
-                                entry._ids.media_meta.add(media.id);
-                                mediaIds.push(media.media_id);
-                            }
-                        })
-                );
-                await (
-                    BundleMediaModel
-                        .query()
-                        .select()
-                        .whereRaw("media_id = " + mediaIds.map(_ => '?').join(' OR media_id = '), [...mediaIds])
-                        .then((bundleMediaResult)=> {
-                            Object.values(BundleIntermediary.associations).forEach((row)=>{
-                                for (const bundleMedia of bundleMediaResult) {
-                                    if (mediaIds.includes(bundleMedia.media_id)) {
-                                        row._ids.bundles.add(bundleMedia.bundle_id);
-                                    }
-                                    BundleIntermediary._cache.bundles_media.set(bundleMedia.media_id, bundleMedia)
-                                }
-                            })
-                        })
-                );
-                for await (const bundleId of entry._ids.bundles.values()) {
-                    const resolvedBundle: BundleIntermediaryBucket['resolved'][any] = {
-                        bundle_id: bundleId,
-                        main_title: '',
-                        sub_title: '',
-                        category: [],
-                        artist: [],
-                        cover_img_url: '',
-                        length: 0,
-                        type: ''
-                    };
-                    const getBundleCoverImage = async (coverImgId: number)=> {
-                        const coverCacheEntry = BundleIntermediary._cache.covers.get(coverImgId);
-                        let coverImgUrl;
-                        if (coverCacheEntry) {
-                            coverImgUrl = coverCacheEntry.file_url;
-                        } else {
-                            const coverImage = await CoversModel.query().findById(coverImgId);
-                            if (coverImage) {
-                                BundleIntermediary._cache.covers.set(coverImage.id, coverImage);
-                                coverImgUrl = coverImage.file_url;
-                            }
-                        }
-                        return coverImgUrl as string;
-                    };
-                    const getMetaRowValues = async (colName: 'artist_name' | 'category_name')=> {
-                        const mediaMetaColName: keyof MediaMetaModel = `meta_${colName == 'artist_name' ? 'artist_id' : 'category_id'}`;
-                        const mediaById: Set<number> = new Set();
-                        const metaRowByColName: string[] = [];
-                        for (const id of mediaIds) {
-                            BundleIntermediary._cache.media_meta.forEach((mediaMetaRow)=> {
-                                if (mediaMetaRow.media_id == id && typeof(mediaMetaRow[mediaMetaColName]) == 'number') {
-                                    mediaById.add(mediaMetaRow[mediaMetaColName] as number);
-                                }
-                            })
-                        }
-                        await (
-                            MetaModel
-                                .query()
-                                .findByIds([...mediaById.values()])
-                                .then(async (metaRows)=> {
-                                    let metaQueryRow: keyof MetaModelColumn;
-                                    for await (const metaRow of metaRows) {
-                                        metaQueryRow = colName == 'artist_name' ? 'artist_id' : 'category_id';
-                                        if (metaRow[metaQueryRow] !== null) {
-                                            await MetaModel.query().findById(metaRow[metaQueryRow] as number).then((row)=>{
-                                                if (row && row[colName]) metaRowByColName.push(row[colName] as string) 
-                                            })
-                                        } else {
-                                            metaRowByColName.push(metaRow[colName] as string)
-                                        }
-                                    }
-                                })
-                        )
-                        return metaRowByColName;
-                    }
-                    const bundleEntry = await BundlesModel.query().select().findById(bundleId);
-
-                    if (bundleEntry) {
-                        BundleIntermediary._cache.bundles.set(bundleEntry.id, bundleEntry)
-                        resolvedBundle.main_title = bundleEntry.main_title;
-                        resolvedBundle.sub_title = bundleEntry.sub_title;
-                        if (bundleEntry.custom_cover_id) {
-                            resolvedBundle.cover_img_url = await getBundleCoverImage(bundleEntry.custom_cover_id);
-                        }
-                    }
-                    
-                    const mediaItems = (
-                        [...BundleIntermediary._cache.bundles_media.values()].filter((bundleMedia)=>bundleMedia.bundle_id == bundleId)
-                    );
-
-                    for await (const mediaId of mediaItems.flatMap(({media_id})=>media_id)) {
-                        if (!!resolvedBundle.cover_img_url && !!resolvedBundle.type) break;
-                        
-                        const mediaEntry = await MediaModel.query().findById(mediaId);
-                        if (!mediaEntry) break;
-
-                        BundleIntermediary._cache.media.set(mediaEntry.id, mediaEntry);
-                        if (!resolvedBundle.cover_img_url && mediaEntry?.cover_img_id) {
-                            resolvedBundle.cover_img_url = await getBundleCoverImage(mediaEntry.cover_img_id);
-                        }
-                        if (!resolvedBundle.type && mediaEntry?.media_type) {
-                            resolvedBundle.type = mediaEntry.media_type;
-                        }
-                    }
-
-                    resolvedBundle.artist = await getMetaRowValues('artist_name');
-                    resolvedBundle.category = await getMetaRowValues('category_name');
-                    resolvedBundle.length = mediaItems.length;
-
-                    BundleIntermediary.resolved.push({...resolvedBundle});
-                }
-            }
-            
-            if (!Array.isArray(BundleIntermediary.resolved)) {
+            if (!Array.isArray(Bundles)) {
                 throw new Error('Invalid request result');
-            } else if (BundleIntermediary.resolved.length == 0) {
+            } else if (Bundles.length == 0) {
                 res.sendStatus(204);
                 return;
             }
             res.statusCode = 200;
-            res.json(BundleIntermediary.resolved);
+            res.json(Bundles);
             res.send();
             return;
         } catch (err) {
-            console.log(err)
+            this.emit('error', {
+                error: err,
+                severity: 2,
+                response: res
+            })
         }
     }
     

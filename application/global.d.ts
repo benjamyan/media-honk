@@ -94,6 +94,8 @@ declare global {
             }
             
             interface BasicLibraryEntry extends BaselineMediaProperties {
+                // uuid: string;
+                // baseUrl: string;
                 /** The relative URL relative to our API */
                 // relativeUrl: PathLike;
                 /** Name of the source in our configuration file */
@@ -103,9 +105,9 @@ declare global {
                 /** The media items under this entry  */
                 entries: Array<MediaItemEntry>;
                 coverUrl?: string;
-                // mediaUrl: Record<string, string>;
-                // uuid: string;
-                // baseUrl: string;
+                // 6.02.2023 added to beat type errors
+                mediaType?: string;
+                mediaUrl: Record<string, string>;
             }
         }
     }

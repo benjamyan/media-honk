@@ -6,8 +6,9 @@ import { CoversModel } from './CoversModel';
 import { MediaMetaModel } from './MediaMetaModel';
 import { MetaModel } from './MetaModel';
 import {BaseHonkModel} from './_ModelBase';
+import { MediaModelColumns } from './_ModelTypes';
 
-export class MediaModel extends BaseHonkModel {
+export class MediaModel extends BaseHonkModel implements MediaModelColumns {
 
 	/** Table name is the only required property. */
 	static tableName = 'media';

@@ -2,8 +2,9 @@ import { Model } from 'objection';
 import { MediaModel } from './MediaModel';
 import { MetaModel } from './MetaModel';
 import { BaseHonkModel } from './_ModelBase';
+import { MediaMetaModelColumns, MetaModelColumns } from './_ModelTypes';
 
-export class MediaMetaModel  extends BaseHonkModel {
+export class MediaMetaModel  extends BaseHonkModel implements MediaMetaModelColumns {
 
 	/** Table name is the only required property. */
 	static get tableName() {
@@ -86,6 +87,34 @@ export class MediaMetaModel  extends BaseHonkModel {
 				}
 			}
 		}
+	}
+
+	static associatedMetaColumn(metaColumn: keyof Pick<MetaModelColumns, 'artist_id'|'category_id'>) {
+		return `meta_${metaColumn}`
+		// switch (metaColumn) {
+		// 	case 'artist_id': {
+		// 		return 'meta_artist_id'
+		// 	}
+		// 	case 'category_id': {
+		// 		return 'meta_category_id'
+		// 	}
+		// }
+	}
+
+	static async getRowsByMetaId(params: { metaCol: keyof Pick<MetaModelColumns, 'artist_id'|'category_id'>, metaIds: number[] }) {
+		const { metaCol, metaIds } = params;
+		const mediaMetaCol = this.associatedMetaColumn(metaCol);
+		const getMediaMetaColByMetaId = (
+			MediaMetaModel
+				.query()
+				.select('media_id')
+				.whereRaw(`${mediaMetaCol} = ` + metaIds.map(_ => '?').join(` OR ${mediaMetaCol} = `), [...metaIds])
+		);
+		return (
+			this.query()
+				.select()
+				.where('media_id', 'in', getMediaMetaColByMetaId)
+		)
 	}
 	
 	static async insertNewMediaMetaRelationRow(mediaId: number, metaCategoryId: number | null, metaArtistId: number | null) {

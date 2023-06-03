@@ -5,6 +5,7 @@ import { json } from 'express';
 import { MediaRoutes } from './routes';
 import { MediaHonkServerBase } from './_Base';
 import { AggregateService } from './services';
+import { HonkRoutes } from './routes/HonkRoute';
 
 let AggregateServiceIntermediary: AggregateService = null!;
 
@@ -70,16 +71,12 @@ export class MediaHonkServer extends MediaHonkServerBase {
             }
 
             if (process.env.HONK_ENV === 'dev' || process.env.HONK_ENV === 'stage') {
-                listeningNamespace = `${this.config.api.use_https ? 'https' : 'http'}://localhost`
+                listeningNamespace = `${this.config.api.use_https ? 'https' : 'http'}://192.168.0.11`
             } else {
                 //
             }
 
-            establishServer(parseInt(connectionPort))
-            // this.app.listen(connectionPort, ()=> {
-            //     console.log(`- Listening on ${listeningNamespace}\n`);
-            //     this.emit('server.listening');
-            // })
+            establishServer(parseInt(connectionPort));
         } catch (err) {
             this.emit('error', {
                 error: err instanceof Error ? err : new Error('Unhandled error: JobPostServer.initializeExpressServer()'),
@@ -94,13 +91,8 @@ export class MediaHonkServer extends MediaHonkServerBase {
      */
     private setupServerMiddleware() {
         this.app.use(json());
-
-        this.app.use(function(_req, res, next) {
-            res.header("Access-Control-Allow-Origin", "*");
-            // res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
-            next();
-        });
         
+        new HonkRoutes();
         new MediaRoutes();
         
     }

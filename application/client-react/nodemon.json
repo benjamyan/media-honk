@@ -1,0 +1,19 @@
+{
+  "execMap": {
+    "ts": "ts-node"
+  },
+  "watch": [
+    "src/*"
+  ],
+  "ext": "html, json, ts, tsx, scss, css",
+  "ignore": [
+      "**/node_modules/",
+      "**/node_modules/*",
+      "**/node_modules/**/*.js",
+      "**/node_modules/**/**/*.js",
+      "**/node_modules/**/**/**/*.js",
+      "dist/",
+      "*.js"
+  ],
+  "exec": "ts-node ./src/index.ts"
+}

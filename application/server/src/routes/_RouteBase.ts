@@ -77,6 +77,26 @@ export class RouteBase extends MediaHonkServerBase {
                 // @ts-expect-error
                 this[method] = this[method].bind(this)
             });
+
+        this.app.use('*', [ this.onRouteTraffic, this.setRouteResponseHeaders ]);
+    }
+
+    private onRouteTraffic(req: Express.Request, res: Express.Response, next: Express.NextFunction) {
+        try {
+            this.logger(`>> ${req.protocol}: ${req.baseUrl}`);
+            next();
+        } catch (err) {
+            this.emit('error', {
+                error: err,
+                severity: 3,
+                response: res
+            })
+        }
+    }
+
+    private setRouteResponseHeaders(req: Express.Request, res: Express.Response, next: Express.NextFunction) {
+        res.header('Access-Control-Allow-Origin', 'http://192.168.0.11:8080');
+        next();
     }
 
     /**

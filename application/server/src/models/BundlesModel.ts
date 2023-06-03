@@ -9,8 +9,9 @@ import { MetaModel } from './MetaModel';
 import {BaseHonkModel} from './_ModelBase';
 import { MediaMetaModel } from './MediaMetaModel';
 import { transaction } from 'objection';
+import { BundlesModelColumns } from './_ModelTypes';
 
-export class BundlesModel extends BaseHonkModel {
+export class BundlesModel extends BaseHonkModel implements BundlesModelColumns {
 	static tableName = 'bundles';
 
 	id: number = null!;

@@ -18,8 +18,6 @@ _old/
 
 docker-dump/
 
-application/client-react
-
 *.zip
 *.7z
 *.tar

@@ -3,8 +3,9 @@ import { MediaModel } from './MediaModel';
 // import { MetaModel } from './MetaModel';
 import { BaseHonkModel } from './_ModelBase';
 import { BundlesModel } from './BundlesModel';
+import { BundlesMediaModelColumns } from './_ModelTypes';
 
-export class BundleMediaModel extends BaseHonkModel {
+export class BundleMediaModel extends BaseHonkModel implements BundlesMediaModelColumns {
 
 	/** Table name is the only required property. */
 	static get tableName() {
@@ -65,6 +66,15 @@ export class BundleMediaModel extends BaseHonkModel {
 				}
 			}
 		}
+	}
+
+	static getRowsByMediaId(params: { mediaIds: number[] }) {
+		const { mediaIds } = params;
+		return (
+			this.query()
+				.select()
+				.whereRaw("media_id = " + mediaIds.map(_ => '?').join(' OR media_id = '), [...mediaIds])
+		)
 	}
 
     static async insertBundleMediaRelationRow(bundleMedia: { bundleId: number, mediaId: number, mediaIndex: number | null }) {
