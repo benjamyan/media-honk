@@ -1,5 +1,5 @@
 import { default as Express } from 'express';
-import { ModelService } from '../services';
+import { ModelService } from '../services/common/ModelService';
 import { MediaHonkServerBase } from '../_Base';
 
 type PermittedKeys = `permitted${Capitalize<'query' | 'body'>}`;
@@ -78,26 +78,26 @@ export class RouteBase extends MediaHonkServerBase {
                 this[method] = this[method].bind(this)
             });
 
-        this.app.use('*', [ this.onRouteTraffic, this.setRouteResponseHeaders ]);
+        // this.app.use('*', [ this.onRouteTraffic, this.setRouteResponseHeaders ]);
     }
 
-    private onRouteTraffic(req: Express.Request, res: Express.Response, next: Express.NextFunction) {
-        try {
-            this.logger(`>> ${req.protocol}: ${req.baseUrl}`);
-            next();
-        } catch (err) {
-            this.emit('error', {
-                error: err,
-                severity: 3,
-                response: res
-            })
-        }
-    }
+    // private onRouteTraffic(req: Express.Request, res: Express.Response, next: Express.NextFunction) {
+    //     try {
+    //         this.logger(`>> ${req.protocol}: ${req.baseUrl}`);
+    //         next();
+    //     } catch (err) {
+    //         this.emit('error', {
+    //             error: err,
+    //             severity: 3,
+    //             response: res
+    //         })
+    //     }
+    // }
 
-    private setRouteResponseHeaders(req: Express.Request, res: Express.Response, next: Express.NextFunction) {
-        res.header('Access-Control-Allow-Origin', 'http://192.168.0.11:8080');
-        next();
-    }
+    // private setRouteResponseHeaders(req: Express.Request, res: Express.Response, next: Express.NextFunction) {
+    //     res.header('Access-Control-Allow-Origin', 'http://192.168.0.11:8080');
+    //     next();
+    // }
 
     /**
      * @method buildPermittedConfigOptions Utility function to return an object containing both required, and optional elements from a given array in `routeConfig`

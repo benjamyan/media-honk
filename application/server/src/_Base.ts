@@ -14,32 +14,20 @@ import { BundlesModel, CoversModel, MediaModel, MetaModel, SourcesModel } from '
 import { MediaMetaModel } from './models/MediaMetaModel';
 import { BundleMediaModel } from './models/BundleMediaModel';
 import { cmdLogger } from './helpers'
+import { ConfiguredMediaProperties } from './types/MediaProperties';
 
 dotenv.config({ path: Path.resolve(__dirname, '../.env') });
 
 const logger = cmdLogger;
 let app = Express(),
     knexInstance: ReturnType<typeof Knex> = null!,
-    databaseConnection: {
-        Bundles: typeof BundlesModel,
-        Media: typeof MediaModel,
-        Meta: typeof MetaModel,
-        Covers: typeof CoversModel,
-        Sources: typeof SourcesModel
-    } = {
-        Bundles: BundlesModel,
-        Media: MediaModel,
-        Meta: MetaModel,
-        Covers: CoversModel,
-        Sources: SourcesModel
-    },
     localSettings: HonkServer.EnvSettings = null!,
-    localConfig: Honk.Configuration = null!,
-    mediaEntries: Record<string, Honk.Media.BaselineMediaProperties> = {};
+    localConfig: HonkServer.ApplicationConfig = null!,
+    mediaEntries: Record<string, ConfiguredMediaProperties> = {};
     
 export class MediaHonkServerBase extends TypedEmitter<HonkServer.InternalEvents> {
     public enableLogging: boolean = true;
-    public mediaEntries: Record<string, Honk.Media.BaselineMediaProperties> = mediaEntries;
+    public mediaEntries: Record<string, ConfiguredMediaProperties> = mediaEntries;
     
     static settings: typeof localSettings = null!;
     static config: typeof localConfig = null!;
@@ -105,13 +93,6 @@ export class MediaHonkServerBase extends TypedEmitter<HonkServer.InternalEvents>
         }
         return localConfig;
     }
-    get db() {
-        if (databaseConnection === null) {
-            this.logger('! SET database connection');
-            this.establishDatabaseConnection();
-        }
-        return databaseConnection
-    }
     get app() {
         if (app === null) {
             this.logger('! MOUNT app');
@@ -139,7 +120,7 @@ export class MediaHonkServerBase extends TypedEmitter<HonkServer.InternalEvents>
             
             await Objection.Model
                 .knex().schema
-                .hasTable('media')
+                .hasTable(MediaModel.tableName)
                 .then(async (tablePresent)=>{
                     if (!tablePresent) {
                         this.logger('- Creating database tables');

@@ -1,79 +1,62 @@
 /// <reference path='../server.d.ts' />
 
-import { json } from 'express';
-
 import { MediaRoutes } from './routes';
 import { MediaHonkServerBase } from './_Base';
-import { AggregateService } from './services';
+import { AggregateService } from './services/AggregateService';
 import { HonkRoutes } from './routes/HonkRoute';
-
-let AggregateServiceIntermediary: AggregateService = null!;
+import { RouteMiddleware } from './routes/_RouteMiddleware';
+import { StreamRoutes } from './routes/StreamRoute';
 
 export class MediaHonkServer extends MediaHonkServerBase {
     
     constructor() {
         super();
         
-        // this.enableLogging = true;
         this.on('server.start', async ()=> {
             this.logger('EV server.start');
-            console.log({...this.settings})
             if (this.settings.AGGREGATION_TYPE !== undefined) {
-                await this.Aggregate.handleAggregateRoutine(this.settings.AGGREGATION_TYPE)
+                await AggregateService.instance.handleAggregateRoutine(this.settings.AGGREGATION_TYPE)
             }
             this.initializeExpressServer();
         });
         this.on('server.listening', ()=> {
             this.logger('EV server.listening');
-            try {
-                this.setupServerMiddleware();
-            } catch (err) {
-                this.emit('error', {
-                    error: err instanceof Error ? err : new Error('Unhandled exception'),
-                    severity: 1
-                })
-            }
+            this.setupServerRouting()
         });
         this.emit('init');
     }
-
-    get Aggregate() {
-        if (AggregateServiceIntermediary === null) {
-            AggregateServiceIntermediary = new AggregateService();
-        }
-        return AggregateServiceIntermediary;
-    }
-
+    
     private initializeExpressServer() {
         this.logger('MediaHonkServer.initializeExpressServer()');
         try {
             const establishServer = (port: number)=> {
-                console.warn(' > Attempting connection on port: ' + port)
+                this.logger(' > Attempting connection on port: ' + port);
                 this.app
                     .listen(port, ()=> {
-                        console.log(` < Listening on ${listeningNamespace}:${port}\n`);
+                        this.logger(` < Listening on ${listeningNamespace}:${port}\n`);
                         this.emit('server.listening');
                     })
                     .on('error', (err)=> {
                         if (err.message.indexOf('EADDRINUSE') > -1) {
-                            console.warn(' < ' + err.message)
+                            this.logger(` < ${err.message}`);
                         }
                         establishServer(port + 1)
                     })
             }
-            let connectionPort: string = null!,
-                listeningNamespace: string = null!;
-
-            if (!!this.config.api.use_https) {
-                connectionPort = String(this.config.api.dev_https_port);
-            } else {
-                connectionPort = String(this.config.api.dev_http_port);
-            }
-
+            const connectionPort: string = (
+                !!this.config.api.use_https
+                    ? String(this.config.api.dev_https_port)
+                    : String(this.config.api.dev_http_port)
+            );
+            let listeningNamespace: string = null!;
+            
             if (process.env.HONK_ENV === 'dev' || process.env.HONK_ENV === 'stage') {
                 listeningNamespace = `${this.config.api.use_https ? 'https' : 'http'}://192.168.0.11`
             } else {
-                //
+                this.emit('error', {
+                    error: `Unregonized ENV: ${process.env.HONK_ENV}`,
+                    severity: 1
+                })
             }
 
             establishServer(parseInt(connectionPort));
@@ -89,13 +72,19 @@ export class MediaHonkServer extends MediaHonkServerBase {
      * @method setupServerMiddleware 
      * Called after the server is started, sets up the middleware/routing we need
      */
-    private setupServerMiddleware() {
-        this.app.use(json());
-        
-        new HonkRoutes();
-        new MediaRoutes();
-        
+    private setupServerRouting() {
+        this.logger('MediaHonkServer.setupServerRouting()');
+        try {
+            new RouteMiddleware();
+            new HonkRoutes();
+            new MediaRoutes();
+            new StreamRoutes();
+        } catch (err) {
+            this.emit('error', {
+                error: err instanceof Error ? err : new Error('Unhandled exception'),
+                severity: 1
+            })
+        }
     }
-
 }
 

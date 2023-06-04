@@ -1,12 +1,12 @@
 import { Model } from 'objection';
 import { Constants } from '../config';
-import { MediaFactory } from '../factories';
 import { MediaHonkServerBase } from '../_Base';
 import { CoversModel } from './CoversModel';
 import { MediaMetaModel } from './MediaMetaModel';
 import { MetaModel } from './MetaModel';
 import {BaseHonkModel} from './_ModelBase';
 import { MediaModelColumns } from './_ModelTypes';
+import { StoredMediaTypes, AssociatedMediaProperties } from '../types/MediaProperties';
 
 export class MediaModel extends BaseHonkModel implements MediaModelColumns {
 
@@ -18,7 +18,7 @@ export class MediaModel extends BaseHonkModel implements MediaModelColumns {
 	title: string = null!;
 	abs_url: string = null!;
 	cover_img_id?: number = null!;
-	media_type: string = null!;
+	media_type: StoredMediaTypes = null!;
 	
 	static async mountMediaTable() {
 		await this.mountTable(this.tableName, (table)=> {
@@ -43,26 +43,8 @@ export class MediaModel extends BaseHonkModel implements MediaModelColumns {
 				id: { type: 'integer' },
 				title: { type: 'string' },
 				abs_url: { type: 'string' },
-				// filename: { type: 'string' },
-				// rel_url: { type: ['string', 'null'] },
-				// rel_url_id: { type: ['integer', 'null'] },
 				cover_img_id: { type: ['integer', 'null'] },
-				// source_id: { type: [ 'integer' ] }
 				media_type: { type: 'string' }
-				// Properties defined as objects or arrays are
-				// automatically converted to JSON strings when
-				// writing to database and back to objects and arrays
-				// when reading from database. To override this
-				// behaviour, you can override the
-				// Model.jsonAttributes property.
-				// address: {
-				// 	type: 'object',
-				// 	properties: {
-				// 		street: { type: 'string' },
-				// 		city: { type: 'string' },
-				// 		zipCode: { type: 'string' }
-				// 	}
-				// }
 			}
 		};
 	}  
@@ -83,7 +65,7 @@ export class MediaModel extends BaseHonkModel implements MediaModelColumns {
 		}
 	}
 
-	static async insertSingleMediaEntryRow(mediaEntry: Honk.DB.media): Promise<number | null> {
+	static async insertSingleMediaEntryRow(mediaEntry: Omit<MediaModelColumns, 'id'>): Promise<number | null> {
 		let mediaEntryId: number | null = null!;
 		
 		try {
@@ -114,14 +96,6 @@ export class MediaModel extends BaseHonkModel implements MediaModelColumns {
 								})
 						)
 					})
-					// .catch(err=>{
-					// 	if (err instanceof Error && err.name === 'UniqueViolationError') {
-					// 		MediaHonkServerBase.emitter(
-					// 			'error', 
-					// 			new Error(`Duplicate media entry with title: ${mediaEntry.title}`)
-					// 		);
-					// 	}
-					// })
 			)
 		} catch (err) {
 			MediaHonkServerBase.emitter(
@@ -131,28 +105,31 @@ export class MediaModel extends BaseHonkModel implements MediaModelColumns {
 		}
 		return mediaEntryId
 	}
-
-	static async insertManyMediaEntryRows(entriesProps: Pick<Parameters<typeof this.insertMediaEntriesWithRelationalFields>[0], 'entries' | 'coverId'>) {
-		// console.log(entriesProps)
-	}
-
+	
 	/**
 	 * 
 	 * @param mediaProps 
 	 * @returns An array of tuples where _tuple[0]_ is the `index` attribute of a media entry, and _tuple[1]_ is the row ID in the `media` table
 	 */
-	static async insertMediaEntriesWithRelationalFields(mediaProps: {entries: Honk.Media.BasicLibraryEntry['entries'], metaArtistIds: (number|null)[], metaCategoryIds: (number|null)[], coverId: number, mediaType: Honk.Media.BasicLibraryEntry['type']}) {
+	static async insertMediaEntriesWithRelationalFields(mediaProps: { entries: AssociatedMediaProperties['entries'], metaArtistIds: (number|null)[], metaCategoryIds: (number|null)[], coverId?: number, mediaType: StoredMediaTypes}) {
 		const mediaEntryIds: number[] = [];
 
 		try {
 			for await (const entry of mediaProps.entries) {
 				await this.insertSingleMediaEntryRow(
-						MediaFactory.mediaEntryToDbMediaEntry({
-							title: entry.title,
-							absUrl: entry.filename,
-							coverImgId: mediaProps.coverId,
-							mediaType: mediaProps.mediaType
-						})
+					{
+						title: entry.title,
+						abs_url: entry.filename,
+						cover_img_id: mediaProps.coverId,
+						media_type: mediaProps.mediaType
+					}
+
+						// MediaFactory.mediaEntryToDbMediaEntry({
+						// 	title: entry.title,
+						// 	absUrl: entry.filename,
+						// 	coverImgId: mediaProps.coverId,
+						// 	mediaType: mediaProps.mediaType
+						// })
 					)
 					.then(function(rowId){
 						if (typeof(rowId) == 'number') {

@@ -8,8 +8,8 @@ import { MediaModel } from './MediaModel';
 import { MetaModel } from './MetaModel';
 import {BaseHonkModel} from './_ModelBase';
 import { MediaMetaModel } from './MediaMetaModel';
-import { transaction } from 'objection';
 import { BundlesModelColumns } from './_ModelTypes';
+import { AssociatedMediaProperties, StoredMediaTypes } from '../types/MediaProperties';
 
 export class BundlesModel extends BaseHonkModel implements BundlesModelColumns {
 	static tableName = 'bundles';
@@ -18,24 +18,15 @@ export class BundlesModel extends BaseHonkModel implements BundlesModelColumns {
 	main_title: string = null!;
 	sub_title: string = null!;
 	custom_cover_id?: number = null!;
-	// media_type: string | null = null!;
+	media_type: StoredMediaTypes = null!;
 	
 	static async mountBundlesTable() {
 		await this.mountTable(this.tableName, (table)=> {
 			table.increments('id');
 			table.string('main_title').notNullable();
 			table.string('sub_title');
-			/** 
-				VU = video unique (movie) 
-				VS = video series (episodes)
-				AU = audio unique (singles)
-				AS = audio series (album)
-				GU = gallery unique (singles)
-				GS = gallery series (ebook)
-			*/
 			table.string('custom_cover_id').references('id').inTable('covers');
-			// table.string('media_type')// .checkBetween(['VU','VS','AU','AS','IU','IS']);
-			// table.integer('cover_img_id').references('id').inTable('covers');
+			table.string('media_type').notNullable().checkBetween(Constants.databaseMediaTypes);
 		})
 		await this.knex().schema.alterTable(this.tableName, (table)=> {
 			table.unique(['main_title', 'sub_title']);
@@ -171,7 +162,7 @@ export class BundlesModel extends BaseHonkModel implements BundlesModelColumns {
 		}
 	}
 
-	static async insertSingleBundleRow(bundleRowContent: Pick<Honk.Media.BasicLibraryEntry, 'title' | 'subtitle'>): Promise<number | null> {
+	static async insertSingleBundleRow(bundleRowContent: Pick<AssociatedMediaProperties, 'title' | 'subtitle' | 'type'>): Promise<number | null> {
 		let newBundleRowId: number | null = null!;
 		try {
 			await (
@@ -193,7 +184,7 @@ export class BundlesModel extends BaseHonkModel implements BundlesModelColumns {
 								.insert({
 									main_title: bundleRowContent.title,
 									sub_title: bundleRowContent.subtitle,
-									// media_type: bundleRowContent.type
+									media_type: bundleRowContent.type
 								})
 								.onConflict(['main_title', 'sub_title'])
 								.ignore()
@@ -218,8 +209,8 @@ export class BundlesModel extends BaseHonkModel implements BundlesModelColumns {
 		return newBundleRowId
 	}
 	
-	static async handleBundleEntryWithRelatedFields(mediaEntry: Honk.Media.BasicLibraryEntry, options?: Record<string, any>) {
-		// MediaHonkServerBase.logger(`- - PROCESSING bundle for ${mediaEntry.title} ${mediaEntry.subtitle || ''}`)
+	static async handleBundleEntryWithRelatedFields(mediaEntry: AssociatedMediaProperties) {
+		// MediaHonkServerBase.logger(`- PROCESSING bundle for ${mediaEntry.title} ${mediaEntry.subtitle || ''}`)
 		let { coverUrl, artists, categories } = mediaEntry;
 		let coverRowId: number = -1,
 			bundleRowId: number = -1,
@@ -228,6 +219,7 @@ export class BundlesModel extends BaseHonkModel implements BundlesModelColumns {
 				categories: []
 			},
 			mediaEntryRowIds: Awaited<ReturnType<typeof MediaModel.insertMediaEntriesWithRelationalFields>> = [];
+			
         try {
             if (coverUrl) {
                 await CoversModel.insertCoverEntry(coverUrl).then(newCoverId=>{
@@ -257,7 +249,8 @@ export class BundlesModel extends BaseHonkModel implements BundlesModelColumns {
 			
 			await this.insertSingleBundleRow({
 					title: mediaEntry.title,
-					subtitle: mediaEntry.subtitle
+					subtitle: mediaEntry.subtitle,
+					type: mediaEntry.type
 				})
 				.then(newBundleRowId=>{
 					if (typeof(newBundleRowId) === 'number') {

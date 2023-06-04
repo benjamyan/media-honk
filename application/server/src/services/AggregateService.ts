@@ -1,45 +1,32 @@
-import { default as Yaml } from 'yaml';
 import { default as Fs } from 'fs';
-
-import { ModelService } from "./common";
 import { ProcedureService } from './ProcedureService';
-import { MediaFactory } from '../factories';
-import { Constants } from '../config';
-import { hasValidMediaProperties, mapDeprecatedToValidKeys } from './modules/mediaEntry';
-import { deteremineMediaEntryType, shakeDirectoryFileTree } from './modules/fileSystem';
-import { MediaConfigPropertyList, MediaConfigProperties } from './modules/propertiesConfig';
-import { MetaModel } from '../models';
+import { shakeDirectoryFileTree } from './modules/fileSystem';
+import { MediaConfigProperties } from './factories/MediaPropertiesFactory';
+import { BundlesModel, MetaModel } from '../models';
+import { MediaHonkServerBase } from '../_Base';
 
-// type ConfigFileContent = Honk.Media.BasicLibraryEntry & {
-//     _dirFileList: string[];
-//     _configFilePath: string | undefined;
-// }
+let AggregateServiceIntermediary: AggregateService = null!;
 
-export class AggregateService extends ProcedureService {
+export class AggregateService extends MediaHonkServerBase {
     public routine: Record<string, ()=> void | Promise<void>> = {
-        backupDatabase: this.createDatabaseBackup,
-        updateSourcesTable: async ()=> (
-            await ModelService.instance.handleTableEntryComparison({
-                tableName: 'sources',
-                comparisonKey: 'abs_url',
-                comparisonData: this.config.api.media_paths,
-                factoryCallback: (dataKey)=> ({
-                    abs_url: this.config.api.media_paths[dataKey],
-                    title: dataKey
-                })
-            })
-        )
+        backupDatabase: this.createDatabaseBackup
     }
     
     private mediaDir: string = null!;
     private configCache: Record<string, MediaConfigProperties> = {};
-    // private configFilePath: string | undefined = undefined;
     
     constructor() {
         super();
         
     }
-    
+
+    static get instance() {
+        if (AggregateServiceIntermediary === null) {
+            AggregateServiceIntermediary = new AggregateService();
+        }
+        return AggregateServiceIntermediary
+    }
+
     public async handleAggregateRoutine(aggregationType: typeof process.env.AGGREGATION_TYPE) {
         this.logger('AggregateService.handleAggregateRoutine()');
         switch (aggregationType) {
@@ -69,7 +56,7 @@ export class AggregateService extends ProcedureService {
                 //         title: dataKey
                 //     })
                 // });
-                await this.routine.updateSourcesTable();
+                // await this.routine.updateSourcesTable();
                 await this.handleMediaEntryAggregation({
                     overwrite: false
                 });
@@ -114,15 +101,12 @@ export class AggregateService extends ProcedureService {
 
         const _self = this;
         try {
-            const attemptMediaAggregate = async (omitConfigCheck?: boolean)=> {
+            const attemptMediaAggregate = async (_omitConfigCheck?: boolean)=> {
                 try {
                     const directoryContent = await shakeDirectoryFileTree(_self.mediaDir);
                     if (directoryContent instanceof Error) throw directoryContent;
                     if (directoryContent.length == 0) return;
-
-                    /** Persist directory content so there only needs to be the single call */
-                    // _self.dirFileList = [...directoryContent];
-
+                    
                     /** Determine whether the current path contains any directories */
                     const hasSubDir = (
                             directoryContent
@@ -142,22 +126,11 @@ export class AggregateService extends ProcedureService {
                      * - `undefined` no yaml file found, directory not pre-configured
                      * */
                     let isMediaDir = directoryContent.find((file)=>file.endsWith('yaml'));
-                    // if (isMediaDir === undefined && !!omitConfigCheck) {
-                    //     isMediaDir = _self.configFilePath;
-                    // }
-                    
-                    if (!!isMediaDir) {
+                    if (!!isMediaDir/* && omitConfigCheck*/) {
                         _self.configCache[isMediaDir] = new MediaConfigProperties({
                             _mediaDir: _self.mediaDir,
                             _configFilePath: isMediaDir
                         });
-                        /** Persist the foudn config file in state */
-                        // _self.configFilePath = isMediaDir;
-                        // /** Aggregate and persist found entries to DB */
-                        // if (_self.configFileContent.entries.length === 0) {
-                        //     throw new Error(`No entries for media: ${_self.configFileContent.title}`);
-                        // }
-                        // await this.db.Bundles.handleBundleEntryWithRelatedFields(_self.configFileContent);
                     }
 
                     if (hasSubDir.length > 0) {
@@ -176,7 +149,7 @@ export class AggregateService extends ProcedureService {
                 _self.mediaDir = this.config.api.media_paths[mediaPath];
                 await attemptMediaAggregate();
             }
-
+            
             for await (const configFile of Object.keys(_self.configCache)) {
                 await _self.configCache[configFile].init();
                 await MetaModel.insertManyMetaRows({
@@ -184,9 +157,9 @@ export class AggregateService extends ProcedureService {
                     categories: _self.configCache[configFile].properties.categories || []
                 })
             }
-
+            
             for await (const configFile of Object.keys(_self.configCache)) {
-                await this.db.Bundles.handleBundleEntryWithRelatedFields(_self.configCache[configFile].properties);
+                await BundlesModel.handleBundleEntryWithRelatedFields(_self.configCache[configFile].properties);
             }
             
             return true;

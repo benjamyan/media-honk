@@ -35,7 +35,7 @@ export class ModelService extends MediaHonkServerBase {
                         return (
                             value.length > 0 
                                 ? `'${value.join(', ')}'` 
-                                : "'UNKNOWN'"
+                                : "'X'"
                         )
                     } else if (value === null) {
                         return "'NULL'";
@@ -87,45 +87,45 @@ export class ModelService extends MediaHonkServerBase {
      * - `comparisonData` is an implicitely defined set of data to compare the values of the select result against
      * - `factoryCallback` should be a handler function for a `comparisonData` entry to be formatted for insertion into the datbase 
      */
-    public async handleTableEntryComparison<K extends keyof Honk.DB.Schema, X extends Honk.DB.Schema[K] extends (infer U)[] ? U : Honk.DB.Schema[K]>({ 
-        tableName, comparisonKey, comparisonData, factoryCallback 
-    }: {
-        tableName: K,
-        comparisonKey: keyof X,
-        comparisonData: Record<string, any>,
-        factoryCallback: (dataKey: string)=> any;
-    }) {
-        try {
-            // await (
-            //     this.db
-            //         .select(comparisonKey as string)
-            //         .from(tableName)
-            //         .then(async (selectRes: Array<X>)=> {
-            //             let currentOperationResult: Awaited<ReturnType<typeof this.insertUniqueEntry>>;
-            //             for (const path in comparisonData) {
-            //                 if (selectRes.some((queryValue)=>queryValue[comparisonKey] === comparisonData[path])) {
-            //                     continue;
-            //                 }
-            //                 // Convert this to use `insertMany` API
-            //                 currentOperationResult = await this.insertUniqueEntry(tableName, factoryCallback(path));
-            //                 if (currentOperationResult instanceof Error) {
-            //                     throw currentOperationResult;
-            //                 }
-            //             }
-            //         })
-            //         .catch(err=>{
-            //             this.emit('error', {
-            //                 error: err,
-            //                 severity: 2
-            //             })
-            //         })
-            // );
-        } catch (err) {
-            this.emit('error', {
-                error: err,
-                severity: 1
-            })
-        }
-    }
+    // public async handleTableEntryComparison<K extends keyof Honk.DB.Schema, X extends Honk.DB.Schema[K] extends (infer U)[] ? U : Honk.DB.Schema[K]>({ 
+    //     tableName, comparisonKey, comparisonData, factoryCallback 
+    // }: {
+    //     tableName: K,
+    //     comparisonKey: keyof X,
+    //     comparisonData: Record<string, any>,
+    //     factoryCallback: (dataKey: string)=> any;
+    // }) {
+    //     try {
+    //         // await (
+    //         //     this.db
+    //         //         .select(comparisonKey as string)
+    //         //         .from(tableName)
+    //         //         .then(async (selectRes: Array<X>)=> {
+    //         //             let currentOperationResult: Awaited<ReturnType<typeof this.insertUniqueEntry>>;
+    //         //             for (const path in comparisonData) {
+    //         //                 if (selectRes.some((queryValue)=>queryValue[comparisonKey] === comparisonData[path])) {
+    //         //                     continue;
+    //         //                 }
+    //         //                 // Convert this to use `insertMany` API
+    //         //                 currentOperationResult = await this.insertUniqueEntry(tableName, factoryCallback(path));
+    //         //                 if (currentOperationResult instanceof Error) {
+    //         //                     throw currentOperationResult;
+    //         //                 }
+    //         //             }
+    //         //         })
+    //         //         .catch(err=>{
+    //         //             this.emit('error', {
+    //         //                 error: err,
+    //         //                 severity: 2
+    //         //             })
+    //         //         })
+    //         // );
+    //     } catch (err) {
+    //         this.emit('error', {
+    //             error: err,
+    //             severity: 1
+    //         })
+    //     }
+    // }
 
 }

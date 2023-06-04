@@ -1,3 +1,3 @@
 export default {}
-
-export * from './Buttons/CloseButton'
+export * from './status-windows/LoadingIndicator';
+export * from './buttons/CloseButton'

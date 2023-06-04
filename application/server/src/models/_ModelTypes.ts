@@ -4,6 +4,7 @@ import { CoversModel } from "./CoversModel";
 import { MediaMetaModel } from "./MediaMetaModel";
 import { MediaModel } from "./MediaModel";
 import { MetaModel } from "./MetaModel";
+import {StoredMediaTypes} from '../types/MediaProperties'
 
 export type ModelTables = {
 	meta: MetaModel;
@@ -12,6 +13,14 @@ export type ModelTables = {
     bundles: BundlesModel;
     bundles_media: BundleMediaModel;
     covers: CoversModel;
+}
+export type ModelTableColumns = {
+	meta: MetaModelColumns;
+    media_meta: MediaMetaModelColumns;
+    media: MediaModelColumns;
+    bundles: BundlesModelColumns;
+    bundles_media: BundlesMediaModelColumns;
+    covers: CoversModelColumns;
 }
 
 export interface MetaModelColumns {
@@ -34,7 +43,7 @@ export interface MediaModelColumns {
 	title: string;
 	abs_url: string;
 	cover_img_id?: number;
-	media_type: string;
+	media_type: StoredMediaTypes;
 }
 
 export interface BundlesModelColumns {
@@ -42,6 +51,7 @@ export interface BundlesModelColumns {
 	main_title: string;
 	sub_title: string;
 	custom_cover_id?: number;
+	media_type: StoredMediaTypes;
 }
 
 export interface CoversModelColumns {

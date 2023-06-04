@@ -19,10 +19,11 @@ export const excludeName: string[] = [];
 export const audioExtensions: string[] = ['mp3', 'wma'];
 export const imageExtensions: string[] = ['jpg','png','jpeg','bmp'];
 export const videoExtensions: string[] = ['mov','avi','mp4'];
+export const subtitleExtensions: string[] = ['srt'];
 
 export const excludeExtensions: string[] = ['txt', 'nfo','DS_Store','ini'];
 export const includeExtensions: string[] = [ ...audioExtensions, ...imageExtensions, ...videoExtensions ];
 
 export const permittedMediaTypes: string[] = ['album','gallery','movie','series','singles'];
 // export const databaseMediaTypes: string[] = ['VU','VS','AU','AS','IU','IS'];
-export const databaseMediaTypes: string[] = ['V','A','I','UNKNOWN'];
+export const databaseMediaTypes: string[] = ['V','A','I','X'];

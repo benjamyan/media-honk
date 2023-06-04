@@ -18,7 +18,7 @@ import 'videojs-vr/dist/videojs-vr.css';
 // import 'videojs-sprite-thumbnails/dist/videojs-sprite-thumbnails.min.js'
 // Custom
 import './_VideoPlayer.scss';
-import '../../components/Buttons/_Buttons.scss';
+import '../../components/buttons/_Buttons.scss';
 // import '../CastMedia/_CastMedia.scss';
 
 interface VideoPlayerProps {

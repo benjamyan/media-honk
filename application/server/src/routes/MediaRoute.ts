@@ -3,9 +3,9 @@
 import { default as Express } from 'express';
 
 import { RouteBase } from './_RouteBase';
-import { BundleMediaModel, BundlesModel, CoversModel, MediaMetaModel, MediaModel, MetaModel, MetaModelColumns } from '../models';
-import { resolve } from 'path';
 import { ProcedureService } from '../services/ProcedureService';
+import { BundlesModel, MetaModel } from '../models';
+import { StoredMediaTypes } from '../types/MediaProperties';
 
 export class MediaRoutes extends RouteBase {
     
@@ -39,12 +39,74 @@ export class MediaRoutes extends RouteBase {
             }
         });
         this.app.use('/media', [ this.parsePermittedRouteOptions ]);
+        this.app.get('/media/types', [ this.getMediaTypes ]);
+        this.app.get('/media/paginated', [ this.getPaginatedBundles ]);
         this.app.get('/media/meta', [ this.getMeta ]);
         this.app.get('/media/bundles', [ this.getBundles ]);
-        
+    }
+
+    /**
+     * @method getPaginatedBundles A route handler to get a limited number of bundles by media type
+     * @param req 
+     * @param res 
+     */
+    private getPaginatedBundles = async (req: Express.Request, res: Express.Response)=> {
+        try {
+            // const paginatedBundles = await (
+            //     BundlesModel
+            //         .query()
+            //         .select()
+            // );
+            res.sendStatus(204);
+        } catch (err) {
+            this.emit('error', {
+                error: err,
+                severity: 2,
+                response: res
+            })
+        }
     }
     
-    /** Simple function to get table row entries that are not of type _null_ from `meta` table
+    /**
+     * @method getMediaTypes A route handler to get a limited number of bundles by media type
+     * @param req 
+     * @param res 
+     */
+    private getMediaTypes = async (req: Express.Request, res: Express.Response)=> {
+        try {
+            const mediaTypes = await (
+                BundlesModel
+                    .query()
+                    .select('media_type')
+                    .then((bundles)=> {
+                        const mediaTypeWithCount: Partial<Record<StoredMediaTypes, number>> = {};
+                        bundles.forEach((bundle)=> {
+                            if (mediaTypeWithCount[bundle.media_type] == undefined) {
+                                mediaTypeWithCount[bundle.media_type] = 0;
+                            }
+                            mediaTypeWithCount[bundle.media_type]!++;
+                        })
+                        return mediaTypeWithCount
+                    })
+            );
+            if (Object.keys(mediaTypes).length == 0) {
+                res.sendStatus(204);
+                return;
+            }
+            res.statusCode = 200;
+            res.json(mediaTypes);
+            res.send();
+        } catch (err) {
+            this.emit('error', {
+                error: err,
+                severity: 2,
+                response: res
+            })
+        }
+    }
+
+    /** 
+     * @method getMeta Simple function to get table row entries that are not of type _null_ from `meta` table
      * @param req 
      * - `{ req.query?: 'artists' | 'categories' }` if passed an object relative to the query given will be returned containing only items fitting those columns
      * @param res 
@@ -95,20 +157,21 @@ export class MediaRoutes extends RouteBase {
 
     /**
      * 
+     * @param query Can accept either `artist` and/or `category` as a properly formatted URL query parameter
+     * - Ex. `artist=Foo+Bar,Baz,Bozz&category=Lorem+Ipsum,Dolor+Sit,Amet`
      * 
-     * 
-     * @returns Results that _explicitely_ match, where the only values returned are those matching ALL parameters
+     * @param res Results that _explicitely_ match, where the only values returned are those matching ALL parameters
      * Array of objects:
-     * - bundle_id <Number> direct ID ref that can be queried
-     * - main_title <String> title of the bundle
-     * - sub_title <String | null> subtitle (if available)
-     * - categories <String[]> applicable categories
-     * - artists <String[]> applicable artists
-     * - cover_img_url <String | null> cover image by URL
-     * - length <number>
-     * - type <string>
+     * - `bundle_id` <Number> direct ID ref that can be queried
+     * - `main_title` <String> title of the bundle
+     * - `sub_title` <String | null> subtitle (if available)
+     * - `categories` <String[]> applicable categories
+     * - `artists` <String[]> applicable artists
+     * - `cover_img_url` <String | null> cover image by URL
+     * - `length` <number>
+     * - `type` <string>
      */
-    private getBundles = async ({ query, ...req }: Express.Request, res: Express.Response) => {
+    private getBundles = async ({ query }: Express.Request, res: Express.Response) => {
         try {
             const Bundles = await ProcedureService.instance.getBundlesByMetaField({
                 artist: query.artist || '',

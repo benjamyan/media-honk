@@ -8,6 +8,26 @@ declare global {
         interface ProcessEnv extends HonkServer.ProcessEnv {}
     }
     namespace HonkServer {
+
+        export type ApplicationConfig = {
+            dns: string;
+            namespace: string;
+            domain: string;
+            directory: PathLike;
+            api: {
+                dev_http_port: number;
+                dev_https_port: number;
+                use_https: boolean;
+                permitted_origins: string[];
+                users: string[];
+                admins: string[];
+                media_paths: Record<string, string>;
+            };
+            db: {
+                file: string;
+            };
+        }
+
         /** CLI arguments the server can accept */
         export type ProcessEnv = {
             /** Node env substitute

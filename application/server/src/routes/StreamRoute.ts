@@ -1,9 +1,4 @@
-// / <reference path='../../server.d.ts' />
-
 import { default as Express } from 'express';
-import { default as Path } from 'path';
-import { default as Fs } from 'fs';
-
 import { RouteBase } from './_RouteBase';
 
 export class StreamRoutes extends RouteBase {
@@ -11,7 +6,7 @@ export class StreamRoutes extends RouteBase {
     constructor() {
         super({
             permittedQuery: {
-                get: [ 'id' ],
+                // get: [ 'id' ],
                 // post: [],
                 // patch: [],
                 // delete: [ '!id' ]
@@ -51,42 +46,43 @@ export class StreamRoutes extends RouteBase {
      * @returns 
      */
     private streamVideoEntry = (req: Express.Request, res: Express.Response): void => {
-        this.logger('MediaRoutes.getMedia')
         try {
-            if (!!req.query.file) {
-                const range = req.headers.range;
+            this.logger(`TODO streamVideoEntry`)
+            res.sendStatus(404);
+            // if (!!req.query.file) {
+            //     const range = req.headers.range;
     
-                if (!range) {
-                    res.status(400).send("Requires Range header");
-                } else {
-                    const videoPath = Path.join('', req.query.file);
-                    const videoSize = Fs.statSync(videoPath).size;
+            //     if (!range) {
+            //         res.status(400).send("Requires Range header");
+            //     } else {
+            //         const videoPath = Path.join('', req.query.file);
+            //         const videoSize = Fs.statSync(videoPath).size;
                     
-                    const start = Number(range.replace(/\D/g, ""));
-                    const end = Math.min(start + (10 ** 9), videoSize - 1);
+            //         const start = Number(range.replace(/\D/g, ""));
+            //         const end = Math.min(start + (10 ** 9), videoSize - 1);
                     
-                    // const videoStream = Fs.createReadStream(videoPath, { start, end, autoClose: true });
+            //         // const videoStream = Fs.createReadStream(videoPath, { start, end, autoClose: true });
                     
-                    res.writeHead(206, {
-                        "Content-Range": `bytes ${start}-${end}/${videoSize}`,
-                        "Accept-Ranges": "bytes",
-                        "Content-Length": end - start + 1,
-                        "Content-Type": "video/mp4",
-                    });
-                    Fs.createReadStream(videoPath, { start, end, autoClose: true })
-                        .pipe(res)
-                        .on('finish', ()=> {
-                            console.log('- FINISH -')
-                        })
-                        .on('close', ()=> {
-                            console.log('- CLOSE -')
-                        })
-                        .on('end', ()=> {
-                            console.log('- END -')
-                        });
-                }
+            //         res.writeHead(206, {
+            //             "Content-Range": `bytes ${start}-${end}/${videoSize}`,
+            //             "Accept-Ranges": "bytes",
+            //             "Content-Length": end - start + 1,
+            //             "Content-Type": "video/mp4",
+            //         });
+            //         Fs.createReadStream(videoPath, { start, end, autoClose: true })
+            //             .pipe(res)
+            //             .on('finish', ()=> {
+            //                 console.log('- FINISH -')
+            //             })
+            //             .on('close', ()=> {
+            //                 console.log('- CLOSE -')
+            //             })
+            //             .on('end', ()=> {
+            //                 console.log('- END -')
+            //             });
+            //     }
                 
-            }
+            // }
         } catch (err) {
             this.emit('error', {
                 error: err,

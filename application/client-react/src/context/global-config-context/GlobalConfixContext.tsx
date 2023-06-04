@@ -1,7 +1,5 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { get_healthCheck } from '../../api/healthCheck';
-import { setAxiosGlobalDefaults } from '../../libs/axios/defaults';
-import { setupAxiousInterceptors } from '../../libs/axios/interceptors';
 import { GlobalConfigOptions, HealthStatus, LayoutOption, ThemeOption } from './GlobalConfigContext.types';
 
 const GlobalConfigContext = createContext<GlobalConfigOptions>(undefined!);
