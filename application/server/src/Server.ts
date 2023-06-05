@@ -2,7 +2,7 @@
 
 import { MediaRoutes } from './routes';
 import { MediaHonkServerBase } from './_Base';
-import { AggregateService } from './services/AggregateService';
+import { $AggregateService } from './services/AggregateService';
 import { HonkRoutes } from './routes/HonkRoute';
 import { RouteMiddleware } from './routes/_RouteMiddleware';
 import { StreamRoutes } from './routes/StreamRoute';
@@ -15,7 +15,7 @@ export class MediaHonkServer extends MediaHonkServerBase {
         this.on('server.start', async ()=> {
             this.logger('EV server.start');
             if (this.settings.AGGREGATION_TYPE !== undefined) {
-                await AggregateService.instance.handleAggregateRoutine(this.settings.AGGREGATION_TYPE)
+                await $AggregateService.handleAggregateRoutine(this.settings.AGGREGATION_TYPE)
             }
             this.initializeExpressServer();
         });

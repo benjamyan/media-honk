@@ -1,7 +1,8 @@
-import { Model } from 'objection';
+import { Model, StaticHookArguments } from 'objection';
 import { default as Knex } from 'knex';
 
 import { MediaHonkServerBase } from '../_Base';
+import { $ModelCache } from '../services/common/ModelCacheService';
 
 /** 
  * - https://vincit.github.io/objection.js/api/model/ 
@@ -94,7 +95,10 @@ export class BaseHonkModel extends Model {
 		// 	})
 	}
 
-	// static get columnNameMappers() {
-	//   return snakeCaseMappers();
-	// }
+	static afterFind(args: StaticHookArguments<any, any>) {
+		if (MediaHonkServerBase.state.standing === 'server.listening') {
+			$ModelCache.set(args.result);
+		}
+	}
+	
 }

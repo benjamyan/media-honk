@@ -1,5 +1,4 @@
 import { default as Fs } from 'fs';
-import { ProcedureService } from './ProcedureService';
 import { shakeDirectoryFileTree } from './modules/fileSystem';
 import { MediaConfigProperties } from './factories/MediaPropertiesFactory';
 import { BundlesModel, MetaModel } from '../models';
@@ -7,7 +6,7 @@ import { MediaHonkServerBase } from '../_Base';
 
 let AggregateServiceIntermediary: AggregateService = null!;
 
-export class AggregateService extends MediaHonkServerBase {
+class AggregateService extends MediaHonkServerBase {
     public routine: Record<string, ()=> void | Promise<void>> = {
         backupDatabase: this.createDatabaseBackup
     }
@@ -174,3 +173,4 @@ export class AggregateService extends MediaHonkServerBase {
     
 }
 
+export const $AggregateService = AggregateService.instance;

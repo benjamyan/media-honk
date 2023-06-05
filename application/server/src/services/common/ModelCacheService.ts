@@ -1,7 +1,6 @@
 import { MetaModel, MediaMetaModel, MediaModel, BundlesModel, BundleMediaModel, CoversModel, ModelTables } from "../../models";
 import { MediaHonkServerBase } from "../../_Base";
 
-let CacheServiceIntermediary: ModelCacheService = null!;
 
 interface ModelCacheServiceModule {
     readonly meta: Map<MetaModel['id'], MetaModel>;
@@ -18,7 +17,9 @@ interface ModelCacheServiceModule {
 //     bundles_media: Map<BundleMediaModel['media_id'], BundleMediaModel>;
 // }
 
-export class ModelCacheService implements ModelCacheServiceModule {
+let CacheServiceIntermediary: ModelCacheService = null!;
+
+class ModelCacheService implements ModelCacheServiceModule {
     readonly meta: Map<number, MetaModel> = new Map();
     readonly media_meta: Map<number, MediaMetaModel> = new Map();
     readonly media: Map<number, MediaModel> = new Map();
@@ -119,3 +120,5 @@ export class ModelCacheService implements ModelCacheServiceModule {
     }
 
 }
+
+export const $ModelCache = ModelCacheService.instance;

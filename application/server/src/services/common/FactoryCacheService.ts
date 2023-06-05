@@ -7,7 +7,7 @@ interface FactoryEntities {
 interface FactoryCacheServiceModule extends FactoryEntities {
 }
 
-export class FactoryCacheService implements FactoryCacheServiceModule  {
+class FactoryCacheService implements FactoryCacheServiceModule  {
     readonly mediaBundles = new Map();
 
     private constructor() {}
@@ -28,3 +28,5 @@ export class FactoryCacheService implements FactoryCacheServiceModule  {
     }
 
 }
+
+export const $FactoryCache = FactoryCacheService.instance;

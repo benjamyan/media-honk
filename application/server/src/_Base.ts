@@ -15,9 +15,13 @@ import { MediaMetaModel } from './models/MediaMetaModel';
 import { BundleMediaModel } from './models/BundleMediaModel';
 import { cmdLogger } from './helpers'
 import { ConfiguredMediaProperties } from './types/MediaProperties';
+import { LIFECYCLE_EVENTS } from './config/events';
 
 dotenv.config({ path: Path.resolve(__dirname, '../.env') });
 
+const serverState: HonkServer.ServerStateBucket = {
+    standing: null
+};
 const logger = cmdLogger;
 let app = Express(),
     knexInstance: ReturnType<typeof Knex> = null!,
@@ -29,6 +33,7 @@ export class MediaHonkServerBase extends TypedEmitter<HonkServer.InternalEvents>
     public enableLogging: boolean = true;
     public mediaEntries: Record<string, ConfiguredMediaProperties> = mediaEntries;
     
+    static state: typeof serverState = null!;
     static settings: typeof localSettings = null!;
     static config: typeof localConfig = null!;
     static emitter: TypedEmitter<HonkServer.InternalEvents>['emit'] = null!;
@@ -38,6 +43,7 @@ export class MediaHonkServerBase extends TypedEmitter<HonkServer.InternalEvents>
     constructor() {
         super();
         
+        this.serverMutationHandler();
         this.on('init', async ()=> {
             this.logger(`Init HonkServer in env: ${process.env.HONK_ENV}`)
 
@@ -77,8 +83,15 @@ export class MediaHonkServerBase extends TypedEmitter<HonkServer.InternalEvents>
         this.config =  localConfig;
         this.settings = localSettings;
         this.logger = logger;
+        this.state = serverState;
     }
     
+    get state() {
+        if (serverState === null) {
+            
+        }
+        return serverState;
+    }
     get settings() {
         if (localSettings === null) {
             this.logger('! MOUNT process env settings');
@@ -102,6 +115,12 @@ export class MediaHonkServerBase extends TypedEmitter<HonkServer.InternalEvents>
     }
     get logger() {
         return logger;
+    }
+
+    private serverMutationHandler() {
+        LIFECYCLE_EVENTS.forEach((evtName)=> {
+            this.on(evtName, ()=> serverState.standing = evtName);
+        })
     }
     
     private async establishDatabaseConnection() {

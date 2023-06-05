@@ -6,7 +6,6 @@ declare global {
     namespace Honk {
         namespace Media {
             type PossibleMediaTypes = 'movie' | 'series' | 'gallery' | 'album' | 'singles';
-
             interface MediaBundle {
                 _guid: string;
                 bundle_id: number;

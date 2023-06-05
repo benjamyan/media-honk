@@ -79,5 +79,10 @@ declare global {
                 response?: Express.Response;
             } | Error | string)=> void;
         }
+
+        export type ServerStateBucket = {
+            standing: null | 'init' | 'server.start' | 'server.listening' | 'server.error';
+            // duration: number;
+        }
     }
 }

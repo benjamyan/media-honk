@@ -3,7 +3,7 @@
 import { default as Express } from 'express';
 
 import { RouteBase } from './_RouteBase';
-import { ProcedureService } from '../services/ProcedureService';
+import { $ProcedureService } from '../services/ProcedureService';
 import { BundlesModel, MetaModel } from '../models';
 import { StoredMediaTypes } from '../types/MediaProperties';
 
@@ -173,7 +173,7 @@ export class MediaRoutes extends RouteBase {
      */
     private getBundles = async ({ query }: Express.Request, res: Express.Response) => {
         try {
-            const Bundles = await ProcedureService.instance.getBundlesByMetaField({
+            const Bundles = await $ProcedureService.getBundlesByMetaField({
                 artist: query.artist || '',
                 category: query.category || ''
             });

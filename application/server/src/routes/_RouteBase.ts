@@ -1,5 +1,4 @@
 import { default as Express } from 'express';
-import { ModelService } from '../services/common/ModelService';
 import { MediaHonkServerBase } from '../_Base';
 
 type PermittedKeys = `permitted${Capitalize<'query' | 'body'>}`;
@@ -28,7 +27,7 @@ export type RouterConfig = {
 }
 
 /**
- * @class RouterBase extends {@link ModelService}
+ * @class RouterBase extends {@link MediaHonkServerBase}
  * @param routeConfig {@link RouterProps} A configuration object passed in to define required and permitted request properties
  * @todo 
  * - `parseRequireElements` should happen on instanciation, not at request time

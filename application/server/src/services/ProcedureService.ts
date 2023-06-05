@@ -1,10 +1,10 @@
 import { MetaModel, MetaModelColumns, MediaMetaModel, MediaModel, BundlesModel, BundleMediaModel, CoversModel } from "../models";
 import { MediaHonkServerBase } from "../_Base";
-import { ModelCacheService } from "./common/ModelCacheService";
+import { $ModelCache } from "./common/ModelCacheService";
 
 let ProcedureServiceIntermediary: ProcedureService = null!;
 
-export class ProcedureService extends MediaHonkServerBase {
+class ProcedureService extends MediaHonkServerBase {
     constructor() {
         super();
 
@@ -39,7 +39,6 @@ export class ProcedureService extends MediaHonkServerBase {
             _idList: Partial<Record<keyof BundleIntermediaryBucket['associations'][any]['_ids'], Set<number>>>,
             listId: (name: keyof typeof BundleIntermediary._idList)=> Array<number>;
         };
-        const CacheIntermediary = ModelCacheService.instance;
         const BundleIntermediary: BundleIntermediaryBucket = {
             resolved: [],
             associations: [],
@@ -87,7 +86,6 @@ export class ProcedureService extends MediaHonkServerBase {
                         column: MetaModel.associatedColumn(columnName)
                     }
                 });
-                CacheIntermediary.set(metaQuery);
             }
             return foundRows
         };
@@ -119,7 +117,6 @@ export class ProcedureService extends MediaHonkServerBase {
                         metaIds: [...entry._related.rows.flatMap(({id})=> id), entry.metaId]
                     })
                     .then((mediaMeta)=>{
-                        CacheIntermediary.set(mediaMeta);
                         for (const media of mediaMeta) {
                             mediaIds.push(media.media_id);
                             entry._ids.media_meta.add(media.id);
@@ -127,7 +124,6 @@ export class ProcedureService extends MediaHonkServerBase {
                     })
             );
             await BundleMediaModel.getRowsByMediaId({ mediaIds }).then((bundleMediaResult)=> {
-                CacheIntermediary.set(bundleMediaResult);
                 Object.values(BundleIntermediary.associations).forEach((row)=>{
                     for (const bundleMedia of bundleMediaResult) {
                         if (mediaIds.includes(bundleMedia.media_id)) {
@@ -149,14 +145,13 @@ export class ProcedureService extends MediaHonkServerBase {
                     type: ''
                 };
                 const getBundleCoverImage = async (coverImgId: number)=> {
-                    const coverCacheEntry = CacheIntermediary.get('covers', coverImgId);
+                    const coverCacheEntry = $ModelCache.get('covers', coverImgId);
                     let coverImgUrl;
                     if (coverCacheEntry) {
                         coverImgUrl = coverCacheEntry.file_url;
                     } else {
                         const coverImage = await CoversModel.query().findById(coverImgId);
                         if (coverImage) {
-                            CacheIntermediary.set([coverImage]);
                             coverImgUrl = coverImage.file_url;
                         }
                     }
@@ -167,7 +162,7 @@ export class ProcedureService extends MediaHonkServerBase {
                     const mediaById: Set<number> = new Set();
                     const metaRowByColName: string[] = [];
                     for (const id of mediaIds) {
-                        CacheIntermediary.media_meta.forEach((mediaMetaRow)=> {
+                        $ModelCache.media_meta.forEach((mediaMetaRow)=> {
                             if (mediaMetaRow.media_id == id && typeof(mediaMetaRow[mediaMetaColName]) == 'number') {
                                 mediaById.add(mediaMetaRow[mediaMetaColName] as number);
                             }
@@ -198,7 +193,6 @@ export class ProcedureService extends MediaHonkServerBase {
                 const bundleEntry = await BundlesModel.query().select().findById(bundleId);
 
                 if (bundleEntry) {
-                    CacheIntermediary.set([bundleEntry]);
                     resolvedBundle.main_title = bundleEntry.main_title;
                     resolvedBundle.sub_title = bundleEntry.sub_title;
                     if (bundleEntry.custom_cover_id) {
@@ -207,7 +201,7 @@ export class ProcedureService extends MediaHonkServerBase {
                 }
                 
                 const mediaItems = (
-                    [...CacheIntermediary.bundles_media.values()].filter((bundleMedia)=>bundleMedia.bundle_id == bundleId)
+                    [...$ModelCache.bundles_media.values()].filter((bundleMedia)=>bundleMedia.bundle_id == bundleId)
                 );
                 for await (const mediaId of mediaItems.flatMap(({media_id})=>media_id)) {
                     if (!!resolvedBundle.cover_img_url && !!resolvedBundle.type) break;
@@ -215,7 +209,6 @@ export class ProcedureService extends MediaHonkServerBase {
                     const mediaEntry = await MediaModel.query().findById(mediaId);
                     if (!mediaEntry) break;
 
-                    CacheIntermediary.set([mediaEntry]);
                     if (!resolvedBundle.cover_img_url && mediaEntry?.cover_img_id) {
                         resolvedBundle.cover_img_url = await getBundleCoverImage(mediaEntry.cover_img_id);
                     }
@@ -236,3 +229,5 @@ export class ProcedureService extends MediaHonkServerBase {
     }
     
 }
+
+export const $ProcedureService = ProcedureService.instance;
