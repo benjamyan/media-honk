@@ -5,4 +5,4 @@ export * from './MetaModel';
 export * from './SourcesModel';
 export * from './BundleMediaModel';
 export * from './MediaMetaModel';
-export * from './_ModelTypes'
+export * from './_ModelDefinitions'

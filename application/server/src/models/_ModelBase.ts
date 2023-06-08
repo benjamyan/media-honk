@@ -2,7 +2,9 @@ import { Model, StaticHookArguments } from 'objection';
 import { default as Knex } from 'knex';
 
 import { MediaHonkServerBase } from '../_Base';
-import { $ModelCache } from '../services/common/ModelCacheService';
+import { $ModelCache } from '../services/cache/ModelCacheService';
+import { BundleMediaModel, BundlesModel, CoversModel, MediaMetaModel, MediaModel, MetaModel, ModelTables } from '.';
+import { table } from 'console';
 
 /** 
  * - https://vincit.github.io/objection.js/api/model/ 
@@ -94,6 +96,20 @@ export class BaseHonkModel extends Model {
 		// 		table.string('abs_url').notNullable().unique();
 		// 	})
 	}
+
+	// static getTableByName(tableName: keyof ModelTables) {
+	// 	switch (tableName) {
+	// 		case 'meta': return MetaModel;
+	// 		case 'bundles': return BundlesModel;
+	// 		case 'bundles_media': return BundleMediaModel;
+	// 		case 'covers': return CoversModel;
+	// 		case 'media': return MediaModel;
+	// 		case 'media_meta': return MediaMetaModel;
+	// 		default: {
+	// 			console.error(`Cannot find table with name: ${tableName}`);
+	// 		}
+	// 	}
+	// }
 
 	static afterFind(args: StaticHookArguments<any, any>) {
 		if (MediaHonkServerBase.state.standing === 'server.listening') {

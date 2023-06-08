@@ -3,7 +3,7 @@ import { MediaModel } from './MediaModel';
 // import { MetaModel } from './MetaModel';
 import { BaseHonkModel } from './_ModelBase';
 import { BundlesModel } from './BundlesModel';
-import { BundlesMediaModelColumns } from './_ModelTypes';
+import { BundlesMediaModelColumns } from './_ModelDefinitions';
 
 export class BundleMediaModel extends BaseHonkModel implements BundlesMediaModelColumns {
 

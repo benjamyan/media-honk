@@ -8,8 +8,8 @@ import { MediaModel } from './MediaModel';
 import { MetaModel } from './MetaModel';
 import {BaseHonkModel} from './_ModelBase';
 import { MediaMetaModel } from './MediaMetaModel';
-import { BundlesModelColumns } from './_ModelTypes';
-import { AssociatedMediaProperties, StoredMediaTypes } from '../types/MediaProperties';
+import { BundlesModelColumns } from './_ModelDefinitions';
+import { ResolvedMediaAssetProperties, StoredMediaTypes } from '../types/MediaProperties';
 
 export class BundlesModel extends BaseHonkModel implements BundlesModelColumns {
 	static tableName = 'bundles';
@@ -162,7 +162,7 @@ export class BundlesModel extends BaseHonkModel implements BundlesModelColumns {
 		}
 	}
 
-	static async insertSingleBundleRow(bundleRowContent: Pick<AssociatedMediaProperties, 'title' | 'subtitle' | 'type'>): Promise<number | null> {
+	static async insertSingleBundleRow(bundleRowContent: Pick<ResolvedMediaAssetProperties, 'title' | 'subtitle' | 'type'>): Promise<number | null> {
 		let newBundleRowId: number | null = null!;
 		try {
 			await (
@@ -209,7 +209,7 @@ export class BundlesModel extends BaseHonkModel implements BundlesModelColumns {
 		return newBundleRowId
 	}
 	
-	static async handleBundleEntryWithRelatedFields(mediaEntry: AssociatedMediaProperties) {
+	static async handleBundleEntryWithRelatedFields(mediaEntry: ResolvedMediaAssetProperties) {
 		// MediaHonkServerBase.logger(`- PROCESSING bundle for ${mediaEntry.title} ${mediaEntry.subtitle || ''}`)
 		let { coverUrl, artists, categories } = mediaEntry;
 		let coverRowId: number = -1,

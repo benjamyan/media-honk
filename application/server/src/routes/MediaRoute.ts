@@ -157,35 +157,54 @@ export class MediaRoutes extends RouteBase {
 
     /**
      * 
-     * @param query Can accept either `artist` and/or `category` as a properly formatted URL query parameter
-     * - Ex. `artist=Foo+Bar,Baz,Bozz&category=Lorem+Ipsum,Dolor+Sit,Amet`
+     * @param query 
+     * - `artist` and/or `category` as a properly formatted URL query parameter
+     *   - Ex. `artist=Foo+Bar,Baz,Bozz&category=Lorem+Ipsum,Dolor+Sit,Amet`
+     * - `mediatype` paginated bundles with the specified media type
+     *   - V(S|X|U) = video, A(S|X|U) = audio, etc
+     *   - If provided in conjunction with meta, will returns those media types matching the provided meta
+     * - If no query provided, will default to returning pagingated bundles for every type
+     *   - Default pagination limit is 10 per media type
      * 
      * @param res Results that _explicitely_ match, where the only values returned are those matching ALL parameters
      * Array of objects:
+     * - `_guid` <String> unique identifier for the bundle
      * - `bundle_id` <Number> direct ID ref that can be queried
      * - `main_title` <String> title of the bundle
      * - `sub_title` <String | null> subtitle (if available)
      * - `categories` <String[]> applicable categories
      * - `artists` <String[]> applicable artists
      * - `cover_img_url` <String | null> cover image by URL
-     * - `length` <number>
-     * - `type` <string>
+     * - `length` <Number>
+     * - `type` <String> `(A|S|V)(S|U|X)` | `X`
      */
     private getBundles = async ({ query }: Express.Request, res: Express.Response) => {
         try {
-            const Bundles = await $ProcedureService.getBundlesByMetaField({
-                artist: query.artist || '',
-                category: query.category || ''
-            });
+            let resolvedBundles;
+            if (!!query.artist || !!query.category) {
+                resolvedBundles = await $ProcedureService.getBundlesByMetaField({
+                    artist: query.artist || '',
+                    category: query.category || ''
+                });
+                if (!!query.mediatype) {
+                    resolvedBundles = resolvedBundles.filter(
+                        (bundle)=> bundle.type.startsWith(query.mediatype as string)
+                    );
+                }
+            } else if (!!query.mediatype) {
+                this.logger('getBundles: TODO media type');
+            } else {
+                this.logger('getBundles: TODO pagination');
+            }
 
-            if (!Array.isArray(Bundles)) {
+            if (!Array.isArray(resolvedBundles)) {
                 throw new Error('Invalid request result');
-            } else if (Bundles.length == 0) {
+            } else if (resolvedBundles.length == 0) {
                 res.sendStatus(204);
                 return;
             }
             res.statusCode = 200;
-            res.json(Bundles);
+            res.json(resolvedBundles);
             res.send();
             return;
         } catch (err) {

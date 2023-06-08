@@ -1,6 +1,6 @@
 import { default as Fs } from 'fs';
-import { shakeDirectoryFileTree } from './modules/fileSystem';
-import { MediaConfigProperties } from './factories/MediaPropertiesFactory';
+import { shakeDirectoryFileTree } from '../utils/fileSystem';
+import { AssetPropertiesConfig } from './factories/AssetPropertiesFactory';
 import { BundlesModel, MetaModel } from '../models';
 import { MediaHonkServerBase } from '../_Base';
 
@@ -12,9 +12,9 @@ class AggregateService extends MediaHonkServerBase {
     }
     
     private mediaDir: string = null!;
-    private configCache: Record<string, MediaConfigProperties> = {};
+    private configCache: Record<string, AssetPropertiesConfig> = {};
     
-    constructor() {
+    private constructor() {
         super();
         
     }
@@ -126,7 +126,7 @@ class AggregateService extends MediaHonkServerBase {
                      * */
                     let isMediaDir = directoryContent.find((file)=>file.endsWith('yaml'));
                     if (!!isMediaDir/* && omitConfigCheck*/) {
-                        _self.configCache[isMediaDir] = new MediaConfigProperties({
+                        _self.configCache[isMediaDir] = new AssetPropertiesConfig({
                             _mediaDir: _self.mediaDir,
                             _configFilePath: isMediaDir
                         });

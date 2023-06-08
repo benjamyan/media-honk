@@ -1,7 +1,7 @@
 import { default as Fs, promises as Fsp } from 'fs';
 import { default as Path } from 'path';
-import { StoredMediaTypes } from '../../types/MediaProperties';
-import { Constants } from '../../config';
+import { StoredMediaTypes } from '../types/MediaProperties';
+import { Constants } from '../config';
 
 /**
  * @function deteremineStoredMediaType A helper function to get the media type from a specified directory based on its content

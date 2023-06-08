@@ -2,20 +2,12 @@ import { MetaModel, MediaMetaModel, MediaModel, BundlesModel, BundleMediaModel, 
 import { MediaHonkServerBase } from "../../_Base";
 
 
-interface ModelCacheServiceModule {
-    readonly meta: Map<MetaModel['id'], MetaModel>;
-    readonly media_meta: Map<MediaMetaModel['id'], MediaMetaModel>;
-    readonly media: Map<MediaModel['id'], MediaModel>;
-    readonly bundles: Map<BundlesModel['id'], BundlesModel>;
-    readonly bundles_media: Map<BundleMediaModel['bundle_id'], BundleMediaModel>;
-    readonly covers: Map<CoversModel['id'], CoversModel>;
-}
-// type CacheServiceModule = {
-//     [Key in keyof Omit<ModelTables, 'bundles_media'>]: Map<ModelTables[Key]['id'], ModelTables[Key]>;
-// }
-// type CacheServiceModule2 = CacheServiceMapped & {
-//     bundles_media: Map<BundleMediaModel['media_id'], BundleMediaModel>;
-// }
+type ModelCacheServiceEntites = {
+        readonly [Key in keyof Omit<ModelTables, 'bundles_media'>]: Map<ModelTables[Key]['id'], ModelTables[Key]>;
+    } & {
+        readonly bundles_media: Map<BundleMediaModel['media_id'], BundleMediaModel>;
+    };
+interface ModelCacheServiceModule extends ModelCacheServiceEntites {}
 
 let CacheServiceIntermediary: ModelCacheService = null!;
 

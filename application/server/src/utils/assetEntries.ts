@@ -1,9 +1,9 @@
-import { Constants } from "../../config";
-import { AcceptedMediaTypes, AssociatedMediaProperties, ConfiguredMediaProperties, StoredMediaTypes, UniqueMediaDefinition } from "../../types/MediaProperties";
+import { Constants } from "../config";
+import { AcceptedMediaTypes, ResolvedMediaAssetProperties, ConfiguredMediaAssetProperties, StoredMediaTypes, UniqueMediaDefinition } from "../types/MediaProperties";
 
-export const formatMediaEntries = (entries: string[], pathname: string, properties: ConfiguredMediaProperties): AssociatedMediaProperties['entries'] => {
+export const formatMediaEntries = (entries: string[], pathname: string, properties: ConfiguredMediaAssetProperties): ResolvedMediaAssetProperties['entries'] => {
     let entryFile: string = null!,
-        formattedEntries: AssociatedMediaProperties['entries'] = [];
+        formattedEntries: ResolvedMediaAssetProperties['entries'] = [];
         
     for (let i = 0; i <= entries.length - 1; i++) {
         entryFile = (
@@ -91,11 +91,11 @@ export const mapDeprecatedToValidKeys = ({
         delete newMediaEntry.actors;
     }
     
-    return { ...newMediaEntry } as ConfiguredMediaProperties // AssociatedMediaProperties
+    return { ...newMediaEntry } as ConfiguredMediaAssetProperties // ResolvedMediaAssetProperties
 }
 
-type HasValidMediaPropertiesType = ConfiguredMediaProperties & Partial<UniqueMediaDefinition>;
-export const hasValidMediaProperties = (mediaEntry: ConfiguredMediaProperties & Partial<UniqueMediaDefinition>): boolean | Error => {
+type HasValidMediaPropertiesType = ConfiguredMediaAssetProperties & Partial<UniqueMediaDefinition>;
+export const hasValidMediaProperties = (mediaEntry: ConfiguredMediaAssetProperties & Partial<UniqueMediaDefinition>): boolean | Error => {
     let currentProperty: HasValidMediaPropertiesType[keyof HasValidMediaPropertiesType] = null!;
 
     for (const property in mediaEntry) {

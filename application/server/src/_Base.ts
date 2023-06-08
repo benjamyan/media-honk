@@ -9,12 +9,12 @@ import { TypedEmitter } from 'tiny-typed-emitter';
 // https://github.com/TryGhost/node-sqlite3/wiki/API
 // import { default as SQLite } from 'sqlite3';
 import { default as Knex } from 'knex';
-import { default as Objection, Model } from 'objection';
+import { default as Objection } from 'objection';
 import { BundlesModel, CoversModel, MediaModel, MetaModel, SourcesModel } from './models';
 import { MediaMetaModel } from './models/MediaMetaModel';
 import { BundleMediaModel } from './models/BundleMediaModel';
-import { cmdLogger } from './helpers'
-import { ConfiguredMediaProperties } from './types/MediaProperties';
+import { Logger } from './utils';
+import { ConfiguredMediaAssetProperties } from './types/MediaProperties';
 import { LIFECYCLE_EVENTS } from './config/events';
 
 dotenv.config({ path: Path.resolve(__dirname, '../.env') });
@@ -22,22 +22,22 @@ dotenv.config({ path: Path.resolve(__dirname, '../.env') });
 const serverState: HonkServer.ServerStateBucket = {
     standing: null
 };
-const logger = cmdLogger;
 let app = Express(),
     knexInstance: ReturnType<typeof Knex> = null!,
     localSettings: HonkServer.EnvSettings = null!,
     localConfig: HonkServer.ApplicationConfig = null!,
-    mediaEntries: Record<string, ConfiguredMediaProperties> = {};
+    mediaEntries: Record<string, ConfiguredMediaAssetProperties> = {};
     
 export class MediaHonkServerBase extends TypedEmitter<HonkServer.InternalEvents> {
     public enableLogging: boolean = true;
-    public mediaEntries: Record<string, ConfiguredMediaProperties> = mediaEntries;
+    public mediaEntries: Record<string, ConfiguredMediaAssetProperties> = mediaEntries;
+    public logger = Logger;
     
     static state: typeof serverState = null!;
     static settings: typeof localSettings = null!;
     static config: typeof localConfig = null!;
     static emitter: TypedEmitter<HonkServer.InternalEvents>['emit'] = null!;
-    static logger: any = null!;
+    static logger: typeof Logger = Logger;
     static on: any = null!;
     
     constructor() {
@@ -82,7 +82,7 @@ export class MediaHonkServerBase extends TypedEmitter<HonkServer.InternalEvents>
         this.on = super.prototype.on;
         this.config =  localConfig;
         this.settings = localSettings;
-        this.logger = logger;
+        this.logger = Logger;
         this.state = serverState;
     }
     
@@ -113,10 +113,7 @@ export class MediaHonkServerBase extends TypedEmitter<HonkServer.InternalEvents>
         }
         return app;
     }
-    get logger() {
-        return logger;
-    }
-
+    
     private serverMutationHandler() {
         LIFECYCLE_EVENTS.forEach((evtName)=> {
             this.on(evtName, ()=> serverState.standing = evtName);

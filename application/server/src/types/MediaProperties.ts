@@ -17,17 +17,17 @@ export interface MediaItemEntry {
     filename: string;
     title: string;
 }
-export interface ConfiguredMediaProperties {
+export interface ConfiguredMediaAssetProperties {
     title: string;
     subtitle?: string;
     artists?: string[];
     categories?: string[];
     type?: AcceptedMediaTypes;
 }
-export interface UniqueMediaDefinition extends ConfiguredMediaProperties {
+export interface UniqueMediaDefinition extends ConfiguredMediaAssetProperties {
     _guid: string;
 }
-export interface AssociatedMediaProperties extends Omit<ConfiguredMediaProperties, 'type'> {
+export interface ResolvedMediaAssetProperties extends Omit<ConfiguredMediaAssetProperties, 'type'> {
     // uuid: string;
     // baseUrl: string;
     /** The relative URL relative to our API */

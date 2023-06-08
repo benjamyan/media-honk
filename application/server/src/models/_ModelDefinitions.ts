@@ -14,6 +14,9 @@ export type ModelTables = {
     bundles_media: BundleMediaModel;
     covers: CoversModel;
 }
+// export const ModelTableLookup: ModelTables = {
+// 	meta: MetaModel;
+// }
 export type ModelTableColumns = {
 	meta: MetaModelColumns;
     media_meta: MediaMetaModelColumns;

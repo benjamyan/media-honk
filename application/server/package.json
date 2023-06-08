@@ -36,7 +36,7 @@
     "@types/node-ssdp": "^4.0.1",
     "@types/sqlite3": "^3.1.8",
     "@types/tsscmp": "^1.0.0",
-    "@types/uuid": "^9.0.0",
+    "@types/uuid": "^9.0.1",
     "@types/xml2json": "^0.11.4",
     "concurrently": "^7.4.0",
     "nodemon": "^2.0.20",

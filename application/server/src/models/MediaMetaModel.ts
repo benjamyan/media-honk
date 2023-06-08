@@ -2,7 +2,7 @@ import { Model } from 'objection';
 import { MediaModel } from './MediaModel';
 import { MetaModel } from './MetaModel';
 import { BaseHonkModel } from './_ModelBase';
-import { MediaMetaModelColumns, MetaModelColumns } from './_ModelTypes';
+import { MediaMetaModelColumns, MetaModelColumns } from './_ModelDefinitions';
 
 export class MediaMetaModel  extends BaseHonkModel implements MediaMetaModelColumns {
 

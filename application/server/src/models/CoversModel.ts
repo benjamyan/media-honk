@@ -2,7 +2,7 @@ import { Model } from 'objection';
 import { MediaHonkServerBase } from '../_Base';
 import { SourcesModel } from './SourcesModel';
 import {BaseHonkModel} from './_ModelBase';
-import { CoversModelColumns } from './_ModelTypes';
+import { CoversModelColumns } from './_ModelDefinitions';
 
 export class CoversModel extends BaseHonkModel implements CoversModelColumns {
 	static tableName = 'covers';

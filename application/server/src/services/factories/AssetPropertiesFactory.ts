@@ -1,26 +1,26 @@
 import { default as Yaml } from 'yaml';
 import { default as Fs } from 'fs';
-import {convertToStoredMediaType, formatMediaEntries} from '../modules/mediaEntry'
-import { deteremineStoredMediaType, shakeDirectoryFileTree } from '../modules/fileSystem';
+import {convertToStoredMediaType, formatMediaEntries} from '../../utils/assetEntries'
+import { deteremineStoredMediaType, shakeDirectoryFileTree } from '../../utils/fileSystem';
 import { Constants } from '../../config';
-import { AssociatedMediaProperties, ConfiguredMediaProperties } from '../../types/MediaProperties';
+import { ResolvedMediaAssetProperties, ConfiguredMediaAssetProperties } from '../../types/MediaProperties';
 import { MediaHonkServerBase } from '../../_Base';
 
-export interface MediaConfigPropertyList {
+export interface AssetPropertyConfigPublicEntity {
     _dirFileList: string[] | undefined;
     _configFilePath: string;
     _mediaDir: string;
-    properties: AssociatedMediaProperties;
+    properties: ResolvedMediaAssetProperties;
 }
 
-export class MediaConfigProperties implements MediaConfigPropertyList {
+export class AssetPropertiesConfig implements AssetPropertyConfigPublicEntity {
     public _configFilePath: string;
     public _mediaDir: string;
     public _dirFileList!: string[];
-    private configuration: ConfiguredMediaProperties;
-    readonly properties: AssociatedMediaProperties;
+    readonly properties: ResolvedMediaAssetProperties;
+    private configuration: ConfiguredMediaAssetProperties;
     
-    constructor(mediaConfigArgs: Pick<MediaConfigPropertyList, '_configFilePath' | '_mediaDir'>) {
+    constructor(mediaConfigArgs: Pick<AssetPropertyConfigPublicEntity, '_configFilePath' | '_mediaDir'>) {
         this._mediaDir = mediaConfigArgs._mediaDir;
         this._configFilePath = mediaConfigArgs._configFilePath;
         this.configuration = Yaml.parse(Fs.readFileSync(this._configFilePath, 'utf-8'));

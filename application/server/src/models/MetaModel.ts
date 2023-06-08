@@ -208,11 +208,7 @@ export class MetaModel extends BaseHonkModel implements MetaModelColumns {
 		// if (column.length == 0) column = ['id','artist_id','artist_name','category_id','category_name'];
 		const rowsByColumn = ()=> (
 			this.query()
-				.column(
-					params.includeRefs 
-						? []
-						: column || []
-				)
+				.column(params.includeRefs ? [] : (column || []))
 				.select()
 				.modify((qb)=> {
 					if (!!artist) {

@@ -1,11 +1,14 @@
+import { default as Express } from 'express';
 import { MetaModel, MetaModelColumns, MediaMetaModel, MediaModel, BundlesModel, BundleMediaModel, CoversModel } from "../models";
 import { MediaHonkServerBase } from "../_Base";
-import { $ModelCache } from "./common/ModelCacheService";
+import { $ModelCache } from "./cache/ModelCacheService";
+import { StoredMediaTypes } from "../types/MediaProperties";
+import { AssetResolution } from './factories/AssetBundleFactory';
 
 let ProcedureServiceIntermediary: ProcedureService = null!;
 
 class ProcedureService extends MediaHonkServerBase {
-    constructor() {
+    private constructor() {
         super();
 
     }
@@ -17,10 +20,10 @@ class ProcedureService extends MediaHonkServerBase {
         return ProcedureServiceIntermediary
     }
     
-    public async getBundlesByMetaField(params: { artist: string, category: string }) {
-        const { artist, category }  = params;
+    public async getBundlesByMediaType(params: { mediaType: Express.Request['query']['mediatype'] }) {
+        if (!params.mediaType) return [];
         type BundleIntermediaryBucket = {
-            resolved: Array<Honk.Media.MediaBundle>;
+            resolved: Array<Honk.Media.AssetBundle>;
             associations: Array<{
                 metaId: number;
                 _ids: {
@@ -36,24 +39,42 @@ class ProcedureService extends MediaHonkServerBase {
                     column: keyof Pick<MetaModelColumns, 'artist_id'|'category_id'>;
                 };
             }>;
-            _idList: Partial<Record<keyof BundleIntermediaryBucket['associations'][any]['_ids'], Set<number>>>,
-            listId: (name: keyof typeof BundleIntermediary._idList)=> Array<number>;
         };
         const BundleIntermediary: BundleIntermediaryBucket = {
             resolved: [],
-            associations: [],
-            _idList: {},
-            listId(name) {
-                let idList: Set<number>;
-                if (this._idList[name] === undefined) {
-                    idList = new Set();
-                    for (const entry of Object.values(this.associations)) {
-                        entry._ids[name].forEach((id)=> idList.add(id));
-                    }
-                    this._idList[name] = idList;
-                }
-                return Array.from((this._idList[name] as Set<number>).values());
-            }
+            associations: []
+        };
+        for (const type of params.mediaType?.split(',')) {
+
+        }
+        return BundleIntermediary.resolved;
+    }
+
+    public async getBundlesByMetaField(params: { artist: string, category: string }) {
+        const { artist, category }  = params;
+        type BundleIntermediaryBucket = {
+            resolved: Array<Honk.Media.AssetBundle>;
+            associations: Array<{
+                metaId: number;
+                _ids: {
+                    bundles: Set<number>;
+                    media_meta: Set<number>;
+                    media: Set<number>;
+                    covers: Set<number>;
+                    meta: Set<number>;
+                    bundles_media: Set<number>;
+                    // artists: Set<number>;
+                    // categories: Set<number>;
+                };
+                _related: {
+                    rows: MetaModel[];
+                    column: keyof Pick<MetaModelColumns, 'artist_id'|'category_id'>;
+                };
+            }>;
+        };
+        const BundleIntermediary: BundleIntermediaryBucket = {
+            resolved: [],
+            associations: []
         };
         const getInitialMetaRows = async ({
             queryMetaFields,
@@ -75,11 +96,13 @@ class ProcedureService extends MediaHonkServerBase {
                     metaId: metaRow.id,
                     _ids: {
                         media_meta: new Set(),
+                        bundles_media: new Set(),
                         bundles: new Set(),
                         meta: new Set<number>().add(metaRow.id),
                         covers: new Set(),
-                        artists: new Set(),
-                        categories: new Set()
+                        media: new Set(),
+                        // artists: new Set(),
+                        // categories: new Set()
                     },
                     _related: {
                         rows: metaQuery.filter((row)=> row.id !== metaRow.id), 
@@ -116,23 +139,49 @@ class ProcedureService extends MediaHonkServerBase {
                         metaCol: entry._related.column,
                         metaIds: [...entry._related.rows.flatMap(({id})=> id), entry.metaId]
                     })
-                    .then((mediaMeta)=>{
+                    .then(async (mediaMeta)=>{
                         for (const media of mediaMeta) {
                             mediaIds.push(media.media_id);
                             entry._ids.media_meta.add(media.id);
                         }
+                        return await BundleMediaModel.getRowsByMediaId({ mediaIds })
+                    })
+                    .then((bundleMediaResult)=> {
+                        Object.values(BundleIntermediary.associations).forEach((row)=>{
+                            for (const bundleMedia of bundleMediaResult) {
+                                if (mediaIds.includes(bundleMedia.media_id)) {
+                                    row._ids.bundles.add(bundleMedia.bundle_id);
+                                }
+                            }
+                        })
                     })
             );
-            await BundleMediaModel.getRowsByMediaId({ mediaIds }).then((bundleMediaResult)=> {
-                Object.values(BundleIntermediary.associations).forEach((row)=>{
-                    for (const bundleMedia of bundleMediaResult) {
-                        if (mediaIds.includes(bundleMedia.media_id)) {
-                            row._ids.bundles.add(bundleMedia.bundle_id);
-                        }
-                    }
-                })
-            })
+            // await BundleMediaModel.getRowsByMediaId({ mediaIds }).then((bundleMediaResult)=> {
+            //     Object.values(BundleIntermediary.associations).forEach((row)=>{
+            //         for (const bundleMedia of bundleMediaResult) {
+            //             if (mediaIds.includes(bundleMedia.media_id)) {
+            //                 row._ids.bundles.add(bundleMedia.bundle_id);
+            //             }
+            //         }
+            //     })
+            // })
             for await (const bundleId of entry._ids.bundles.values()) {
+                BundleIntermediary.resolved.push(
+                    new AssetResolution({
+                        mediaIds,
+                        associations: entry._ids,
+                        relationships: {
+                            meta: entry._related.rows.map((row)=> ({
+                                id: row.id,
+                                artist_name: row.artist_name,
+                                artist_id: row.artist_id,
+                                category_id: row.category_id,
+                                category_name: row.category_name
+                            }))
+                        }
+                    })
+                );
+
                 const resolvedBundle: BundleIntermediaryBucket['resolved'][any] = {
                     _guid: 'super-unique-id',
                     bundle_id: bundleId,

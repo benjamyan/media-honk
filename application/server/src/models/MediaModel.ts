@@ -5,8 +5,8 @@ import { CoversModel } from './CoversModel';
 import { MediaMetaModel } from './MediaMetaModel';
 import { MetaModel } from './MetaModel';
 import {BaseHonkModel} from './_ModelBase';
-import { MediaModelColumns } from './_ModelTypes';
-import { StoredMediaTypes, AssociatedMediaProperties } from '../types/MediaProperties';
+import { MediaModelColumns } from './_ModelDefinitions';
+import { StoredMediaTypes, ResolvedMediaAssetProperties } from '../types/MediaProperties';
 
 export class MediaModel extends BaseHonkModel implements MediaModelColumns {
 
@@ -111,7 +111,7 @@ export class MediaModel extends BaseHonkModel implements MediaModelColumns {
 	 * @param mediaProps 
 	 * @returns An array of tuples where _tuple[0]_ is the `index` attribute of a media entry, and _tuple[1]_ is the row ID in the `media` table
 	 */
-	static async insertMediaEntriesWithRelationalFields(mediaProps: { entries: AssociatedMediaProperties['entries'], metaArtistIds: (number|null)[], metaCategoryIds: (number|null)[], coverId?: number, mediaType: StoredMediaTypes}) {
+	static async insertMediaEntriesWithRelationalFields(mediaProps: { entries: ResolvedMediaAssetProperties['entries'], metaArtistIds: (number|null)[], metaCategoryIds: (number|null)[], coverId?: number, mediaType: StoredMediaTypes}) {
 		const mediaEntryIds: number[] = [];
 
 		try {
