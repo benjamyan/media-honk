@@ -113,6 +113,7 @@ export class BaseHonkModel extends Model {
 
 	static afterFind(args: StaticHookArguments<any, any>) {
 		if (MediaHonkServerBase.state.standing === 'server.listening') {
+			if (args.result.length == 0) return;
 			$ModelCache.set(args.result);
 		}
 	}

@@ -12,6 +12,7 @@ export class BundleMediaModel extends BaseHonkModel implements BundlesMediaModel
         return `${BundlesModel.tableName}_${MediaModel.tableName}`
     };
 
+	id: number = null!;
 	bundle_id: number = null!;
     media_id: number = null!;
     media_index?: number | null = null!;
@@ -79,15 +80,15 @@ export class BundleMediaModel extends BaseHonkModel implements BundlesMediaModel
 
     static async insertBundleMediaRelationRow(bundleMedia: { bundleId: number, mediaId: number, mediaIndex: number | null }) {
         try {
-			// const doesBundleExist = await (
-			// 	BundleMediaModel
-			// 		.query()
-			// 		.select()
-			// 		.where('bundle_id', bundleMedia.bundleId)
-			// 		.andWhere('media_id', bundleMedia.mediaId)
-			// 		.andWhere('media_index', bundleMedia.mediaIndex)
-			// );
-			// if (doesBundleExist.length == 0) {
+			const doesBundleExist = await (
+				BundleMediaModel
+					.query()
+					.select()
+					.where('bundle_id', bundleMedia.bundleId)
+					.andWhere('media_id', bundleMedia.mediaId)
+					.andWhere('media_index', bundleMedia.mediaIndex)
+			);
+			if (doesBundleExist.length == 0) {
 				await (
 					this.query()
 						.insert({
@@ -96,12 +97,11 @@ export class BundleMediaModel extends BaseHonkModel implements BundlesMediaModel
 							media_index: bundleMedia.mediaIndex
 						})
 						// .whereNot(bundleMediaRelationshipRow)
-						.onConflict(['media_id','bundle_id','media_index'])
-						.ignore()
+						// .onConflict(['media_id','bundle_id','media_index'])
+						// .ignore()
 						.catch(err=>console.log(err))
 				)
-			// }
-			
+			}
         } catch (err) {
             console.log(err)
 			// console.log({...bundleMedia})

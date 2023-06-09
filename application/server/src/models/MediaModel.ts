@@ -69,11 +69,20 @@ export class MediaModel extends BaseHonkModel implements MediaModelColumns {
 		let mediaEntryId: number | null = null!;
 		
 		try {
+			const foundMediaEntry = await (
+				this.query()
+					.select()
+					.where('abs_url', mediaEntry.abs_url)
+			);
+			if (foundMediaEntry.length > 0) {
+				return foundMediaEntry[0].id
+			}
 			await (
 				this.query()
 					.insert(mediaEntry)
 					.onConflict([ 'abs_url' ])
 					.ignore()
+					// .merge()
 					.then((insertMediaEntryResult)=>{
 						if (insertMediaEntryResult.id > 0) {
 							mediaEntryId = insertMediaEntryResult.id;
@@ -116,21 +125,12 @@ export class MediaModel extends BaseHonkModel implements MediaModelColumns {
 
 		try {
 			for await (const entry of mediaProps.entries) {
-				await this.insertSingleMediaEntryRow(
-					{
+				await this.insertSingleMediaEntryRow({
 						title: entry.title,
 						abs_url: entry.filename,
 						cover_img_id: mediaProps.coverId,
 						media_type: mediaProps.mediaType
-					}
-
-						// MediaFactory.mediaEntryToDbMediaEntry({
-						// 	title: entry.title,
-						// 	absUrl: entry.filename,
-						// 	coverImgId: mediaProps.coverId,
-						// 	mediaType: mediaProps.mediaType
-						// })
-					)
+					})
 					.then(function(rowId){
 						if (typeof(rowId) == 'number') {
 							mediaEntryIds.push(rowId);

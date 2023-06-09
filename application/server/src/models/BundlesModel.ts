@@ -272,7 +272,6 @@ export class BundlesModel extends BaseHonkModel implements BundlesModelColumns {
 						mediaEntryRowIds = insertedMediaEntries;
 					}
 				});
-				
 			for await (const mediaId of mediaEntryRowIds) {
 				await BundleMediaModel.insertBundleMediaRelationRow({
 					bundleId: bundleRowId,

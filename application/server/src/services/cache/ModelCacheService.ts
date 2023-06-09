@@ -57,40 +57,6 @@ class ModelCacheService implements ModelCacheServiceModule {
             }
         }
         return true
-
-        // if (values[0] instanceof BundlesModel) {
-        //     (values as BundlesModel[]).forEach((value)=> {
-        //         this.bundles.set(value.id, value)
-        //     })
-        // } else if (values[0] instanceof MediaModel) {
-        //     (values as MediaModel[]).forEach((value)=> {
-        //         this.media.set(value.id, value)
-        //     })
-        // } else if (values[0] instanceof MetaModel) {
-        //     (values as MetaModel[]).forEach((value)=> {
-        //         this.meta.set(value.id, value)
-        //     })
-        // } else if (values[0] instanceof MediaMetaModel) {
-        //     (values as MediaMetaModel[]).forEach((value)=> {
-        //         this.media_meta.set(value.id, value)
-        //     })
-        // } else if (values[0] instanceof BundleMediaModel) {
-        //     (values as BundleMediaModel[]).forEach((value)=> {
-        //         this.bundles_media.set(value.media_id, value)
-        //     })
-        // } else if (values[0] instanceof CoversModel) {
-        //     (values as CoversModel[]).forEach((value)=> {
-        //         this.covers.set(value.id, value)
-        //     })
-        // } else {
-        //     MediaHonkServerBase.emitter('error', {
-        //         name: `ERR_CACHE_SERVICE`,
-        //         message: ``,
-        //         severity: 2
-        //     })
-        //     return false
-        // }
-        // return true
     }
 
     public get<T extends keyof ModelTables, C extends number | Partial<{ [Column in keyof T]: T[Column] }>>(table: T, column: C) {

@@ -2,8 +2,7 @@ import { default as Express } from 'express';
 import { MetaModel, MetaModelColumns, MediaMetaModel, MediaModel, BundlesModel, BundleMediaModel, CoversModel } from "../models";
 import { MediaHonkServerBase } from "../_Base";
 import { $ModelCache } from "./cache/ModelCacheService";
-import { StoredMediaTypes } from "../types/MediaProperties";
-import { AssetResolution } from './factories/AssetBundleFactory';
+import { v4 as uuidV4 } from 'uuid';
 
 let ProcedureServiceIntermediary: ProcedureService = null!;
 
@@ -132,64 +131,47 @@ class ProcedureService extends MediaHonkServerBase {
         }
         
         for await (const entry of BundleIntermediary.associations) {
-            const mediaIds: number[] = [];
-            await (
+            const mediaIds = await (
                 MediaMetaModel
                     .getRowsByMetaId({
                         metaCol: entry._related.column,
                         metaIds: [...entry._related.rows.flatMap(({id})=> id), entry.metaId]
                     })
                     .then(async (mediaMeta)=>{
+                        const mediaIdList = mediaMeta.map(({media_id})=>media_id);
                         for (const media of mediaMeta) {
-                            mediaIds.push(media.media_id);
                             entry._ids.media_meta.add(media.id);
                         }
-                        return await BundleMediaModel.getRowsByMediaId({ mediaIds })
+                        return {
+                            mediaIdList,
+                            bundleMediaResult: await (
+                                BundleMediaModel.getRowsByMediaId({ mediaIds: mediaIdList })
+                            )
+                        }
                     })
-                    .then((bundleMediaResult)=> {
+                    .then(({ mediaIdList, bundleMediaResult })=> {
                         Object.values(BundleIntermediary.associations).forEach((row)=>{
                             for (const bundleMedia of bundleMediaResult) {
-                                if (mediaIds.includes(bundleMedia.media_id)) {
+                                if (mediaIdList.includes(bundleMedia.media_id)) {
                                     row._ids.bundles.add(bundleMedia.bundle_id);
                                 }
                             }
                         })
+                        return mediaIdList
                     })
             );
-            // await BundleMediaModel.getRowsByMediaId({ mediaIds }).then((bundleMediaResult)=> {
-            //     Object.values(BundleIntermediary.associations).forEach((row)=>{
-            //         for (const bundleMedia of bundleMediaResult) {
-            //             if (mediaIds.includes(bundleMedia.media_id)) {
-            //                 row._ids.bundles.add(bundleMedia.bundle_id);
-            //             }
-            //         }
-            //     })
-            // })
+            
             for await (const bundleId of entry._ids.bundles.values()) {
-                BundleIntermediary.resolved.push(
-                    new AssetResolution({
-                        mediaIds,
-                        associations: entry._ids,
-                        relationships: {
-                            meta: entry._related.rows.map((row)=> ({
-                                id: row.id,
-                                artist_name: row.artist_name,
-                                artist_id: row.artist_id,
-                                category_id: row.category_id,
-                                category_name: row.category_name
-                            }))
-                        }
-                    })
-                );
+                const bundleEntry = await BundlesModel.query().select().findById(bundleId);
 
+                if (!bundleEntry) continue;
                 const resolvedBundle: BundleIntermediaryBucket['resolved'][any] = {
-                    _guid: 'super-unique-id',
-                    bundle_id: bundleId,
-                    main_title: '',
-                    sub_title: '',
+                    _guid: uuidV4(),
+                    title: bundleEntry.main_title,
+                    subTitle: bundleEntry.sub_title,
                     category: [],
                     artist: [],
-                    cover_img_url: '',
+                    coverImgUrl: '',
                     length: 0,
                     type: ''
                 };
@@ -238,28 +220,23 @@ class ProcedureService extends MediaHonkServerBase {
                         })
                     )
                     return metaRowByColName;
-                }
-                const bundleEntry = await BundlesModel.query().select().findById(bundleId);
+                };
 
-                if (bundleEntry) {
-                    resolvedBundle.main_title = bundleEntry.main_title;
-                    resolvedBundle.sub_title = bundleEntry.sub_title;
-                    if (bundleEntry.custom_cover_id) {
-                        resolvedBundle.cover_img_url = await getBundleCoverImage(bundleEntry.custom_cover_id);
-                    }
+                if (bundleEntry.custom_cover_id) {
+                    resolvedBundle.coverImgUrl = await getBundleCoverImage(bundleEntry.custom_cover_id);
                 }
                 
                 const mediaItems = (
                     [...$ModelCache.bundles_media.values()].filter((bundleMedia)=>bundleMedia.bundle_id == bundleId)
                 );
                 for await (const mediaId of mediaItems.flatMap(({media_id})=>media_id)) {
-                    if (!!resolvedBundle.cover_img_url && !!resolvedBundle.type) break;
+                    if (!!resolvedBundle.coverImgUrl && !!resolvedBundle.type) break;
                     
                     const mediaEntry = await MediaModel.query().findById(mediaId);
                     if (!mediaEntry) break;
 
-                    if (!resolvedBundle.cover_img_url && mediaEntry?.cover_img_id) {
-                        resolvedBundle.cover_img_url = await getBundleCoverImage(mediaEntry.cover_img_id);
+                    if (!resolvedBundle.coverImgUrl && mediaEntry?.cover_img_id) {
+                        resolvedBundle.coverImgUrl = await getBundleCoverImage(mediaEntry.cover_img_id);
                     }
                     if (!resolvedBundle.type && mediaEntry?.media_type) {
                         resolvedBundle.type = mediaEntry.media_type;
