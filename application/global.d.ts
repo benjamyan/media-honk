@@ -1,6 +1,6 @@
 /// <reference types="node" />
 
-import { default as Node } from 'node';
+// import { default as Node } from 'node';
 import { v4 } from 'uuid';
 
 declare global {
@@ -10,16 +10,17 @@ declare global {
         }
         namespace Media {
             type PossibleMediaTypes = 'movie' | 'series' | 'gallery' | 'album' | 'singles';
+            type StoredMediaTypes = `${'V' | 'A' | 'I'}${'U' | 'S' | 'X'}` | 'X';
             interface AssetBundle {
                 _guid: string; // typeof v4;
-                bundle_id: number;
-                main_title: string;
-                sub_title: string | undefined;
+                // bundle_id: number;
+                title: string;
+                subTitle: string | undefined;
                 category: string[];
                 artist: string[];
-                cover_img_url: string | undefined;
                 length: number;
-                type: string;
+                type: StoredMediaTypes;
+                coverImgUrl: string | undefined;
             }
         }
     }

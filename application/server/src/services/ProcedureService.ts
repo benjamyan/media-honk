@@ -3,14 +3,12 @@ import { MetaModel, MetaModelColumns, MediaMetaModel, MediaModel, BundlesModel, 
 import { MediaHonkServerBase } from "../_Base";
 import { $ModelCache } from "./cache/ModelCacheService";
 import { v4 as uuidV4 } from 'uuid';
+import { $FactoryCache } from './cache/FactoryServiceCache';
 
 let ProcedureServiceIntermediary: ProcedureService = null!;
 
-class ProcedureService extends MediaHonkServerBase {
-    private constructor() {
-        super();
-
-    }
+class ProcedureService {
+    private constructor() {}
 
     static get instance() {
         if (ProcedureServiceIntermediary === null) {
@@ -18,240 +16,114 @@ class ProcedureService extends MediaHonkServerBase {
         }
         return ProcedureServiceIntermediary
     }
-    
-    public async getBundlesByMediaType(params: { mediaType: Express.Request['query']['mediatype'] }) {
-        if (!params.mediaType) return [];
-        type BundleIntermediaryBucket = {
-            resolved: Array<Honk.Media.AssetBundle>;
-            associations: Array<{
-                metaId: number;
-                _ids: {
-                    bundles: Set<number>;
-                    media_meta: Set<number>;
-                    covers: Set<number>;
-                    meta: Set<number>;
-                    artists: Set<number>;
-                    categories: Set<number>;
-                };
-                _related: {
-                    rows: MetaModel[];
-                    column: keyof Pick<MetaModelColumns, 'artist_id'|'category_id'>;
-                };
-            }>;
-        };
-        const BundleIntermediary: BundleIntermediaryBucket = {
-            resolved: [],
-            associations: []
-        };
-        for (const type of params.mediaType?.split(',')) {
 
+    private async resolveNewAssetBundle(BundleEntry: BundlesModel, mediaIdList?: number[]) {
+        try {
+            if (!BundleEntry) throw new Error(`Invalid bundle given to resolver`);
+            let resolvedBundle: Honk.Media.AssetBundle = {
+                _guid: uuidV4(),
+                title: BundleEntry.main_title,
+                subTitle: BundleEntry.sub_title,
+                category: [],
+                artist: [],
+                coverImgUrl: '',
+                length: 0,
+                type: BundleEntry.media_type
+            };
+            const relatedMediaIdList = mediaIdList || await BundleMediaModel.getRowsByBundleId(BundleEntry.id);
+            if (!Array.isArray(relatedMediaIdList) || relatedMediaIdList.length == 0) {
+                throw new Error(`Failed to find bundles_media where bundle_id = ${BundleEntry.id}`);
+            }
+            
+            if (BundleEntry.custom_cover_id) {
+                resolvedBundle.coverImgUrl = await CoversModel.getCoverImageById(BundleEntry.custom_cover_id);
+            }
+            
+            for await (const mediaId of relatedMediaIdList) {
+                if (!!resolvedBundle.coverImgUrl && !!resolvedBundle.type) break;
+                
+                const mediaEntry = await MediaModel.query().findById(mediaId);
+                if (!mediaEntry) break;
+    
+                if (!resolvedBundle.coverImgUrl && mediaEntry?.cover_img_id) {
+                    resolvedBundle.coverImgUrl = await CoversModel.getCoverImageById(mediaEntry.cover_img_id);
+                }
+            }
+    
+            resolvedBundle.artist = await MetaModel.getValuesByMediaId('artist_name', relatedMediaIdList);
+            resolvedBundle.category = await MetaModel.getValuesByMediaId('category_name', relatedMediaIdList);
+            resolvedBundle.length = relatedMediaIdList.length;
+
+            $FactoryCache.set([resolvedBundle]);
+            return resolvedBundle
+        } catch (err) {
+            console.log(err)
+            return 
         }
-        return BundleIntermediary.resolved;
     }
 
-    public async getBundlesByMetaField(params: { artist: string, category: string }) {
-        const { artist, category }  = params;
-        type BundleIntermediaryBucket = {
-            resolved: Array<Honk.Media.AssetBundle>;
-            associations: Array<{
-                metaId: number;
-                _ids: {
-                    bundles: Set<number>;
-                    media_meta: Set<number>;
-                    media: Set<number>;
-                    covers: Set<number>;
-                    meta: Set<number>;
-                    bundles_media: Set<number>;
-                    // artists: Set<number>;
-                    // categories: Set<number>;
-                };
-                _related: {
-                    rows: MetaModel[];
-                    column: keyof Pick<MetaModelColumns, 'artist_id'|'category_id'>;
-                };
-            }>;
-        };
-        const BundleIntermediary: BundleIntermediaryBucket = {
-            resolved: [],
-            associations: []
-        };
-        const getInitialMetaRows = async ({
-            queryMetaFields,
-            columnName
-        }:{
-            queryMetaFields: string;
-            columnName: keyof Pick<MetaModelColumns, 'artist_name' | 'category_name'>;
-        })=> {
-            const foundRows: typeof BundleIntermediary.associations = [];
-            for await (const columnValue of queryMetaFields.split(',')) {
-                const metaQuery = await MetaModel.getAssociatedRowsByValue({
-                    column: columnName, 
-                    value: columnValue
-                });
-                const metaRow = metaQuery.find((metaRow)=> metaRow[columnName] == columnValue);
-                if (metaQuery.length == 0 || !metaRow) continue;
-                
-                foundRows.push({
-                    metaId: metaRow.id,
-                    _ids: {
-                        media_meta: new Set(),
-                        bundles_media: new Set(),
-                        bundles: new Set(),
-                        meta: new Set<number>().add(metaRow.id),
-                        covers: new Set(),
-                        media: new Set(),
-                        // artists: new Set(),
-                        // categories: new Set()
-                    },
-                    _related: {
-                        rows: metaQuery.filter((row)=> row.id !== metaRow.id), 
-                        column: MetaModel.associatedColumn(columnName)
-                    }
-                });
+    public async getAllBundles() {
+        const resolvedBundles: Array<Honk.Media.AssetBundle> = [];
+        try {
+            const bundles = await BundlesModel.query().select();
+            let resolvedBundle;
+            for (const bundle of bundles) {
+                resolvedBundle = await this.resolveNewAssetBundle(bundle);
+                if (resolvedBundle === undefined) continue;
+                resolvedBundles.push(resolvedBundle);
             }
-            return foundRows
-        };
-        if (!!artist) {
-            BundleIntermediary.associations = [
-                ...BundleIntermediary.associations,
-                ...await getInitialMetaRows({
-                    queryMetaFields: artist,
-                    columnName: 'artist_name'
-                })
-            ]
+        } catch (err) {
+            console.log(err);
         }
-        if (!!category) {
-            BundleIntermediary.associations = [
-                ...BundleIntermediary.associations,
-                ...await getInitialMetaRows({
-                    queryMetaFields: category,
-                    columnName: 'category_name'
-                })
-            ]
-        }
-        
-        for await (const entry of BundleIntermediary.associations) {
-            const mediaIds = await (
-                MediaMetaModel
-                    .getRowsByMetaId({
-                        metaCol: entry._related.column,
-                        metaIds: [...entry._related.rows.flatMap(({id})=> id), entry.metaId]
-                    })
-                    .then(async (mediaMeta)=>{
-                        const mediaIdList = mediaMeta.map(({media_id})=>media_id);
-                        for (const media of mediaMeta) {
-                            entry._ids.media_meta.add(media.id);
-                        }
-                        return {
-                            mediaIdList,
-                            bundleMediaResult: await (
-                                BundleMediaModel.getRowsByMediaId({ mediaIds: mediaIdList })
-                            )
-                        }
-                    })
-                    .then(({ mediaIdList, bundleMediaResult })=> {
-                        Object.values(BundleIntermediary.associations).forEach((row)=>{
-                            for (const bundleMedia of bundleMediaResult) {
-                                if (mediaIdList.includes(bundleMedia.media_id)) {
-                                    row._ids.bundles.add(bundleMedia.bundle_id);
-                                }
+        return resolvedBundles
+    }
+
+    public async getBundlesByMetaField(metaColumn: 'artist_name' | 'category_name', metaValue: string) {
+        const resolvedBundles: Array<Honk.Media.AssetBundle> = [];
+
+        try {
+            const associatedColumn = MetaModel.associatedColumn(metaColumn);
+            for (const queryValue of (metaValue.includes(',') ? metaValue.split(',') : [metaValue])) {
+                const assetIdList = await (
+                    MediaMetaModel
+                        .getRowsByMetaId({
+                            metaCol: associatedColumn,
+                            metaIds: await MetaModel.getRowIdsByValue(metaColumn, queryValue)
+                        })
+                        .then(async (mediaMeta)=>{
+                            const mediaIdList = mediaMeta.map(({media_id})=>media_id);
+                            return {
+                                mediaIdList,
+                                bundleMediaResult: await BundleMediaModel.getRowsByMediaId(mediaIdList)
                             }
                         })
-                        return mediaIdList
-                    })
-            );
-            
-            for await (const bundleId of entry._ids.bundles.values()) {
-                const bundleEntry = await BundlesModel.query().select().findById(bundleId);
-
-                if (!bundleEntry) continue;
-                const resolvedBundle: BundleIntermediaryBucket['resolved'][any] = {
-                    _guid: uuidV4(),
-                    title: bundleEntry.main_title,
-                    subTitle: bundleEntry.sub_title,
-                    category: [],
-                    artist: [],
-                    coverImgUrl: '',
-                    length: 0,
-                    type: ''
-                };
-                const getBundleCoverImage = async (coverImgId: number)=> {
-                    const coverCacheEntry = $ModelCache.get('covers', coverImgId);
-                    let coverImgUrl;
-                    if (coverCacheEntry) {
-                        coverImgUrl = coverCacheEntry.file_url;
-                    } else {
-                        const coverImage = await CoversModel.query().findById(coverImgId);
-                        if (coverImage) {
-                            coverImgUrl = coverImage.file_url;
-                        }
-                    }
-                    return coverImgUrl as string;
-                };
-                const getMetaRowValues = async (colName: 'artist_name' | 'category_name')=> {
-                    const mediaMetaColName: keyof MediaMetaModel = `meta_${colName == 'artist_name' ? 'artist_id' : 'category_id'}`;
-                    const mediaById: Set<number> = new Set();
-                    const metaRowByColName: string[] = [];
-                    for (const id of mediaIds) {
-                        $ModelCache.media_meta.forEach((mediaMetaRow)=> {
-                            if (mediaMetaRow.media_id == id && typeof(mediaMetaRow[mediaMetaColName]) == 'number') {
-                                mediaById.add(mediaMetaRow[mediaMetaColName] as number);
-                            }
-                        });
-                    }
-                    await (
-                        MetaModel.query().findByIds([...mediaById.values()]).then(async (metaRows)=> {
-                            let metaQueryRow: keyof MetaModelColumns;
-                            for await (const metaRow of metaRows) {
-                                metaQueryRow = colName == 'artist_name' ? 'artist_id' : 'category_id';
-                                if (metaRow[metaQueryRow] !== null) {
-                                    await (
-                                        MetaModel
-                                            .query()
-                                            .findById(metaRow[metaQueryRow] as number)
-                                            .then((row)=>{
-                                                if (row && row[colName]) metaRowByColName.push(row[colName] as string) 
-                                            })
-                                    )
-                                } else {
-                                    metaRowByColName.push(metaRow[colName] as string)
+                        .then(({ mediaIdList, bundleMediaResult })=> {
+                            const bundleIdList = new Set<number>();
+                            for (const bundleMediaRow of bundleMediaResult) {
+                                if (mediaIdList.includes(bundleMediaRow.media_id)) {
+                                    bundleIdList.add(bundleMediaRow.bundle_id);
                                 }
                             }
+                            return { 
+                                media: mediaIdList,
+                                bundles:  [...bundleIdList]
+                            }
                         })
-                    )
-                    return metaRowByColName;
-                };
-
-                if (bundleEntry.custom_cover_id) {
-                    resolvedBundle.coverImgUrl = await getBundleCoverImage(bundleEntry.custom_cover_id);
-                }
-                
-                const mediaItems = (
-                    [...$ModelCache.bundles_media.values()].filter((bundleMedia)=>bundleMedia.bundle_id == bundleId)
                 );
-                for await (const mediaId of mediaItems.flatMap(({media_id})=>media_id)) {
-                    if (!!resolvedBundle.coverImgUrl && !!resolvedBundle.type) break;
-                    
-                    const mediaEntry = await MediaModel.query().findById(mediaId);
-                    if (!mediaEntry) break;
-
-                    if (!resolvedBundle.coverImgUrl && mediaEntry?.cover_img_id) {
-                        resolvedBundle.coverImgUrl = await getBundleCoverImage(mediaEntry.cover_img_id);
-                    }
-                    if (!resolvedBundle.type && mediaEntry?.media_type) {
-                        resolvedBundle.type = mediaEntry.media_type;
-                    }
+                for await (const bundleId of assetIdList.bundles) {
+                    const resolvedBundle = await BundlesModel.query().select().findById(bundleId).then((Bundle)=> {
+                        if (Bundle) return this.resolveNewAssetBundle(Bundle)
+                    });
+                    if (resolvedBundle) resolvedBundles.push(resolvedBundle);
                 }
-
-                resolvedBundle.artist = await getMetaRowValues('artist_name');
-                resolvedBundle.category = await getMetaRowValues('category_name');
-                resolvedBundle.length = mediaItems.length;
-
-                BundleIntermediary.resolved.push({...resolvedBundle});
             }
+            
+            return resolvedBundles
+        } catch (err) {
+            console.log(err)
+            return err instanceof Error ? err : new Error(`An unknown exception occured.`)
         }
         
-        return BundleIntermediary.resolved
     }
     
 }

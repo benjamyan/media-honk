@@ -31,6 +31,7 @@ class FactoryServiceCache implements FactoryServiceCacheModule  {
         if (typeof(value) == 'string') {
             return this.factoryAssets.get(value);
         } else {
+            console.log("TODO FactoryServiceCache.get FOR objects");
             //
         }
     }

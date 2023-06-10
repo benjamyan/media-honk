@@ -119,20 +119,27 @@ export class MediaMetaModel  extends BaseHonkModel implements MediaMetaModelColu
 	
 	static async insertNewMediaMetaRelationRow(mediaId: number, metaCategoryId: number | null, metaArtistId: number | null) {
         try {
-			if (metaCategoryId == null && metaArtistId == null) {
+			if (!metaCategoryId && !metaArtistId) {
 				return;
 			}
 			const mediaIdExists = await MediaModel.query().select().findById(mediaId);
 			if (mediaIdExists) {
-				this.query()
-					.insert({
-						media_id: mediaId,
-						meta_category_id: metaCategoryId,
-						meta_artist_id: metaArtistId
-					})
-					.onConflict(true)
-					.ignore()
-					.catch(err=>console.log(err));
+				const rowColumns = {
+					media_id: mediaId,
+					meta_category_id: metaCategoryId || null,
+					meta_artist_id: metaArtistId || null
+				}
+				await (
+					this.query()
+						.select()
+						.where(rowColumns)
+						.then(async (foundRows)=> {
+							if (foundRows.length > 0) return;
+							this.query()
+								.insert(rowColumns)
+								.catch(err=>console.log(err))
+						})
+				)
 			}
         } catch (err) {
             console.log(err)

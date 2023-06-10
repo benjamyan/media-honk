@@ -125,42 +125,42 @@ export class BundlesModel extends BaseHonkModel implements BundlesModelColumns {
 		return json;
 	}
 
-	static async getBundlesByMeta(params: Pick<Express.Request['query'], 'artist' | 'category'>) {
-		try {
-			const metaParamId = ()=> (
-				MetaModel
-					.query()
-					.select('id')
-					.where('artist_name', '=', params.artist as string)
-			);
-			const metaId = ()=> (
-				MetaModel.query()
-					.select('id')
-					.where('artist_name', '=', params.artist as string)
-					.orWhere('artist_id', '=', metaParamId())
-			);
-			const mediaMetaId = async ()=> (
-				MediaMetaModel
-					.query()
-					.select('media_id')
-					.where('meta_artist_id', '=', metaId())
-			);
-			const mediaIdList = await (
-				mediaMetaId()
-					.then((res)=>res.map(row=>row.media_id))
-			)
-			const bundleMediaId = ()=> (
-				BundleMediaModel
-					.query()
-					.select()
-					.whereRaw("media_id = " + mediaIdList.map(_ => '?').join(' OR media_id = '), [...mediaIdList])
-					.then((res)=>res.map((row)=>row.bundle_id))
-			);
-			return await BundlesModel.query().findByIds(await bundleMediaId())
-		} catch (err) {
-			console.log(err)
-		}
-	}
+	// static async getBundlesByMeta(params: Pick<Express.Request['query'], 'artist' | 'category'>) {
+	// 	try {
+	// 		const metaParamId = ()=> (
+	// 			MetaModel
+	// 				.query()
+	// 				.select('id')
+	// 				.where('artist_name', '=', params.artist as string)
+	// 		);
+	// 		const metaId = ()=> (
+	// 			MetaModel.query()
+	// 				.select('id')
+	// 				.where('artist_name', '=', params.artist as string)
+	// 				.orWhere('artist_id', '=', metaParamId())
+	// 		);
+	// 		const mediaMetaId = async ()=> (
+	// 			MediaMetaModel
+	// 				.query()
+	// 				.select('media_id')
+	// 				.where('meta_artist_id', '=', metaId())
+	// 		);
+	// 		const mediaIdList = await (
+	// 			mediaMetaId()
+	// 				.then((res)=>res.map(row=>row.media_id))
+	// 		)
+	// 		const bundleMediaId = ()=> (
+	// 			BundleMediaModel
+	// 				.query()
+	// 				.select()
+	// 				.whereRaw("media_id = " + mediaIdList.map(_ => '?').join(' OR media_id = '), [...mediaIdList])
+	// 				.then((res)=>res.map((row)=>row.bundle_id))
+	// 		);
+	// 		return await BundlesModel.query().findByIds(await bundleMediaId())
+	// 	} catch (err) {
+	// 		console.log(err)
+	// 	}
+	// }
 
 	static async insertSingleBundleRow(bundleRowContent: Pick<ResolvedMediaAssetProperties, 'title' | 'subtitle' | 'type'>): Promise<number | null> {
 		let newBundleRowId: number | null = null!;

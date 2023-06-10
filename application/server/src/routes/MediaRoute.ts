@@ -12,7 +12,7 @@ export class MediaRoutes extends RouteBase {
     constructor() {
         super({
             permittedQuery: {
-                get: [ 'metatype', 'category', 'artist' ],
+                get: [ 'metatype', 'category', 'artist', 'page', 'limit' ],
                 // post: [],
                 // patch: [],
                 // delete: [ '!id' ]
@@ -40,31 +40,8 @@ export class MediaRoutes extends RouteBase {
         });
         this.app.use('/media', [ this.parsePermittedRouteOptions ]);
         this.app.get('/media/types', [ this.getMediaTypes ]);
-        this.app.get('/media/paginated', [ this.getPaginatedBundles ]);
         this.app.get('/media/meta', [ this.getMeta ]);
         this.app.get('/media/bundles', [ this.getBundles ]);
-    }
-
-    /**
-     * @method getPaginatedBundles A route handler to get a limited number of bundles by media type
-     * @param req 
-     * @param res 
-     */
-    private getPaginatedBundles = async (req: Express.Request, res: Express.Response)=> {
-        try {
-            // const paginatedBundles = await (
-            //     BundlesModel
-            //         .query()
-            //         .select()
-            // );
-            res.sendStatus(204);
-        } catch (err) {
-            this.emit('error', {
-                error: err,
-                severity: 2,
-                response: res
-            })
-        }
     }
     
     /**
@@ -72,7 +49,7 @@ export class MediaRoutes extends RouteBase {
      * @param req 
      * @param res 
      */
-    private getMediaTypes = async (req: Express.Request, res: Express.Response)=> {
+    private getMediaTypes = async (_req: Express.Request, res: Express.Response)=> {
         try {
             const mediaTypes = await (
                 BundlesModel
@@ -93,9 +70,7 @@ export class MediaRoutes extends RouteBase {
                 res.sendStatus(204);
                 return;
             }
-            res.statusCode = 200;
-            res.json(mediaTypes);
-            res.send();
+            res.status(200).send(mediaTypes);
         } catch (err) {
             this.emit('error', {
                 error: err,
@@ -181,31 +156,48 @@ export class MediaRoutes extends RouteBase {
     private getBundles = async ({ query }: Express.Request, res: Express.Response) => {
         try {
             let resolvedBundles;
-            if (!!query.artist || !!query.category) {
-                resolvedBundles = await $ProcedureService.getBundlesByMetaField({
-                    artist: query.artist || '',
-                    category: query.category || ''
-                });
-                if (!!query.mediatype) {
+            if (!!query.artist && !!query.category) {
+                this.logger('getBundles: TODO category + artist');
+                resolvedBundles = 'Cannot accept both an artist and category query';
+            } else if (!!query.artist || !!query.category) {
+                resolvedBundles = await $ProcedureService.getBundlesByMetaField(
+                    !!query.artist ? 'artist_name' : 'category_name',
+                    (query.artist || query.category) as string
+                );
+            } else {
+                resolvedBundles = await $ProcedureService.getAllBundles();
+            }
+
+            if (Array.isArray(resolvedBundles)) {
+                if (!!query.page) {
+                    resolvedBundles = [
+                        ...Object.values(resolvedBundles.reduce((bundleAccumulator, AssetBundle)=> {
+                            if (!bundleAccumulator[AssetBundle.type]) {
+                                bundleAccumulator[AssetBundle.type] = [ AssetBundle ];
+                            } else if (bundleAccumulator[AssetBundle.type].length < 10) {
+                                bundleAccumulator[AssetBundle.type].push(AssetBundle);
+                            }
+                            return bundleAccumulator
+                        }, {} as Record<StoredMediaTypes, Honk.Media.AssetBundle[]>)).flat(1)
+                    ];
+                } else if (!!query.mediatype) {
                     resolvedBundles = resolvedBundles.filter(
                         (bundle)=> bundle.type.startsWith(query.mediatype as string)
                     );
                 }
-            } else if (!!query.mediatype) {
-                this.logger('getBundles: TODO media type');
-            } else {
-                this.logger('getBundles: TODO pagination');
             }
 
-            if (!Array.isArray(resolvedBundles)) {
-                throw new Error('Invalid request result');
+            if (typeof(resolvedBundles) == 'string') {
+                res.status(400).send(resolvedBundles);
+                return;
+            } else if (!Array.isArray(resolvedBundles)) {
+                res.status(406).send('Mishapen result');
+                return;
             } else if (resolvedBundles.length == 0) {
                 res.sendStatus(204);
                 return;
             }
-            res.statusCode = 200;
-            res.json(resolvedBundles);
-            res.send();
+            res.status(200).send(resolvedBundles);
             return;
         } catch (err) {
             this.emit('error', {

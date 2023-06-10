@@ -45,7 +45,7 @@ type AssetResolutionFactoryProps = {
 //     return coverImgUrl as string;
 // }
 
-// const getMetaRowValues = (colName: 'artist_name' | 'category_name')=> {
+// const getMetaColValuesByMediaId = (colName: 'artist_name' | 'category_name')=> {
 //     const mediaMetaColName: keyof MediaMetaModel = `meta_${colName == 'artist_name' ? 'artist_id' : 'category_id'}`;
 //     const mediaById: Set<number> = new Set();
 //     const metaRowByColName: string[] = [];

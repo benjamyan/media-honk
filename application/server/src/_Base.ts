@@ -10,7 +10,7 @@ import { TypedEmitter } from 'tiny-typed-emitter';
 // import { default as SQLite } from 'sqlite3';
 import { default as Knex } from 'knex';
 import { default as Objection } from 'objection';
-import { BundlesModel, CoversModel, MediaModel, MetaModel, SourcesModel } from './models';
+import { BundlesModel, CoversModel, MediaModel, MetaModel } from './models';
 import { MediaMetaModel } from './models/MediaMetaModel';
 import { BundleMediaModel } from './models/BundleMediaModel';
 import { Logger } from './utils';
@@ -140,7 +140,6 @@ export class MediaHonkServerBase extends TypedEmitter<HonkServer.InternalEvents>
                 .then(async (tablePresent)=>{
                     if (!tablePresent) {
                         this.logger('- Creating database tables');
-                        await SourcesModel.mountSourcesTable();
                         await BundlesModel.mountBundlesTable();
                         await CoversModel.mountCoversTable();
                         await MetaModel.mountMetaTable();

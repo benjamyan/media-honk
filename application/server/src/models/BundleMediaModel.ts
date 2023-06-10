@@ -69,9 +69,24 @@ export class BundleMediaModel extends BaseHonkModel implements BundlesMediaModel
 		}
 	}
 
-	static getRowsByMediaId(params: { mediaIds: number[] }) {
-		const { mediaIds } = params;
-		return (
+	static async getRowsByBundleId(bundleId: number) {
+		return await (
+			this
+				.query()
+				.select()
+				.where('bundle_id', bundleId)
+				.then((BundleMedia)=> {
+					const bundleMediaIds = new Set<number>();
+					for (const { media_id } of BundleMedia) {
+						bundleMediaIds.add(media_id);
+					}
+					return [...bundleMediaIds.values()];
+				})
+		)
+	}
+
+	static async getRowsByMediaId(mediaIds: number[]) {
+		return await (
 			this.query()
 				.select()
 				.whereRaw("media_id = " + mediaIds.map(_ => '?').join(' OR media_id = '), [...mediaIds])
@@ -96,9 +111,6 @@ export class BundleMediaModel extends BaseHonkModel implements BundlesMediaModel
 							media_id: bundleMedia.mediaId,
 							media_index: bundleMedia.mediaIndex
 						})
-						// .whereNot(bundleMediaRelationshipRow)
-						// .onConflict(['media_id','bundle_id','media_index'])
-						// .ignore()
 						.catch(err=>console.log(err))
 				)
 			}

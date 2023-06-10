@@ -42,60 +42,60 @@ export class BaseHonkModel extends Model {
 		)
 	}
 
-	static mountDatabaseTables() {
-		// this.knex()
-		// 	.schema
-		// 	.createTableIfNotExists(BundlesModel.tableName, (table)=> {
-		// 		table.increments('id').primary();
-		// 		table.string('main_title').notNullable().unique();
-		// 		table.string('sub_title');
-		// 		/** 
-		// 			VU = video unique (movie) 
-		// 			VS = video series (episodes)
-		// 			AU = audio unique (singles)
-		// 			AS = audio series (album)
-		// 			GU = gallery unique (singles)
-		// 			GS = gallery series (ebook)
-		// 		*/
-		// 		table.string('media_type').notNullable().checkBetween(['VU','VS','AU','AS','GU','GS']);
-		// 		table.integer('cover_img_id').references('id').inTable('covers');
-		// 	})
-		// 	.createTableIfNotExists(`${this.tableName}_${MediaModel.tableName}`, (table)=> {
-		// 		table.increments('bundle_id').notNullable().references('id').inTable(BundlesModel.tableName);
-		// 		table.integer('media_id').notNullable().references('id').inTable(MediaModel.tableName);
-		// 		table.integer('media_index').unique();
-		// 	})
-		// 	.createTableIfNotExists(CoversModel.tableName, (table)=> {
-		// 		table.increments('id').primary();
-		// 		table.string('file_url').unique();
-		// 		table.integer('source_id').references('id').inTable(SourcesModel.tableName);
-		// 	})
-		// 	.createTableIfNotExists(MediaModel.tableName, (table)=> {
-		// 		table.increments('id').primary();
-		// 		table.string('title').notNullable();
-		// 		table.string('filename').notNullable().unique();
-		// 		table.string('rel_url');
-		// 		table.integer('rel_url_id').references('id');
-		// 		table.integer('cover_img_id').references('id').inTable(CoversModel.tableName);
-		// 		table.integer('source_id').references('id').inTable(SourcesModel.tableName);
-		// 	})
-		// 	.createTableIfNotExists(`${MediaModel.tableName}_${MetaModel.tableName}`, (table)=> {
-		// 		table.integer('media_id').notNullable().references('id').inTable(MediaModel.tableName);
-		// 		table.integer('meta_id').notNullable().references('id').inTable(MetaModel.tableName);
-		// 	})
-		// 	.createTableIfNotExists(MetaModel.tableName, (table)=> {
-		// 		table.increments('id').primary();
-		// 		table.string('artist_name');
-		// 		table.integer('artist_id').references('id');
-		// 		table.string('category_name');
-		// 		table.integer('category_id').references('id');
-		// 	})
-		// 	.createTableIfNotExists(SourcesModel.tableName, (table)=> {
-		// 		table.increments('id').primary();
-		// 		table.string('title').notNullable().unique();
-		// 		table.string('abs_url').notNullable().unique();
-		// 	})
-	}
+	// static mountDatabaseTables() {
+	// 	this.knex()
+	// 		.schema
+	// 		.createTableIfNotExists(BundlesModel.tableName, (table)=> {
+	// 			table.increments('id').primary();
+	// 			table.string('main_title').notNullable().unique();
+	// 			table.string('sub_title');
+	// 			/** 
+	// 				VU = video unique (movie) 
+	// 				VS = video series (episodes)
+	// 				AU = audio unique (singles)
+	// 				AS = audio series (album)
+	// 				GU = gallery unique (singles)
+	// 				GS = gallery series (ebook)
+	// 			*/
+	// 			table.string('media_type').notNullable().checkBetween(['VU','VS','AU','AS','GU','GS']);
+	// 			table.integer('cover_img_id').references('id').inTable('covers');
+	// 		})
+	// 		.createTableIfNotExists(`${this.tableName}_${MediaModel.tableName}`, (table)=> {
+	// 			table.increments('bundle_id').notNullable().references('id').inTable(BundlesModel.tableName);
+	// 			table.integer('media_id').notNullable().references('id').inTable(MediaModel.tableName);
+	// 			table.integer('media_index').unique();
+	// 		})
+	// 		.createTableIfNotExists(CoversModel.tableName, (table)=> {
+	// 			table.increments('id').primary();
+	// 			table.string('file_url').unique();
+	// 			table.integer('source_id').references('id').inTable(SourcesModel.tableName);
+	// 		})
+	// 		.createTableIfNotExists(MediaModel.tableName, (table)=> {
+	// 			table.increments('id').primary();
+	// 			table.string('title').notNullable();
+	// 			table.string('filename').notNullable().unique();
+	// 			table.string('rel_url');
+	// 			table.integer('rel_url_id').references('id');
+	// 			table.integer('cover_img_id').references('id').inTable(CoversModel.tableName);
+	// 			table.integer('source_id').references('id').inTable(SourcesModel.tableName);
+	// 		})
+	// 		.createTableIfNotExists(`${MediaModel.tableName}_${MetaModel.tableName}`, (table)=> {
+	// 			table.integer('media_id').notNullable().references('id').inTable(MediaModel.tableName);
+	// 			table.integer('meta_id').notNullable().references('id').inTable(MetaModel.tableName);
+	// 		})
+	// 		.createTableIfNotExists(MetaModel.tableName, (table)=> {
+	// 			table.increments('id').primary();
+	// 			table.string('artist_name');
+	// 			table.integer('artist_id').references('id');
+	// 			table.string('category_name');
+	// 			table.integer('category_id').references('id');
+	// 		})
+	// 		.createTableIfNotExists(SourcesModel.tableName, (table)=> {
+	// 			table.increments('id').primary();
+	// 			table.string('title').notNullable().unique();
+	// 			table.string('abs_url').notNullable().unique();
+	// 		})
+	// }
 
 	// static getTableByName(tableName: keyof ModelTables) {
 	// 	switch (tableName) {

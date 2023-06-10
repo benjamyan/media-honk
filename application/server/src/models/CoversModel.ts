@@ -1,8 +1,8 @@
 import { Model } from 'objection';
 import { MediaHonkServerBase } from '../_Base';
-import { SourcesModel } from './SourcesModel';
 import {BaseHonkModel} from './_ModelBase';
 import { CoversModelColumns } from './_ModelDefinitions';
+import { $ModelCache } from '../services/cache/ModelCacheService';
 
 export class CoversModel extends BaseHonkModel implements CoversModelColumns {
 	static tableName = 'covers';
@@ -10,17 +10,12 @@ export class CoversModel extends BaseHonkModel implements CoversModelColumns {
 	/** Declarative column  names for type guard */
 	id: number = null!;
 	file_url: string = null!;
-	source_id: number = null!;
 	
 	static async mountCoversTable() {
 		await this.mountTable(this.tableName, (table)=> {
 			table.increments('id').primary();
 			table.string('file_url').unique();
-			table.integer('source_id').references('id').inTable(SourcesModel.tableName);
 		});
-		// await this.knex().schema.alterTable(this.tableName, (table)=> {
-		// 	table.unique(['file_url']);
-		// })
 	}
 
 	/** Optional JSON schema. This is not the database schema!
@@ -30,11 +25,10 @@ export class CoversModel extends BaseHonkModel implements CoversModelColumns {
 	static get jsonSchema() {
 		return {
 			type: 'object',
-			required: [ 'file_url','source_id' ],
+			required: [ 'file_url' ],
 			properties: {
 				id: { type: 'integer' },
-				file_url: { type: 'string' },
-				source_id: { type: 'integer' }
+				file_url: { type: 'string' }
 			}
 		};
 	}
@@ -51,41 +45,28 @@ export class CoversModel extends BaseHonkModel implements CoversModelColumns {
 					from: 'covers.id',
 					to: 'media.cover_img_id'
 				}
-			},
-			source: {
-				relation: Model.ManyToManyRelation,
-				modelClass: require('./SourcesModel'),
-				join: {
-					from: 'covers.source_id',
-					to: 'sources.id'
-				}
-			},
-			// media: {
-			// 	relation: Model.ManyToManyRelation,
-			// 	modelClass: require('./Media'),
-			// 	join: {
-			// 		from: 'meta.id',
-			// 		through: {
-			// 			from: 'media_meta.meta_id',
-			// 			to: 'media_meta.media_id'
-			// 		},
-			// 		to: 'media.id'
-			// 	}
-			// },
+			}
 		}
 	}
 
-	static async getCoverByMediaId(mediaId: number) {
-		
+	static async getCoverImageById(coverImgId: number) {
+		const coverCacheEntry = $ModelCache.get('covers', coverImgId);
+		let coverImgUrl;
+		if (coverCacheEntry) {
+			coverImgUrl = coverCacheEntry.file_url;
+		} else {
+			const coverImage = await this.query().findById(coverImgId);
+			if (coverImage) {
+				coverImgUrl = coverImage.file_url;
+			}
+		}
+		return coverImgUrl as string;
 	}
 
 	static async insertCoverEntry(fileName: string) {
 		return await (
 			this.query()
-				.insert({
-					file_url: fileName,
-					source_id: 1
-				})
+				.insert({ file_url: fileName })
 				.onConflict('file_url')
 				.ignore()
 				.then((insertedCover)=> {
@@ -94,9 +75,7 @@ export class CoversModel extends BaseHonkModel implements CoversModelColumns {
 					}
 				})
 				.then(async (coverId)=>{
-					if (coverId !== undefined) {
-						return coverId
-					}
+					if (coverId !== undefined) return coverId
 					return await (
 						this.query()
 							.select()
