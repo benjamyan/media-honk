@@ -1,9 +1,4 @@
-// / <reference path='../../server.d.ts' />
-
 import { default as Express } from 'express';
-import { default as Path } from 'path';
-import { default as Fs } from 'fs';
-
 import { RouteBase } from './_RouteBase';
 
 export class HonkRoutes extends RouteBase {
@@ -14,14 +9,16 @@ export class HonkRoutes extends RouteBase {
             permittedBody: {},
             requiredHeader: {}
         });
-        
+
+        this.logger('- Established /');
         this.app.use('/health', [ this.healthCheck ]);
-        
+
     }
 
     private healthCheck(_req: Express.Request, res: Express.Response): void {
         try {
             res.sendStatus(200)
+            return;
         } catch (err) {
             this.emit('error', 'Bad health check')
         }

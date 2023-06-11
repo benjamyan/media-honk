@@ -6,7 +6,7 @@ export class StreamRoutes extends RouteBase {
     constructor() {
         super({
             permittedQuery: {
-                // get: [ 'id' ],
+                get: [ 'id' ],
                 // post: [],
                 // patch: [],
                 // delete: [ '!id' ]
@@ -22,6 +22,7 @@ export class StreamRoutes extends RouteBase {
             }
         });
         
+        this.logger('- Established /stream');
         this.app.use('/stream', (req: Express.Request, res: Express.Response, next)=> {
             switch (req.method) {
                 case 'GET': {

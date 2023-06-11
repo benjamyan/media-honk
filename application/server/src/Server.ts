@@ -6,6 +6,7 @@ import { $AggregateService } from './services/AggregateService';
 import { HonkRoutes } from './routes/HonkRoute';
 import { RouteMiddleware } from './routes/_RouteMiddleware';
 import { StreamRoutes } from './routes/StreamRoute';
+import { ResourceRoutes } from './routes/ResourceRoute';
 
 export class MediaHonkServer extends MediaHonkServerBase {
     
@@ -21,7 +22,7 @@ export class MediaHonkServer extends MediaHonkServerBase {
         });
         this.on('server.listening', ()=> {
             this.logger('EV server.listening');
-            this.setupServerRouting()
+            this.setupServerRouting();
         });
         this.emit('init');
     }
@@ -78,6 +79,7 @@ export class MediaHonkServer extends MediaHonkServerBase {
             new RouteMiddleware();
             new HonkRoutes();
             new MediaRoutes();
+            new ResourceRoutes();
             new StreamRoutes();
         } catch (err) {
             this.emit('error', {

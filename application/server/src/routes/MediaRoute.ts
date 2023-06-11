@@ -38,6 +38,8 @@ export class MediaRoutes extends RouteBase {
                 }
             }
         });
+
+        this.logger('- Established /media');
         this.app.use('/media', [ this.parsePermittedRouteOptions ]);
         this.app.get('/media/types', [ this.getMediaTypes ]);
         this.app.get('/media/meta', [ this.getMeta ]);
@@ -197,7 +199,10 @@ export class MediaRoutes extends RouteBase {
                 res.sendStatus(204);
                 return;
             }
-            res.status(200).send(resolvedBundles);
+            res.status(200).send(resolvedBundles.map((bundle)=>({
+                ...bundle,
+                coverImgUrl: undefined
+            })));
             return;
         } catch (err) {
             this.emit('error', {
