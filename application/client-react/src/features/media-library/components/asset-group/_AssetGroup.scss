@@ -1,0 +1,49 @@
+.asset_group {
+    pointer-events: none;
+    white-space: nowrap;
+    overflow: hidden;
+    &-title {
+        margin: 25px;
+    }
+    &-row {
+        pointer-events: all;
+        overflow-x: auto;
+        overflow-y: hidden;
+        display: flex;
+        flex-wrap: nowrap;
+        scrollbar-width: 10px;
+        &.v > div {
+            width: 325px;
+            height: 225px;
+            img {
+                aspect-ratio: 16 / 9;
+            }
+        }
+        &.a > div {
+            width: 210px;
+            height: 250px;
+            img {
+                aspect-ratio: 1 / 1;
+            }
+        }
+        &.i > div {
+            width: 215px;
+            height: 375px;
+            img {
+                aspect-ratio: 1 / 1;
+            }
+        }
+        > div {
+            flex: 0 0 auto;
+            margin: 0 25px 0 0;
+            &:first-child {
+                margin-left: 25px;
+            }
+        }
+    }
+    &-grid {
+        > div {
+            // display: inline-block;
+        }
+    }
+}

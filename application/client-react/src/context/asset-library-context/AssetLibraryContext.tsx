@@ -1,11 +1,11 @@
 import React, { createContext, useContext, useState } from 'react';
-import { LibraryView, AssetLibrarySettings } from './AssetLibraryContext.types';
+import { LibraryView, AssetLibrarySettings, MediaType } from './AssetLibraryContext.types';
 
 const AssetLibraryContext = createContext<AssetLibrarySettings>(undefined!);
 
-const AssetLibraryContextProvider = ({ children }: {children: React.ReactNode[]}) => {
-    const [ libraryView, setLibraryView ] = useState<LibraryView>('GRID');
-    const [ mediaType, setMediaType ] = useState<LibraryView>('GRID');
+const AssetLibraryContextProvider = ({ children }: {children: React.ReactNode}) => {
+    const [ libraryView, setLibraryView ] = useState<LibraryView>('ROW');
+    const [ mediaType, setMediaType ] = useState<MediaType>(null);
     
     const updateLibraryContext = ()=> {
 
@@ -31,7 +31,7 @@ const useAssetLibraryContext = ()=> {
         return context
     } catch (err) {
         console.error(err)
-        return {}
+        return {} as AssetLibrarySettings
     }
 }
 
