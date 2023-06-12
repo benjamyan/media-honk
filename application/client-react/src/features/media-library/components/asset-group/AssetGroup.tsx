@@ -10,7 +10,10 @@ export const AssetGroup = (props: { rowTitle: string, bundleAssets: Honk.Media.A
 
     return (
         <section className={`${CLASSNAME}`}>
-            <h2 className={`${CLASSNAME}-title`}>{ props.rowTitle }</h2>
+            <div className={`${CLASSNAME}-title`}>
+                <h2 className={`${CLASSNAME}-title_copy`}>{ props.rowTitle }</h2>
+                {/* <button className={`${CLASSNAME}-title_link`}></button> */}
+            </div>
             <div className={`${CLASSNAME}-${libraryView.toLowerCase()}  ${props.bundleAssets[0].type[0].toLowerCase()}`}>
                 { props.bundleAssets.map(AssetCard)}
             </div>

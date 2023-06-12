@@ -1,18 +1,20 @@
-import React, { createContext, useContext, useState } from 'react';
-import { MediaPlayerContextState } from './MediaPlayerContext.types';
+import React, { createContext, useContext, useEffect, useState } from 'react';
+import { MediaPlayerContextState, MediaPlayerType } from './MediaPlayerContext.types';
+import { useAssetLibraryContext } from '../asset-library-context/AssetLibraryContext';
 
 const MediaPlayerContext = createContext<MediaPlayerContextState>(undefined!);
 
 const MediaPlayerContextProvider = ({ children }: {children: React.ReactNode}) => {
-    const [ bundleId, setBundleId ] = useState<string | null>(null);
+    const { assetBucket } = useAssetLibraryContext();
+    const [ mediaPlaying, setMediaPlaying ] = useState<boolean>(false);
+    const [ mediaType, setMediaType ] = useState<MediaPlayerContextState['mediaType']>(null);
+    const [ bundleId, setBundleId ] = useState<MediaPlayerContextState['bundleId']>(null);
 
     const updateMediaPlayerContext: MediaPlayerContextState['updateMediaPlayerContext'] = (params)=> {
         switch (params.action) {
             case 'UPDATE': {
-                for (const keyname in params.payload) {
-                    switch(keyname) {
-                        case 'bundleId': return setBundleId(params.payload.bundleId);
-                    }
+                if (params.payload.bundleId !== undefined) {
+                    setBundleId(params.payload.bundleId);
                 }
                 break;
             }
@@ -22,9 +24,30 @@ const MediaPlayerContextProvider = ({ children }: {children: React.ReactNode}) =
         }
     }
 
+    useEffect(()=> {
+        if (assetBucket == null) return;
+        if (bundleId == null && mediaType !== null) {
+            return setMediaType(null);
+        } else {
+            const assetById = assetBucket[bundleId as string];
+            if (assetById.type.startsWith('V')) {
+                return setMediaType('VIDEO')
+            } else if (assetById.type.startsWith('A')) {
+                return setMediaType('AUDIO');
+            } else if (assetById.type.startsWith('I')) {
+                return setMediaType('IMAGE');
+            } else {
+                setMediaType(null);
+                console.error(`TODO cant parse for type of ${assetById.type}`);
+            }
+        }
+    }, [ bundleId ])
+
     return (
         <MediaPlayerContext.Provider value={{
+            mediaType,
             bundleId,
+            mediaPlaying,
             updateMediaPlayerContext
         }}>
             { children }

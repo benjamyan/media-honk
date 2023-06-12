@@ -11,11 +11,11 @@ try {
     ReactDOM.render(
         <React.StrictMode>
             <GlobalConfigContextProvider>
-                <MediaPlayerContextProvider>
                     <AssetLibraryContextProvider>
-                        <MediaHonkHome />
+                        <MediaPlayerContextProvider>
+                                <MediaHonkHome />
+                        </MediaPlayerContextProvider>
                     </AssetLibraryContextProvider>
-                </MediaPlayerContextProvider>
             </GlobalConfigContextProvider>
         </React.StrictMode>,
         document.getElementById('root')

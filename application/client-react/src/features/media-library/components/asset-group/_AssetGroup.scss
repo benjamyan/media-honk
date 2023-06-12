@@ -3,7 +3,9 @@
     white-space: nowrap;
     overflow: hidden;
     &-title {
-        margin: 25px;
+        &_copy {
+            margin: 25px;
+        }
     }
     &-row {
         pointer-events: all;
@@ -34,6 +36,7 @@
             }
         }
         > div {
+            max-width: 100%;
             flex: 0 0 auto;
             margin: 0 25px 0 0;
             &:first-child {

@@ -1,5 +1,11 @@
 .media_library {
     width: 100%;
     height: auto;
-    margin-top: var(--header-height);
+    position: relative;
+    &.locked {
+        z-index: -1;
+        position: fixed;
+        left: -100vw;
+        pointer-events: none;
+    }
 }

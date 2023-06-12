@@ -1,6 +1,12 @@
 :root {
-    --text-color: #000;
-    --border-color: #000;
-    --background-color: #eeeeee;
-    --image-background-color: #d4d4d4;
+    --text-color: #fff;
+    --border-color: #fff;
+    --background-color: #000;
+    --image-background-color: #1f1f1f;
+    &.light {
+        --text-color: #000;
+        --border-color: #000;
+        --background-color: #eeeeee;
+        --image-background-color: #d4d4d4;
+    }
 }

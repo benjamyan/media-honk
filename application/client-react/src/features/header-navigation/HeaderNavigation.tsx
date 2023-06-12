@@ -5,6 +5,8 @@ import './_HeaderNavigation.scss';
 export const HeaderNavigation = ()=> {
 
     return (
-        <nav className='header__nav'>HeaderNavigation</nav>
+        <nav className='header__nav'>
+            <h4>HeaderNavigation</h4>
+        </nav>
     )
 }
