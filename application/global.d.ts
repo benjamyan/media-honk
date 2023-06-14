@@ -20,7 +20,7 @@ declare global {
                 artist: string[];
                 length: number;
                 type: StoredMediaTypes;
-                coverImgUrl: string | undefined;
+                // coverImgUrl: string | undefined;
             }
         }
     }

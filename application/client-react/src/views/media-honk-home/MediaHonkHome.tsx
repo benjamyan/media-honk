@@ -9,13 +9,13 @@ import { AssetOverview } from '../../features/asset-overview/AssetOverview';
 export const MediaHonkHome = ()=> {
     const { healthStatus } = useGlobalConfigContext();
     const { assetBucket } = useAssetLibraryContext();
-    const { bundleId, mediaPlaying } = useMediaPlayerContext();
+    const { selectedMedia, mediaPlaying } = useMediaPlayerContext();
     
     const MediaBundleOverview = useCallback(()=> {
         if (assetBucket == null) return <></>;
-        if (bundleId == null) return <></>;
-        return <AssetOverview mediaAsset={assetBucket[bundleId]} />
-    }, [ bundleId ]);
+        if (selectedMedia == null) return <></>;
+        return <AssetOverview mediaAsset={selectedMedia} />
+    }, [ selectedMedia ]);
 
     return (
         <>

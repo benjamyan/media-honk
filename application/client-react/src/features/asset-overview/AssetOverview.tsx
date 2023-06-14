@@ -5,7 +5,7 @@ import { useMediaPlayerContext } from '../../context';
 
 import './_AssetOverview.scss';
 
-export const AssetOverview = (props: { mediaAsset: Honk.Media.AssetBundle }) => {
+export const AssetOverview = (props: { mediaAsset: MediaAssetBundle }) => {
     const { updateMediaPlayerContext } = useMediaPlayerContext();
     const CLASSNAME = 'asset-overview';
     const { mediaAsset } = props;

@@ -3,7 +3,7 @@ import { wrapPromise } from "./_utils";
 import { ENDPOINTS, QUERY_PARAMS } from "../config/honk.endpoints";
 
 export const get_bundlesByPage = async (pageNumber?: number)=> {
-    const queryEndpoint = `${ENDPOINTS.local.getBundles}?${QUERY_PARAMS.getBundles.page}=${pageNumber || 1}`
+    const queryEndpoint = `${ENDPOINTS.getBundles}?${QUERY_PARAMS.getBundles.page}=${pageNumber || 1}`
     const abortController = new AbortController();
     let bundlesByPage: Honk.Media.AssetBundle[] = [];
     await wrapPromise(

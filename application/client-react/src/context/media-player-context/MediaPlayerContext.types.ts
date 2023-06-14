@@ -1,12 +1,16 @@
-export type MediaPlayerType = 'VIDEO' | 'AUDIO' | 'IMAGE';
+import { MediaAssetBundle } from "../../types";
+
 export type MediaPlayerContextState = {
-    mediaType: MediaPlayerType | null;
-    bundleId: string | null;
+    selectedMedia: MediaAssetBundle | null;
+    // playerType: MediaPlayerType | null;
+    // bundleId: string | null;
     mediaPlaying: boolean;
     updateMediaPlayerContext: (args0: {
             action: 'UPDATE',
-            payload: { 
-                [Key in keyof Omit<MediaPlayerContextState, 'updateMediaPlayerContext'>]?: MediaPlayerContextState[Key]
+            payload: {
+                selectedMediaId?: string | null;
+                mediaPlaying?: boolean;
+                // [Key in keyof Omit<MediaPlayerContextState, 'updateMediaPlayerContext'>]?: MediaPlayerContextState[Key]
             }
         })=> void;
 }

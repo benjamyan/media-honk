@@ -1,15 +1,16 @@
 import React from 'react';
 import { ENDPOINTS } from '../../config/honk.endpoints';
 import './_CoverImage.scss';
+import { MediaAssetBundle } from '../../types';
 
-export const CoverImage = (props: { assetBundle: Honk.Media.AssetBundle })=> {
+export const CoverImage = (props: { assetBundle: MediaAssetBundle })=> {
     const { assetBundle } = props;
     const CLASSNAME = 'cover-image';
 
     return (
         <img 
             className={`${CLASSNAME} ${assetBundle.type[0].toLowerCase()}`} 
-            src={`${ENDPOINTS.local.getCoverImage}?id=${assetBundle._guid}`} 
+            src={assetBundle.coverImgUrl} 
             alt={assetBundle.title}
         />
     )

@@ -1,7 +1,10 @@
 /// <reference path="../../../global.d.ts" />
 
+export type MediaPlayerType = 'VIDEO' | 'AUDIO' | 'IMAGE';
 
-export interface MediaLibraryEntry extends Honk.Media.BasicLibraryEntry {}
+export interface MediaAssetBundle extends Honk.Media.AssetBundle {
+    coverImgUrl: string;
+}
 // export interface MediaLibraryEntry {
 //     uuid: string;
 //     baseUrl: string;

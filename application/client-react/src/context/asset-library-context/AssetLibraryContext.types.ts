@@ -1,12 +1,18 @@
 import { MutableRefObject } from "react";
+import { MediaAssetBundle } from "../../types";
 
 export type LibraryView = 'GRID' | 'ROW';
-export type MediaType = null | Honk.Media.StoredMediaTypes;
+export type MediaView = null | Honk.Media.StoredMediaTypes;
 
 export type AssetLibrarySettings = {
-    assetBucket: Record<Honk.Media.AssetBundle['_guid'], Honk.Media.AssetBundle> | null;
-    // assetBucket: MutableRefObject<Record<Honk.Media.AssetBundle['_guid'], Honk.Media.AssetBundle> | null>;
+    /** All asset passed from the API
+     * - `null` if the API call hasnt been made/completed yet
+     * - `Record` where key is the `_guid` of the asset bundle contained in value
+     */
+    assetBucket: null | Record<string, MediaAssetBundle>;
+    // assetBucket: null | ;
+    // assetBucket: Record<MediaAssetBundle['_guid'], MediaAssetBundle> | null;
     libraryView: LibraryView;
-    mediaType: MediaType;
+    mediaView: MediaView;
     updateLibraryContext: ()=> void;
 }

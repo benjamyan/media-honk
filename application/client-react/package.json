@@ -7,7 +7,8 @@
   "types": "",
   "main": "src/index.ts",
   "scripts": {
-    "dev": "webpack serve",
+    "dev": "webpack serve --env build=development",
+    "stage": "webpack serve --env build=staging",
     "build": "webpack build"
   },
   "devDependencies": {
@@ -26,6 +27,7 @@
     "eslint-plugin-react-hooks": "^4.6.0",
     "file-loader": "^6.2.0",
     "html-webpack-plugin": "^5.5.1",
+    "msw": "^1.2.2",
     "nodemon": "^2.0.22",
     "react": "^18.2.0",
     "react-dev-utils": "^12.0.1",

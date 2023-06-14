@@ -1,3 +1,5 @@
+/// <reference path="../index.d.ts" />
+
 import { default as React } from 'react';
 import ReactDOM from 'react-dom';
 import { GlobalConfigContextProvider } from '../context/global-config-context/GlobalConfixContext';
@@ -7,6 +9,10 @@ import { AssetLibraryContextProvider, MediaPlayerContextProvider } from '../cont
 import './_App.scss';
 
 try {
+    if (honkConfig.ENV === 'staging') {
+        const { workerConfig } = require('../__mock__/mockService');
+        workerConfig.start();
+    }
     initAxiosInstance();
     ReactDOM.render(
         <React.StrictMode>

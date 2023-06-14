@@ -5,31 +5,33 @@ import { LoaderingIndicator } from '../../components';
 import { AssetGroup } from './components/asset-group/AssetGroup';
 import './_MediaLibrary.scss';
 import { useAssetLibraryContext, useMediaPlayerContext } from '../../context';
+import { MediaAssetBundle } from '../../types';
 
 export const MediaLibrary = ()=> {
     const CLASSNAME = 'media_library';
-    const { bundleId } = useMediaPlayerContext();
+    const { selectedMedia } = useMediaPlayerContext();
     const { assetBucket } = useAssetLibraryContext();
-    const [ assetBundles, setAssetBundles ] = useState<Record<string, Honk.Media.AssetBundle[]> | null>({});
+    const [ sortedAssetBundles, setSortedAssetBundles ] = useState<Record<string, MediaAssetBundle[]> | null>({});
 
     const AssetBundlesByMediaType = useCallback(
         ()=> {
-            if (assetBundles === null) {
+            if (sortedAssetBundles === null) {
                 return <LoaderingIndicator />
-            } else if (Object.keys(assetBundles).length == 0) {
+            } else if (Object.keys(sortedAssetBundles).length == 0) {
                 return <h2>No bundles found!</h2>
             }
-            const AssetItems: JSX.Element[] = Object.entries(assetBundles).flatMap((bundle, i)=> (
+            const AssetItems: JSX.Element[] = Object.entries(sortedAssetBundles).flatMap((bundle, i)=> (
                 <AssetGroup key={`AssetGroup-${i}`} rowTitle={ bundle[0] } bundleAssets={bundle[1]} />
             ));
             return <>{ AssetItems }</>
         },
-        [ assetBundles ]
+        [ sortedAssetBundles ]
     );
 
     useEffect(()=> {
+        /** Sorting based on the asset bundles given via context */
         if (!assetBucket) return;
-        setAssetBundles(
+        setSortedAssetBundles(
             Object.values(assetBucket).reduce((bundleAccumulator, bundle)=> {
                 const assetRowTitle = (
                     Object.keys(MEDIA_TYPES).find((title)=> bundle.type.startsWith(title))
@@ -44,12 +46,12 @@ export const MediaLibrary = ()=> {
                     console.log(`Cant find in MEDIA_TYPES: ${bundle.type}`);
                 }
                 return bundleAccumulator
-            }, {} as Record<string, Honk.Media.AssetBundle[]>) 
+            }, {} as Record<string, MediaAssetBundle[]>) 
         );
     }, [assetBucket]);
 
     return (
-        <div className={`${CLASSNAME} ${bundleId !== null ? 'locked' : ''}`}>
+        <div className={`${CLASSNAME} ${selectedMedia !== null ? 'locked' : ''}`}>
             <AssetBundlesByMediaType />
         </div>
     )
