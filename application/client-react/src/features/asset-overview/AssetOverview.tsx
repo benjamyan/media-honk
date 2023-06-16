@@ -2,6 +2,7 @@ import React from 'react'
 import { CoverImage } from '../../components/cover-images/CoverImage';
 import { CloseButton } from '../../components';
 import { useMediaPlayerContext } from '../../context';
+import { MediaAssetBundle } from '../../types';
 
 import './_AssetOverview.scss';
 
@@ -12,11 +13,11 @@ export const AssetOverview = (props: { mediaAsset: MediaAssetBundle }) => {
 
     const closeAssetOverview = ()=> updateMediaPlayerContext({
         action: 'UPDATE',
-        payload: { bundleId: null }
+        payload: { selectedMediaId: null }
     });
     const playAssetMedia = ()=> updateMediaPlayerContext({
         action: 'UPDATE',
-        payload: { mediaPlaying: true }
+        payload: { mediaPlaying: true, currentMediaId: 0 }
     });
 
     return (

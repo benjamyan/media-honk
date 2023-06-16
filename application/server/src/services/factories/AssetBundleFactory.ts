@@ -4,7 +4,7 @@ import { $FactoryCache } from '../cache/FactoryServiceCache';
 import { $ModelCache } from '../cache/ModelCacheService';
 
 type AssetResolutionFactoryEntity = {
-    readonly asset: Honk.Media.AssetBundle;
+    readonly asset: Honk.Server.AssetBundle;
 };
 type AssetResolutionFactoryProps = {
     bundle: BundlesModelColumns
@@ -99,7 +99,7 @@ type AssetResolutionFactoryProps = {
 // }
 
 // export const AssetBundleFactory = async (props: AssetResolutionFactoryProps)=> {
-//     const asset: Honk.Media.AssetBundle = {
+//     const asset: Honk.Server.AssetBundle = {
 //         _guid: generateUniqueGuid(),
 //         title: undefined!,
 //         subTitle: undefined!,

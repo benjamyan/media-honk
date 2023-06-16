@@ -49,18 +49,15 @@ export class CoversModel extends BaseHonkModel implements CoversModelColumns {
 		}
 	}
 
-	static async getCoverImageById(coverImgId: number) {
-		const coverCacheEntry = $ModelCache.get('covers', coverImgId);
-		let coverImgUrl;
-		if (coverCacheEntry) {
-			coverImgUrl = coverCacheEntry.file_url;
-		} else {
-			const coverImage = await this.query().findById(coverImgId);
-			if (coverImage) {
-				coverImgUrl = coverImage.file_url;
-			}
+	static async getCoverRowById(coverImgId: number | undefined) {
+		if (coverImgId === undefined) return;
+		let CoverRow = $ModelCache.get('covers', coverImgId);
+		if (!CoverRow) {
+			await this.query().findById(coverImgId).then((Cover)=> {
+				if (Cover) CoverRow = Cover;
+			});
 		}
-		return coverImgUrl as string;
+		return CoverRow;
 	}
 
 	static async insertCoverEntry(fileName: string) {

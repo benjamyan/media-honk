@@ -8,7 +8,7 @@ export const ENDPOINTS = {
     getMediaTypes: `/media/types`,
     getBundles: `/media/bundles`,
     getCoverImage: `/resource/cover`,
-    streamFile: `/stream`
+    streamVideo: `/stream/video`
 }
 export const QUERY_PARAMS = {
     getBundles: { 
@@ -18,6 +18,10 @@ export const QUERY_PARAMS = {
         limit: 'limit',
         page: 'page',
         id: 'id'
+    },
+    streamVideo: {
+        id: 'id',
+        entry: 'entry'
     }
     // getBundles: [ 'mediatype', 'artist', 'category', 'limit', 'page' ]
 }

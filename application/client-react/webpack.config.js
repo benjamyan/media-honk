@@ -6,22 +6,12 @@ const HtmlWebpackPlugin = require("html-webpack-plugin");
 // const InlineChunkHtmlPlugin = require('react-dev-utils/InlineChunkHtmlPlugin');
 
 module.exports = (env)=> {
-    console.log(env);
-    // if (env.development) {
-    //     require('./src/__mock__/mockService.ts');
-    // }
-
     return {
         entry: "./src/index.ts",
-        mode: process.env.NODE_ENV === 'development' ? "development" : 'production',
+        mode: env !== 'production' ? 'development' : 'production',
         output: {
             path: path.resolve(__dirname, 'dist')
         },
-        // devServer: {
-        //     contentBase: path.join(__dirname, 'dist'),
-        //     compress: true,
-        //     port: 9000
-        // },
         resolve: { 
             extensions: ['.js', '.ts', '.tsx'],
             modules: [

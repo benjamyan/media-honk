@@ -1,16 +1,7 @@
 export type AcceptedMediaTypes = Honk.Media.PossibleMediaTypes;
-/**
- * `VU` video unique (movie)
- * `VS` video series (tv show)
- * `AS` audio series (album, podcast)
- * `AU` audio unique (singles)
- * `IS` image series (image gallery)
- * `IU` image unique (unique images (idk why))
- * `X` unknown media type
- */
-export type StoredMediaTypes = `${'V' | 'A' | 'I'}${'U' | 'S' | 'X'}` | 'X';
-// export type StoredMediaTypes = 'VU' | 'VS' | 'VX' | 'AS' | 'AU'| 'AX' | 'IS' | 'IU' | 'IX' | 'X';
-// export type StoredMediaTypes = 'V' | 'A' | 'I' | 'X';
+
+export type StoredMediaTypes = Honk.Media.StoredMediaTypes;
+// export type StoredMediaTypes = `${'V' | 'A' | 'I'}${'U' | 'S' | 'X'}` | 'X';
 
 export interface MediaItemEntry {
     index: number;

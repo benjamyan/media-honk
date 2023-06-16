@@ -5,23 +5,28 @@ import { v4 } from 'uuid';
 
 declare global {
     namespace Honk {
-        namespace Request {
-            type RequestMediaTypes = 'A' | 'V' | 'I';
-        }
-        namespace Media {
-            type PossibleMediaTypes = 'movie' | 'series' | 'gallery' | 'album' | 'singles';
-            type StoredMediaTypes = `${'V' | 'A' | 'I'}${'U' | 'S' | 'X'}` | 'X';
+        namespace Server {
             interface AssetBundle {
-                _guid: string; // typeof v4;
-                // bundle_id: number;
+                _guid: string;
+                _bundleId: number;
+                _mediaEntries: Array<number>;
+                _coverId: number | undefined;
                 title: string;
                 subTitle: string | undefined;
                 category: string[];
                 artist: string[];
-                length: number;
-                type: StoredMediaTypes;
-                // coverImgUrl: string | undefined;
+                type: Honk.Media.StoredMediaTypes;
             }
+        }
+        namespace Media {
+            type PossibleMediaTypes = 'movie' | 'series' | 'gallery' | 'album' | 'singles';
+            type StoredMediaTypes = `${'V' | 'A' | 'I'}${'U' | 'S' | 'X'}` | 'X';
+            interface AssetBundle extends Omit<Honk.Server.AssetBundle, '_bundleId' | '_mediaEntries'> {
+                length: number;
+            }
+        }
+        namespace Request {
+            type RequestMediaTypes = 'A' | 'V' | 'I';
         }
     }
 }

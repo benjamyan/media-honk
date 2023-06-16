@@ -6,7 +6,9 @@
 //         // export type ENV = 'staging' | 'development' | 'production';
 //     }
 // }
-declare var honkConfig = {
-    ENV: string
+declare var honkConfig: {
+    ENV: 'staging' | 'development' // | 'production'
+} = {
+    ENV
     // ENV: 'staging' | 'development' | 'production'
 }

@@ -2,6 +2,8 @@ import express, { default as Express } from 'express';
 import { existsSync } from 'fs';
 import { RouteBase } from './_RouteBase';
 import { $FactoryCache } from '../services/cache/FactoryServiceCache';
+import { $ModelCache } from '../services/cache/ModelCacheService';
+import { CoversModel, MediaModel } from '../models';
 
 export class ResourceRoutes extends RouteBase {
     
@@ -50,7 +52,7 @@ export class ResourceRoutes extends RouteBase {
      * @param res 
      * @returns 
      */
-    private getCoverImage = (req: Express.Request, res: Express.Response): void => {
+    private getCoverImage = async (req: Express.Request, res: Express.Response) => {
         try {
             if (!req.query.id) {
                 res.status(400).send('Required ID not provided');
@@ -58,16 +60,36 @@ export class ResourceRoutes extends RouteBase {
             }
             const bundleById = $FactoryCache.get(req.query.id);
             if (!bundleById) {
-                res.sendStatus(409);
-                return;
-            } else if (!bundleById.coverImgUrl) {
-                res.sendStatus(204);
-                return;
-            } else if (!existsSync(bundleById.coverImgUrl)) {
-                res.sendStatus(404);
+                res.status(409).send(`No bundle found with ID ${req.query.id}`);
                 return;
             }
-            res.status(200).sendFile(bundleById.coverImgUrl);
+            
+            let coverImgUrl: string | undefined;
+            if (bundleById !== undefined) {
+                coverImgUrl = await CoversModel.getCoverRowById(bundleById._coverId).then((CoverRow)=> CoverRow?.file_url);
+            }
+            let MediaModelEntry;
+            for await (const mediaId of bundleById._mediaEntries) {
+                if (coverImgUrl !== undefined) break;
+                MediaModelEntry = $ModelCache.get('media', mediaId);
+                if (!MediaModelEntry) {
+                    MediaModelEntry = await MediaModel.query().findById(mediaId);
+                }
+                coverImgUrl = await CoversModel.getCoverRowById(MediaModelEntry?.cover_img_id).then((CoverRow)=> {
+                    if (CoverRow && CoverRow.file_url) {
+                        $FactoryCache.set([{ ...bundleById, _coverId: CoverRow.id }]);
+                        return CoverRow.file_url
+                    }
+                });
+            }
+            
+            if (!coverImgUrl) {
+                res.sendStatus(204);
+            } else if (!existsSync(coverImgUrl)) {
+                res.sendStatus(404);
+            } else {
+                res.status(200).sendFile(coverImgUrl);
+            }
             return;
         } catch (err) {
             this.emit('error', {

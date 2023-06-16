@@ -69,9 +69,9 @@ export const workerConfig = setupWorker(
         const cover = mockBundles.find(({_guid})=> _guid === id);
         if (cover) {
             if (cover.type.startsWith('A')) {
-                
+                return res(require('./covers/audio/2.jpg'))
             } else if (cover.type.startsWith('V')) {
-                
+                return res(require('./covers/video/2.jpg'))
             } else if (cover.type.startsWith('I')) {
                 return res(require('./covers/image/2.jpg'))
             }

@@ -59,7 +59,7 @@ class ModelCacheService implements ModelCacheServiceModule {
         return true
     }
 
-    public get<T extends keyof ModelTables, C extends number | Partial<{ [Column in keyof T]: T[Column] }>>(table: T, column: C) {
+    public get<T extends keyof ModelTables, C extends number | Partial<{ [Column in keyof ModelTables[T]]: ModelTables[T][Column] }>>(table: T, column: C) {
         let cacheEntry;
         if (typeof(column) == 'number') {
             cacheEntry = this[table].get(column);

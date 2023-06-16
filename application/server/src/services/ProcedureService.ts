@@ -1,5 +1,5 @@
 import { default as Express } from 'express';
-import { MetaModel, MetaModelColumns, MediaMetaModel, MediaModel, BundlesModel, BundleMediaModel, CoversModel } from "../models";
+import { MetaModel, MediaMetaModel, MediaModel, BundlesModel, BundleMediaModel, CoversModel } from "../models";
 import { MediaHonkServerBase } from "../_Base";
 import { $ModelCache } from "./cache/ModelCacheService";
 import { v4 as uuidV4 } from 'uuid';
@@ -17,45 +17,34 @@ class ProcedureService {
         return ProcedureServiceIntermediary
     }
 
-    private async resolveNewAssetBundle(BundleEntry: BundlesModel, mediaIdList?: number[]) {
+    private async AssetBundleResolver(BundleEntry: BundlesModel, mediaIdList?: number[]) {
         try {
             if (!BundleEntry) throw new Error(`Invalid bundle given to resolver`);
-            let resolvedBundle: Honk.Media.AssetBundle = {
-                _guid: uuidV4(),
-                title: BundleEntry.main_title,
-                subTitle: BundleEntry.sub_title,
-                category: [],
-                artist: [],
-                coverImgUrl: '',
-                length: 0,
-                type: BundleEntry.media_type
-            };
             const relatedMediaIdList = mediaIdList || await BundleMediaModel.getRowsByBundleId(BundleEntry.id);
             if (!Array.isArray(relatedMediaIdList) || relatedMediaIdList.length == 0) {
                 throw new Error(`Failed to find bundles_media where bundle_id = ${BundleEntry.id}`);
             }
+            const ResolvedBundle: Honk.Server.AssetBundle = {
+                _guid: uuidV4(),
+                _bundleId: BundleEntry.id,
+                _coverId: BundleEntry.custom_cover_id,
+                _mediaEntries: [...relatedMediaIdList],
+                title: BundleEntry.main_title,
+                subTitle: BundleEntry.sub_title,
+                category: [],
+                artist: [],
+                type: BundleEntry.media_type
+            };
+            await Promise.all([
+                MetaModel.getValuesByMediaId('artist_name', relatedMediaIdList),
+                MetaModel.getValuesByMediaId('category_name', relatedMediaIdList)
+            ]).then(([ artists, categories ])=> {
+                ResolvedBundle.artist = [...artists];
+                ResolvedBundle.category = [...categories];
+            });
             
-            if (BundleEntry.custom_cover_id) {
-                resolvedBundle.coverImgUrl = await CoversModel.getCoverImageById(BundleEntry.custom_cover_id);
-            }
-            
-            for await (const mediaId of relatedMediaIdList) {
-                if (!!resolvedBundle.coverImgUrl && !!resolvedBundle.type) break;
-                
-                const mediaEntry = await MediaModel.query().findById(mediaId);
-                if (!mediaEntry) break;
-    
-                if (!resolvedBundle.coverImgUrl && mediaEntry?.cover_img_id) {
-                    resolvedBundle.coverImgUrl = await CoversModel.getCoverImageById(mediaEntry.cover_img_id);
-                }
-            }
-    
-            resolvedBundle.artist = await MetaModel.getValuesByMediaId('artist_name', relatedMediaIdList);
-            resolvedBundle.category = await MetaModel.getValuesByMediaId('category_name', relatedMediaIdList);
-            resolvedBundle.length = relatedMediaIdList.length;
-
-            $FactoryCache.set([resolvedBundle]);
-            return resolvedBundle
+            $FactoryCache.set([ResolvedBundle]);
+            return ResolvedBundle
         } catch (err) {
             console.log(err)
             return 
@@ -63,23 +52,23 @@ class ProcedureService {
     }
 
     public async getAllBundles() {
-        const resolvedBundles: Array<Honk.Media.AssetBundle> = [];
+        const ResolvedBundles: Array<Honk.Server.AssetBundle> = [];
         try {
             const bundles = await BundlesModel.query().select();
-            let resolvedBundle;
+            let ResolvedBundle;
             for (const bundle of bundles) {
-                resolvedBundle = await this.resolveNewAssetBundle(bundle);
-                if (resolvedBundle === undefined) continue;
-                resolvedBundles.push(resolvedBundle);
+                ResolvedBundle = await this.AssetBundleResolver(bundle);
+                if (ResolvedBundle === undefined) continue;
+                ResolvedBundles.push(ResolvedBundle);
             }
         } catch (err) {
             console.log(err);
         }
-        return resolvedBundles
+        return ResolvedBundles
     }
 
     public async getBundlesByMetaField(metaColumn: 'artist_name' | 'category_name', metaValue: string) {
-        const resolvedBundles: Array<Honk.Media.AssetBundle> = [];
+        const ResolvedBundles: Array<Honk.Server.AssetBundle> = [];
 
         try {
             const associatedColumn = MetaModel.associatedColumn(metaColumn);
@@ -111,21 +100,21 @@ class ProcedureService {
                         })
                 );
                 for await (const bundleId of assetIdList.bundles) {
-                    const resolvedBundle = await BundlesModel.query().select().findById(bundleId).then((Bundle)=> {
-                        if (Bundle) return this.resolveNewAssetBundle(Bundle)
+                    const ResolvedBundle = await BundlesModel.query().select().findById(bundleId).then((Bundle)=> {
+                        if (Bundle) return this.AssetBundleResolver(Bundle)
                     });
-                    if (resolvedBundle) resolvedBundles.push(resolvedBundle);
+                    if (ResolvedBundle) ResolvedBundles.push(ResolvedBundle);
                 }
             }
             
-            return resolvedBundles
+            return ResolvedBundles
         } catch (err) {
             console.log(err)
             return err instanceof Error ? err : new Error(`An unknown exception occured.`)
         }
         
     }
-    
+
 }
 
 export const $ProcedureService = ProcedureService.instance;

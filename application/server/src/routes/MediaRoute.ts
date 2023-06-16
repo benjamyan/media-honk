@@ -180,7 +180,7 @@ export class MediaRoutes extends RouteBase {
                                 bundleAccumulator[AssetBundle.type].push(AssetBundle);
                             }
                             return bundleAccumulator
-                        }, {} as Record<StoredMediaTypes, Honk.Media.AssetBundle[]>)).flat(1)
+                        }, {} as Record<StoredMediaTypes, Honk.Server.AssetBundle[]>)).flat(1)
                     ];
                 } else if (!!query.mediatype) {
                     resolvedBundles = resolvedBundles.filter(

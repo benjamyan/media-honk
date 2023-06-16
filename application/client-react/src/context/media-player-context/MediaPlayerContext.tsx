@@ -6,10 +6,10 @@ const MediaPlayerContext = createContext<MediaPlayerContextState>(undefined!);
 
 const MediaPlayerContextProvider = ({ children }: {children: React.ReactNode}) => {
     const { assetBucket } = useAssetLibraryContext();
-    const [ mediaPlaying, setMediaPlaying ] = useState<boolean>(false);
-    // const [ playerType, setPlayerType ] = useState<MediaPlayerContextState['playerType']>(null);
-    // const [ bundleId, setBundleId ] = useState<MediaPlayerContextState['bundleId']>(null);
+    
     const [ selectedMedia, setSelectedMedia ] = useState<MediaPlayerContextState['selectedMedia']>(null);
+    const [ mediaPlaying, setMediaPlaying ] = useState<boolean>(false);
+    const [ currentMediaId, setCurrentMediaId ] = useState<number | null>(null);
 
     const updateMediaPlayerContext: MediaPlayerContextState['updateMediaPlayerContext'] = (params)=> {
         const { payload } = params;
@@ -17,10 +17,16 @@ const MediaPlayerContextProvider = ({ children }: {children: React.ReactNode}) =
             case 'UPDATE': {
                 if (payload.selectedMediaId !== undefined) {
                     if (!assetBucket) {
-                        console.error(``);
+                        console.error(`No asset bucket to draw from`);
                         break;
                     }
                     setSelectedMedia(payload.selectedMediaId !== null ? assetBucket[payload.selectedMediaId] : null);
+                }
+                if (payload.mediaPlaying !== undefined) {
+                    setMediaPlaying(payload.mediaPlaying);
+                }
+                if (payload.currentMediaId !== undefined) {
+                    setCurrentMediaId(payload.currentMediaId);
                 }
                 break;
             }
@@ -28,32 +34,12 @@ const MediaPlayerContextProvider = ({ children }: {children: React.ReactNode}) =
                 console.warn(`MediaPlayerContext unknown action passed: ${params.action}`);
             }
         }
-    }
-
-    // useEffect(()=> {
-    //     if (assetBucket == null) return;
-    //     if (bundleId == null && playerType !== null) {
-    //         return setPlayerType(null);
-    //     } else {
-    //         const assetById = assetBucket[bundleId as string];
-    //         if (assetById.type.startsWith('V')) {
-    //             return setPlayerType('VIDEO')
-    //         } else if (assetById.type.startsWith('A')) {
-    //             return setPlayerType('AUDIO');
-    //         } else if (assetById.type.startsWith('I')) {
-    //             return setPlayerType('IMAGE');
-    //         } else {
-    //             setPlayerType(null);
-    //             console.error(`TODO cant parse for type of ${assetById.type}`);
-    //         }
-    //     }
-    // }, [ bundleId ])
+    };
 
     return (
         <MediaPlayerContext.Provider value={{
             selectedMedia,
-            // playerType,
-            // bundleId,
+            currentMediaId,
             mediaPlaying,
             updateMediaPlayerContext
         }}>

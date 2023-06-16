@@ -56,6 +56,7 @@ declare global {
              */
             DEPRECATED_DEFS: 'true' | 'false';
         }
+
         /** The CLI arguments parsed to a friendlier format */
         export type EnvSettings = {
             [Key in keyof ProcessEnv]: (
@@ -64,6 +65,7 @@ declare global {
                     : ProcessEnv[Key]
             )
         }
+        
         /** Customized events and emitters */
         export type InternalEvents = {
             [key: string]: (...args0: any) => void;

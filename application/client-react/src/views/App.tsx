@@ -9,7 +9,9 @@ import { AssetLibraryContextProvider, MediaPlayerContextProvider } from '../cont
 import './_App.scss';
 
 try {
+    console.log(`Env: ${honkConfig.ENV}`);
     if (honkConfig.ENV === 'staging') {
+        console.log(`Init: mock-service-worker`);
         const { workerConfig } = require('../__mock__/mockService');
         workerConfig.start();
     }

@@ -3,7 +3,7 @@
 export type MediaPlayerType = 'VIDEO' | 'AUDIO' | 'IMAGE';
 
 export interface MediaAssetBundle extends Honk.Media.AssetBundle {
-    coverImgUrl: string;
+    // coverImgUrl: string;
 }
 // export interface MediaLibraryEntry {
 //     uuid: string;
