@@ -27,17 +27,12 @@ export const VideoPlayer = () => {
 	const [playerLoaded, setPlayerLoaded] = React.useState<boolean>(false);
 	const videoRef = React.useRef<HTMLVideoElement>(null);
 	const playerRef = React.useRef<videojs.Player>();
-
-	const isVR = false; // !!activeVideo.mediaType && activeVideo.mediaType.indexOf('VR') > -1;
-
+	
 	React.useEffect(()=> {
 		if (videojs.getComponent('CustomMenu') === undefined) {
 			videojs.registerComponent('CustomMenu', CustomMenu);
 			videojs.registerComponent('CustomCloseButton', CustomCloseButton);
 			// videojs.registerComponent('CastVideoButton', CastVideoButton);
-		}
-		if (isVR && videojs.getComponent('vrZoom') === undefined) {
-			videojs.registerPlugin('vrZoom', VrZoom);
 		}
 		setPlayerLoaded(true);
 	}, []);
@@ -53,25 +48,11 @@ export const VideoPlayer = () => {
 					}],
 					autoplay: true
 				}).ready(function(this) {
-					if (isVR) {
-						/// @ts-expect-error
-						this.vr({
-							projection: '180',
-							debug: true,
-							forceCardboard: false,
-							motionControls: false,
-							disableTogglePlay: false
-						});
-						/// @ts-expect-error
-						this.vrZoom();
-					}
-					
 					/** Start invoking custom DOM additions after all necessary plugins are loaded*/
 					this.addChild('CustomMenu');
 					const CustomMenu = this.getChild('CustomMenu') as videojs.Component;
 					if (CustomMenu !== undefined && !!CustomMenu) {
 						CustomMenu.addChild('CustomCloseButton');
-						if (!isVR) CustomMenu.addChild('CastVideoButton');
 					}
 					
 					// Listen for dispose and close entire modal when it happens
@@ -85,7 +66,7 @@ export const VideoPlayer = () => {
 	}, [playerLoaded])
 
 	return (
-		<div className={`video__player ${isVR ? 'vr' : ''}`}>
+		<div className={`video__player`}>
 			<video playsInline ref={videoRef} className='video-js vjs-thetrueme-city video__player--media' />
 		</div>
 	)
