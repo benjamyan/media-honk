@@ -201,6 +201,10 @@ export class MediaRoutes extends RouteBase {
             }
             res.status(200).send(resolvedBundles.map((bundle)=>({
                 ...bundle,
+                length: bundle._mediaEntries.length,
+                _bundleId: undefined,
+                _coverId: undefined,
+                _mediaEntries: undefined,
                 coverImgUrl: undefined
             })));
             return;

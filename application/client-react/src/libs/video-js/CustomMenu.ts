@@ -19,10 +19,11 @@ export class CustomMenu extends Component {
                 this.removeClass('active')
             }
         }
-        player.on('play', toggleActiveClass.bind(null, true))
-        player.on('pause', toggleActiveClass.bind(null, true))
-        player.on('useractive', toggleActiveClass.bind(null, true))
-        player.on('userinactive', toggleActiveClass.bind(null, false))
+        player.on('play', toggleActiveClass.bind(null, true));
+        player.on('pause', toggleActiveClass.bind(null, true));
+        player.on('seeked', toggleActiveClass.bind(null, true));
+        player.on('useractive', toggleActiveClass.bind(null, true));
+        player.on('userinactive', toggleActiveClass.bind(null, false));
     }
     createEl() {
         return videojs.dom.createEl('div', {

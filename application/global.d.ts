@@ -21,7 +21,7 @@ declare global {
         namespace Media {
             type PossibleMediaTypes = 'movie' | 'series' | 'gallery' | 'album' | 'singles';
             type StoredMediaTypes = `${'V' | 'A' | 'I'}${'U' | 'S' | 'X'}` | 'X';
-            interface AssetBundle extends Omit<Honk.Server.AssetBundle, '_bundleId' | '_mediaEntries'> {
+            interface AssetBundle extends Omit<Honk.Server.AssetBundle, '_bundleId' | '_mediaEntries' | '_coverId'> {
                 length: number;
             }
         }

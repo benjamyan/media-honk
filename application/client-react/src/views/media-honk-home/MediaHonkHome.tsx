@@ -1,9 +1,8 @@
 import React, { useCallback } from 'react';
 import { useGlobalConfigContext } from '../../context/global-config-context/GlobalConfixContext';
-import { HeaderNavigation, MediaLibrary, VideoPlayer } from '../../features';
+import { HeaderNavigation, ImageGallary, MediaLibrary, VideoPlayer } from '../../features';
 import { LoaderingIndicator } from '../../components/status-windows/LoadingIndicator';
 import { useAssetLibraryContext, useMediaPlayerContext } from '../../context';
-import { CoverImage } from '../../components/cover-images/CoverImage';
 import { AssetOverview } from '../../features/asset-overview/AssetOverview';
 
 export const MediaHonkHome = ()=> {
@@ -20,8 +19,8 @@ export const MediaHonkHome = ()=> {
     const MediaPlayer = useCallback(()=> {
         if (!mediaPlaying || !selectedMedia) return null
         switch (selectedMedia.type[0]) {
-            case 'A': return <></>;
-            case 'I': return <></>;
+            case 'A': return <>AUDIO TODO</>;
+            case 'I': return <ImageGallary />;
             case 'V': 
             default: return <VideoPlayer />;
         }
@@ -33,7 +32,7 @@ export const MediaHonkHome = ()=> {
                 <LoaderingIndicator />
             )}
             { mediaPlaying &&
-                <>TODO</>
+                <MediaPlayer />
             }
             <MediaBundleOverview />
             <HeaderNavigation />

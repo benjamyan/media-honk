@@ -4,13 +4,14 @@ import { default as Express } from 'express';
 import { RouteBase } from './_RouteBase';
 import { $ModelCache } from '../services/cache/ModelCacheService';
 import { $FactoryCache } from '../services/cache/FactoryServiceCache';
+import { BundleMediaModel, BundlesModel, MediaModel } from '../models';
 
 export class StreamRoutes extends RouteBase {
     
     constructor() {
         super({
             permittedQuery: {
-                get: [ 'id' ],
+                get: [ 'id', 'entry' ],
                 // post: [],
                 // patch: [],
                 // delete: [ '!id' ]
@@ -38,8 +39,47 @@ export class StreamRoutes extends RouteBase {
             }
         });
         this.app.use('/stream', [ this.parsePermittedRouteOptions ]);
+        this.app.get('/stream/image', [ this.streamImageMedia ]);
         this.app.get('/stream/video', [ this.streamVideoEntry ]);
         
+    }
+
+    private streamImageMedia = async (req: Express.Request, res: Express.Response)=> {
+        const { id, entry } = req.query;
+        if (!id) {
+            res.status(404).send('Requires ID parameter');
+            return;
+        }
+        /** Get the associated bundle based on id passed from query param */
+        const Bundle = $FactoryCache.get(id);
+        if (!Bundle) {
+            res.status(404).send('No bundle with given ID found');
+            return;
+        }
+        /** Get the BundleMedia rows where bundle ID matches */
+        let foundMediaBundles = $ModelCache.get('bundles_media', { bundle_id: Bundle._bundleId });
+        if (!Array.isArray(foundMediaBundles) || foundMediaBundles.length == 0) {
+            /** If none are found, query for them in database */
+            foundMediaBundles = await BundleMediaModel.query().select().where('bundle_id', Bundle._bundleId)
+        }
+        /** If the media index was passed in, find it in the media bundles; if not, select the first one available */
+        const MediaBundle = (
+            entry !== undefined
+                ? foundMediaBundles.find(({media_index})=> media_index === parseInt(entry))
+                : foundMediaBundles[0]
+        );
+        if (!MediaBundle) {
+            res.status(404).send('No media associated with the found bundle');
+            return;
+        }
+        /** Get the media table entry so its file can be referenced and streamed */
+        let MediaEntry = $ModelCache.get('media', MediaBundle.media_id) || await MediaModel.query().findById(MediaBundle.media_id);
+        if (!MediaEntry) {
+            res.status(404).send('Could not locate playable media');
+            return;
+        }
+        res.status(200).sendFile(MediaEntry.abs_url);
+        return;
     }
 
     /**
@@ -50,49 +90,57 @@ export class StreamRoutes extends RouteBase {
      * @param res 
      * @returns 
      */
-    private streamVideoEntry = (req: Express.Request, res: Express.Response): void => {
+    private streamVideoEntry = async (req: Express.Request, res: Express.Response) => {
         try {
-            const { id, entry } = req.params;
+            const { id, entry } = req.query;
             if (!id) {
                 res.status(404).send('Requires ID parameter');
                 return;
             }
-            
+            /** Get the associated bundle based on id passed from query param */
             const Bundle = $FactoryCache.get(id);
             if (!Bundle) {
-                res.sendStatus(404);
+                res.status(404).send('No bundle with given ID found');
                 return;
             }
-
-            const foundMediaBundles = $ModelCache.get('bundles_media', { bundle_id: Bundle._bundleId });
+            /** Get the BundleMedia rows where bundle ID matches */
+            let foundMediaBundles = $ModelCache.get('bundles_media', { bundle_id: Bundle._bundleId });
+            if (!Array.isArray(foundMediaBundles) || foundMediaBundles.length == 0) {
+                /** If none are found, query for them in database */
+                foundMediaBundles = await BundleMediaModel.query().select().where('bundle_id', Bundle._bundleId)
+            }
+            /** If the media index was passed in, find it in the media bundles; if not, select the first one available */
             const MediaBundle = (
                 entry !== undefined
-                    ? foundMediaBundles.find(({media_index})=> media_index && media_index === parseInt(entry))
+                    ? foundMediaBundles.find(({media_index})=> media_index === parseInt(entry))
                     : foundMediaBundles[0]
             );
             if (!MediaBundle) {
-                res.sendStatus(404);
+                res.status(404).send('No media associated with the found bundle');
                 return;
             }
-            
+            /** Get the media table entry so its file can be referenced and streamed */
+            let MediaEntry = $ModelCache.get('media', MediaBundle.media_id) || await MediaModel.query().findById(MediaBundle.media_id);
+            if (!MediaEntry) {
+                res.status(404).send('Could not locate playable media');
+                return;
+            }
             const range = req.headers.range;
 
             if (!range) {
                 res.status(400).send("Requires Range header");
             } else {
-                const videoPath = $ModelCache.get('bundles', Bundle._bundleId);
-                // const videoPath = Path.join('', req.query.file);
+                const videoPath = Path.join('', MediaEntry.abs_url);
                 const videoSize = Fs.statSync(videoPath).size;
                 
                 const start = Number(range.replace(/\D/g, ""));
                 const end = Math.min(start + (10 ** 9), videoSize - 1);
                 
-                // const videoStream = Fs.createReadStream(videoPath, { start, end, autoClose: true });
-                
                 res.writeHead(206, {
                     "Content-Range": `bytes ${start}-${end}/${videoSize}`,
                     "Accept-Ranges": "bytes",
                     "Content-Length": end - start + 1,
+                    // "Content-Type": "rtmp/mp4",
                     "Content-Type": "video/mp4",
                 });
                 Fs.createReadStream(videoPath, { start, end, autoClose: true })

@@ -1,7 +1,7 @@
 import React from 'react';
 
 // import { CloseButton } from '../../components';
-import { VrZoom, CustomMenu, CustomCloseButton, CastVideoButton, vjsConfig } from '../../libs/video-js';
+import { CustomMenu, CustomCloseButton, vjsConfig } from '../../libs/video-js';
 import { useMediaPlayerContext } from '../../context';
 
 // https://www.npmjs.com/package/chromecast-api
@@ -46,8 +46,10 @@ export const VideoPlayer = () => {
 						src: stream_videoFile(selectedMedia._guid, currentMediaId).static, 
 						type: 'video/mp4' 
 					}],
-					autoplay: true
+					preload: 'metadata',
+					autoplay: false
 				}).ready(function(this) {
+
 					/** Start invoking custom DOM additions after all necessary plugins are loaded*/
 					this.addChild('CustomMenu');
 					const CustomMenu = this.getChild('CustomMenu') as videojs.Component;
@@ -55,7 +57,14 @@ export const VideoPlayer = () => {
 						CustomMenu.addChild('CustomCloseButton');
 					}
 					
-					// Listen for dispose and close entire modal when it happens
+					// this.on('play', ()=> {
+					// 	/// @ts-expect-error
+					// 	if (screen.orientation.type.match(/\w+/)[0] === 'landscape') {
+					// 		if (videoRef.current) videoRef.current.requestFullscreen();
+					// 	}
+					// })
+
+					/** Listen for dispose and close entire modal when it happens */
 					this.on('dispose', ()=> updateMediaPlayerContext({
 						action: 'UPDATE',
 						payload: { mediaPlaying: false }
@@ -67,7 +76,7 @@ export const VideoPlayer = () => {
 
 	return (
 		<div className={`video__player`}>
-			<video playsInline ref={videoRef} className='video-js vjs-thetrueme-city video__player--media' />
+			<video ref={videoRef} playsInline className='video-js vjs-thetrueme-city video__player--media' />
 		</div>
 	)
 }

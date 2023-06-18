@@ -1,7 +1,7 @@
 import { default as Yaml } from 'yaml';
 import { default as Fs } from 'fs';
 import {convertToStoredMediaType, formatMediaEntries} from '../../utils/assetEntries'
-import { deteremineStoredMediaType, shakeDirectoryFileTree } from '../../utils/fileSystem';
+import { deteremineStoredMediaType, naturalCompare, shakeDirectoryFileTree } from '../../utils/fileSystem';
 import { Constants } from '../../config';
 import { ResolvedMediaAssetProperties, ConfiguredMediaAssetProperties } from '../../types/MediaProperties';
 import { MediaHonkServerBase } from '../../_Base';
@@ -79,7 +79,7 @@ export class AssetPropertiesConfig implements AssetPropertyConfigPublicEntity {
     private getMediaEntryList() {
         if (this.properties.entries === null) {
             this.properties.entries = formatMediaEntries(
-                this._dirFileList.filter((currProperty)=> (
+                this._dirFileList.sort(naturalCompare).filter((currProperty)=> (
                     currProperty !== this.properties.coverUrl && currProperty !== this._configFilePath
                 )),
                 this._mediaDir,

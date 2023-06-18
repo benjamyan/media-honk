@@ -16,7 +16,7 @@ export const AssetGroup = (props: { rowTitle: string, bundleAssets: MediaAssetBu
                 <button className={`${CLASSNAME}-title_link`}>{'More >'}</button>
             </div>
             <div className={`${CLASSNAME}-${libraryView.toLowerCase()}  ${props.bundleAssets[0].type[0].toLowerCase()}`}>
-                { props.bundleAssets.map(AssetCard)}
+                { props.bundleAssets.sort((a, b)=>0.5 - Math.random()).map(AssetCard)}
             </div>
         </section>
     )

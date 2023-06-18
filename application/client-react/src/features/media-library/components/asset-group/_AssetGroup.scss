@@ -3,6 +3,9 @@
     white-space: nowrap;
     overflow: hidden;
     margin-bottom: 25px;
+    &:last-of-type {
+        padding-bottom: 50px;
+    }
     &-title {
         width: calc(100% - 50px);
         margin: 0 25px;
@@ -22,28 +25,22 @@
         flex-wrap: nowrap;
         scrollbar-width: 10px;
         &.v > div {
-            // width: 325px;
-            // height: 225px;
+            width: 325px;
             img {
-                width: 325px;
                 height: 180px;
                 aspect-ratio: 16 / 9;
             }
         }
         &.a > div {
-            // width: 210px;
-            // height: 250px;
+            width: 210px;
             img {
-                width: 210px;
                 height: 210px;
                 aspect-ratio: 1 / 1;
             }
         }
         &.i > div {
-            // width: 215px;
-            // height: 375px;
+            width: 215px;
             img {
-                width: 215px;
                 height: 300px;
                 aspect-ratio: 1 / 1;
             }
@@ -52,6 +49,7 @@
             max-width: 100%;
             flex: 0 0 auto;
             margin: 0 25px 0 0;
+            white-space: normal;
             &:first-child {
                 margin-left: 25px;
             }
