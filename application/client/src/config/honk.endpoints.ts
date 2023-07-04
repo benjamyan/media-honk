@@ -13,7 +13,7 @@ export const ENDPOINTS = {
 }
 export const QUERY_PARAMS = {
     getBundles: { 
-        type: 'type',
+        type: 'mediatype',
         artist: 'artist',
         category: 'category', 
         limit: 'limit',

@@ -9,7 +9,7 @@ export type AssetLibrarySettings = {
      * - `null` if the API call hasnt been made/completed yet
      * - `Record` where key is the `_guid` of the asset bundle contained in value
      */
-    assetBucket: null | Record<string, MediaAssetBundle>;
+    assetBucket: Record<string, MediaAssetBundle>;
     metaArtistBucket: Array<string>;
     metaCategoryBucket: Array<string>;
     // assetBucket: null | ;
@@ -18,6 +18,8 @@ export type AssetLibrarySettings = {
     mediaView: MediaView;
     updateLibraryContext: (args0: {
             action: 'UPDATE';
-            payload: any;
+            payload: Partial<Omit<AssetLibrarySettings, 'updateLibraryContext' | 'assetBucket'>> & {
+                assetBucket: Array<MediaAssetBundle>
+            }
         })=> void;
 }

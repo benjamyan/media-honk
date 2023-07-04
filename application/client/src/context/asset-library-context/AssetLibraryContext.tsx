@@ -7,15 +7,36 @@ import { get_metaValues } from '../../api/get_metaValues';
 const AssetLibraryContext = createContext<AssetLibrarySettings>(undefined!);
 
 const AssetLibraryContextProvider = ({ children }: {children: React.ReactNode}) => {
-    const [ assetBucket, setAssetBucket ] = useState<AssetLibrarySettings['assetBucket']>(null);
+    const [ assetBucket, setAssetBucket ] = useState<AssetLibrarySettings['assetBucket']>({});
     const [ metaArtistBucket, setMetaArtistBucket ] = useState<AssetLibrarySettings['metaArtistBucket']>([]);
     const [ metaCategoryBucket, setMetaCategoryBucket ] = useState<AssetLibrarySettings['metaCategoryBucket']>([]);
     const [ metaSearch, setMetaSearch ] = useState<string[]>([]);
     const [ libraryView, setLibraryView ] = useState<LibraryView>('ROW');
     const [ mediaView, setMediaView ] = useState<MediaView>(null);
     
-    const updateLibraryContext = ()=> {
-        
+    const updateLibraryContext: AssetLibrarySettings['updateLibraryContext'] = ({ action, payload })=> {
+        switch (action) {
+            default:
+            case 'UPDATE': {
+                if (payload.assetBucket) {
+                    setAssetBucket({
+                        ...assetBucket,
+                        ...Object.fromEntries(
+                            payload.assetBucket.map((bundle)=> [bundle._guid, {
+                                ...bundle,
+                                coverImgUrl: `${ENDPOINTS.getCoverImage}?id=${bundle._guid}`
+                            }])
+                        )
+                    });
+                }
+                if (payload.mediaView) {
+                    setMediaView(payload.mediaView);
+                }
+                if (payload.libraryView) {
+                    setLibraryView(payload.libraryView);
+                }
+            }
+        }
     }
 
     useEffect(()=> {

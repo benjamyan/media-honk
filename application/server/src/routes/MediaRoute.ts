@@ -12,7 +12,7 @@ export class MediaRoutes extends RouteBase {
     constructor() {
         super({
             permittedQuery: {
-                get: [ 'metatype', 'category', 'artist', 'page', 'limit' ],
+                get: [ 'mediatype', 'category', 'artist', 'page', 'limit' ],
                 // post: [],
                 // patch: [],
                 // delete: [ '!id' ]

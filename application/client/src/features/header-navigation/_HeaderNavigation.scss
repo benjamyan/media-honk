@@ -7,9 +7,18 @@
     left: 0;
     z-index: var(--header-z-index);
     background-color: var(--background-color);
-    > * {
-        margin: 0;
-        text-align: center;
-        display: inline-block;
+    &--interact,
+    &--searching {
+        width: calc(100% - 20px);
+        padding: 10px 10px 0 10px;
+    }
+    &--interact {
+        display: flex;
+        flex-direction: row;
+        align-content: center;
+        justify-content: space-between;
+        > * {
+            text-align: center;
+        }
     }
 }

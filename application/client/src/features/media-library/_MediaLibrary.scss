@@ -2,10 +2,10 @@
     width: 100%;
     height: auto;
     position: relative;
-    &.locked {
-        z-index: -1;
-        position: fixed;
-        left: -100vw;
-        pointer-events: none;
-    }
+    // &.locked {
+    //     z-index: -1;
+    //     position: fixed;
+    //     left: -100vw;
+    //     pointer-events: none;
+    // }
 }
