@@ -1,5 +1,5 @@
 import { setupWorker, rest } from 'msw';
-import { ENDPOINTS } from '../config/honk.endpoints';
+import { ENDPOINTS } from '../api/_endpoints';
 import { mockBundles, mockMeta } from './data';
 
 export const workerConfig = setupWorker(

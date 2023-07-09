@@ -1,6 +1,6 @@
 import axios, { AxiosResponse } from "axios";
 import { wrapPromise } from "./_utils";
-import { ENDPOINTS, HONK_URL, QUERY_PARAMS } from "../config/honk.endpoints";
+import { ENDPOINTS, HONK_URL, QUERY_PARAMS } from "./_endpoints";
 
 export const stream_videoFile = (bundleId: string, mediaId: number | null)=> {
     let query = `${ENDPOINTS.streamVideo}?${QUERY_PARAMS.streamVideo.id}=${bundleId}`;

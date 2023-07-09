@@ -1,8 +1,9 @@
 import React, { createContext, useContext, useEffect, useRef, useState } from 'react';
 import { LibraryView, AssetLibrarySettings, MediaView } from './AssetLibraryContext.types';
 import { get_bundlesByPage } from '../../api/get_bundlesByPage';
-import { ENDPOINTS } from '../../config/honk.endpoints';
+import { ENDPOINTS } from '../../api/_endpoints';
 import { get_metaValues } from '../../api/get_metaValues';
+import { get_assetBundles } from '../../api/get_assetBundles';
 
 const AssetLibraryContext = createContext<AssetLibrarySettings>(undefined!);
 
@@ -12,7 +13,7 @@ const AssetLibraryContextProvider = ({ children }: {children: React.ReactNode}) 
     const [ metaCategoryBucket, setMetaCategoryBucket ] = useState<AssetLibrarySettings['metaCategoryBucket']>([]);
     const [ metaSearch, setMetaSearch ] = useState<string[]>([]);
     const [ libraryView, setLibraryView ] = useState<LibraryView>('ROW');
-    const [ mediaView, setMediaView ] = useState<MediaView>(null);
+    const [ mediaView, setMediaView ] = useState<MediaView>([]);
     
     const updateLibraryContext: AssetLibrarySettings['updateLibraryContext'] = ({ action, payload })=> {
         switch (action) {
@@ -30,10 +31,28 @@ const AssetLibraryContextProvider = ({ children }: {children: React.ReactNode}) 
                     });
                 }
                 if (payload.mediaView) {
-                    setMediaView(payload.mediaView);
+                    if (payload.mediaView === 'NULL') {
+                        setMediaView([])
+                    } else {
+                        setMediaView([ ...payload.mediaView ] as MediaView);
+                    }
                 }
                 if (payload.libraryView) {
                     setLibraryView(payload.libraryView);
+                }
+                if (payload.metaSearch) {
+                    get_assetBundles({
+                        artist: metaArtistBucket.map((artist)=>payload.metaSearch?.includes(artist) ? artist : undefined).filter(Boolean) as string[],
+                        category: metaCategoryBucket.map((category)=>payload.metaSearch?.includes(category) ? category : undefined).filter(Boolean) as string[]
+                    }).axios().then((res)=>{
+                        updateLibraryContext({
+                            action: 'UPDATE',
+                            payload: { assetBucket: res }
+                        })
+                        setMetaSearch(payload.metaSearch as string[]);
+                        /// @ts-expect-error
+                        if (payload.metaSearch.length > 0 && libraryView == 'ROW') setLibraryView('GRID');
+                    })
                 }
             }
         }
@@ -68,6 +87,7 @@ const AssetLibraryContextProvider = ({ children }: {children: React.ReactNode}) 
             metaCategoryBucket,
             libraryView,
             mediaView,
+            metaSearch,
             updateLibraryContext
         }}>
             { children }

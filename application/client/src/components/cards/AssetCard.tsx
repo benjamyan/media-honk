@@ -1,5 +1,5 @@
 import React from 'react';
-import { ENDPOINTS } from '../../config/honk.endpoints';
+import { ENDPOINTS } from '../../api/_endpoints';
 
 import './_AssetCard.scss';
 import { useMediaPlayerContext } from '../../context';

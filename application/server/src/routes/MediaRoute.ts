@@ -199,6 +199,7 @@ export class MediaRoutes extends RouteBase {
                 res.sendStatus(204);
                 return;
             }
+            
             res.status(200).send(resolvedBundles.map((bundle)=>({
                 ...bundle,
                 length: bundle._mediaEntries.length,

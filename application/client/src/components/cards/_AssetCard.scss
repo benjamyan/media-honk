@@ -1,7 +1,12 @@
 .asset_card {
+    margin-bottom: 20px;
     * {
         pointer-events: none;
         vertical-align: top;
+    }
+    &_title,
+    &_subtitle {
+        display: none;
     }
     &_title {
         margin-bottom: 5px;

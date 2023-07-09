@@ -13,7 +13,7 @@ export const AssetOverview = (props: { mediaAsset: MediaAssetBundle }) => {
 
     const closeAssetOverview = ()=> updateMediaPlayerContext({
         action: 'UPDATE',
-        payload: { selectedMediaId: null }
+        payload: { selectedMediaId: null, mediaPlaying: false, currentMediaId: null }
     });
     const playAssetMedia = ()=> updateMediaPlayerContext({
         action: 'UPDATE',

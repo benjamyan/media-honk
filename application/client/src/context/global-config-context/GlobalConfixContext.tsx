@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { get_healthCheck } from '../../api/healthCheck';
+import { get_healthCheck } from '../../api/get_healthCheck';
 import { GlobalConfigOptions, HealthStatus, LayoutOption, ThemeOption } from './GlobalConfigContext.types';
 
 const GlobalConfigContext = createContext<GlobalConfigOptions>(undefined!);

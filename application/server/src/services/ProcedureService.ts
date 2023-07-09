@@ -40,8 +40,13 @@ class ProcedureService {
                 ResolvedBundle.category = [...categories];
             });
             
-            $FactoryCache.set([ResolvedBundle]);
-            return ResolvedBundle
+            const ExistingBundle = $FactoryCache.get(ResolvedBundle);
+            if (ExistingBundle) {
+                return ExistingBundle;
+            } else {
+                $FactoryCache.set([ResolvedBundle]);
+                return ResolvedBundle
+            }
         } catch (err) {
             console.log(err)
             return 

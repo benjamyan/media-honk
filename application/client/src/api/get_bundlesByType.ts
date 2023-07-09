@@ -1,6 +1,6 @@
 import axios, { AxiosResponse } from "axios";
 import { wrapPromise } from "./_utils";
-import { ENDPOINTS, QUERY_PARAMS } from "../config/honk.endpoints";
+import { ENDPOINTS, QUERY_PARAMS } from "./_endpoints";
 
 export const get_bundlesByMediaType = async (mediaType: Honk.Media.StoredMediaTypes)=> {
     const queryEndpoint = `${ENDPOINTS.getBundles}?${QUERY_PARAMS.getBundles.type}=${mediaType}`

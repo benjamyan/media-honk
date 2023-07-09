@@ -1,5 +1,5 @@
 import Axios from "axios";
-import { HONK_URL } from "../../config/honk.endpoints";
+import { HONK_URL } from "../../api/_endpoints";
 
 export function setupAxiousInterceptors() {
     console.log(`Url: ${HONK_URL[Client.honkConfig.ENV]}`)

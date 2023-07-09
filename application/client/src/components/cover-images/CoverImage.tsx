@@ -1,6 +1,6 @@
 import React from 'react';
 import { MediaAssetBundle } from '../../types';
-import { ENDPOINTS, HONK_URL, QUERY_PARAMS } from '../../config/honk.endpoints';
+import { ENDPOINTS, HONK_URL, QUERY_PARAMS } from '../../api/_endpoints';
 
 import './_CoverImage.scss';
 import { get_coverImage } from '../../api/get_coverImage';

@@ -11,7 +11,7 @@ export type MediaPlayerContextState = {
             payload: {
                 selectedMediaId?: string | null;
                 mediaPlaying?: boolean;
-                currentMediaId?: number;
+                currentMediaId?: number | null;
                 // [Key in keyof Omit<MediaPlayerContextState, 'updateMediaPlayerContext'>]?: MediaPlayerContextState[Key]
             }
         })=> void;

@@ -3,18 +3,19 @@ import { CloseButton } from '../../components';
 import "./_ImageGallery.scss"
 import { useMediaPlayerContext } from '../../context';
 import { stream_imageFile } from '../../api/stream_imageFile';
+import { get_coverImage } from '../../api/get_coverImage';
 
 export const ImageGallary = ()=> {
     const { selectedMedia, updateMediaPlayerContext } = useMediaPlayerContext();
 
     const [isFullscreen, setFullscreen] = React.useState<boolean>(false);
-    const [currentImage, setCurrentImage] = React.useState<number>(0);
+    const [currentImage, setCurrentImage] = React.useState<number>(-1);
     const viewerRef = React.useRef<HTMLDivElement>(null);
     const imageRef = React.useRef<HTMLDivElement>(null);
     
     const closeImageGallery = ()=> updateMediaPlayerContext({
         action: 'UPDATE',
-        payload: { mediaPlaying: false }
+        payload: { mediaPlaying: false, currentMediaId: null, selectedMediaId: null }
     });
     
     if (!selectedMedia) return null;
@@ -25,10 +26,14 @@ export const ImageGallary = ()=> {
                 <img 
                     className={`image__viewer--media-content`}
                     loading='eager'
-                    src={stream_imageFile(selectedMedia._guid, currentImage).static}
+                    src={
+                        currentImage == -1
+                            ? get_coverImage(selectedMedia._guid).static
+                            : stream_imageFile(selectedMedia._guid, currentImage).static
+                    }
                     onClick={(e)=>{
                         if (window.innerWidth / 2 > e.clientX) {
-                            if (currentImage > 0) {
+                            if (currentImage > -1) {
                                 setCurrentImage(currentImage - 1);
                                 imageRef.current?.scrollTo(0,0);
                             }

@@ -1,6 +1,6 @@
 import axios, { AxiosResponse } from "axios";
 import { wrapPromise } from "./_utils";
-import { ENDPOINTS, HONK_URL, QUERY_PARAMS } from "../config/honk.endpoints";
+import { ENDPOINTS, HONK_URL, QUERY_PARAMS } from "./_endpoints";
 
 export const get_coverImage = (bundleId: string)=> {
     const query = `${ENDPOINTS.getCoverImage}?${QUERY_PARAMS.getBundles.id}=${bundleId}`;

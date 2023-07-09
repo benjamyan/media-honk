@@ -3,9 +3,14 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import './_MetaSearchBar.scss';
 import { useAssetLibraryContext } from '../../../../context';
 
-export const MetaSearchBar = ({ updateSearchValue }:{ updateSearchValue: (args:{ action: 'ADD' | 'REMOVE', value: string | null })=> void }) => {
-	const { metaArtistBucket, metaCategoryBucket } = useAssetLibraryContext();
-	const [ searchValues, setSearchValues ] = useState<string[]>([]);
+type MetaSearchBarProps = {
+	updateSearchFocus: (focused: boolean)=> void;
+	updateSearchValue: (args:{ action: 'ADD' | 'REMOVE', value: string | null })=> void
+}
+
+export const MetaSearchBar = ({ updateSearchValue, updateSearchFocus }: MetaSearchBarProps) => {
+	const { metaArtistBucket, metaCategoryBucket, metaSearch } = useAssetLibraryContext();
+	const [ searchValues, setSearchValues ] = useState<string[]>(metaSearch);
 	const [ inputActive, setInputActive ] = useState(false);
 	const searchInputRef = useRef<HTMLInputElement>(null);
 
@@ -59,6 +64,9 @@ export const MetaSearchBar = ({ updateSearchValue }:{ updateSearchValue: (args:{
 			document.addEventListener('click', onInputClearEventHandler);
 		}
 	}, [ searchValues ]);
+	useEffect(()=>{
+		updateSearchFocus(inputActive);
+	}, [ inputActive ]);
 
 	return (
 		<div className={`meta__search ${inputActive ? 'active' : ''}`}>

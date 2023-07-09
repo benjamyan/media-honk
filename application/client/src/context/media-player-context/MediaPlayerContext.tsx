@@ -15,6 +15,7 @@ const MediaPlayerContextProvider = ({ children }: {children: React.ReactNode}) =
         const { payload } = params;
         switch (params.action) {
             case 'UPDATE': {
+                console.log(payload)
                 if (payload.selectedMediaId !== undefined) {
                     if (!assetBucket) {
                         console.error(`No asset bucket to draw from`);
