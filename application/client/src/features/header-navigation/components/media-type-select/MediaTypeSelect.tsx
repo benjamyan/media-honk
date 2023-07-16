@@ -21,7 +21,7 @@ export const MediaTypeSelect = () => {
     }, [ assetBucket ]);
     
     return (
-        <select className='mediatype__select' onChange={(e)=>
+        <select className='mediatype__select' defaultValue={'NULL'} value={mediaView[0]} onChange={(e)=>
             updateLibraryContext({
                 action: 'UPDATE',
                 payload: {
@@ -29,10 +29,11 @@ export const MediaTypeSelect = () => {
                 }
             })
         }>
-            <option selected={mediaView.length == 0} value={'NULL'}>All</option>
-            { Object.entries(mediaTypeOptionList).map((mediaType)=>
+            <option value={'NULL'}>All</option>
+            { Object.entries(mediaTypeOptionList).map((mediaType, i)=>
                 <option 
-                    selected={ mediaView[0] == mediaType[0] }
+                    key={`mediatypeselect-${i}`}
+                    // selected={ mediaView[0] == mediaType[0] }
                     value={mediaType[0]} 
                     onClick={()=>{
                         console.log(1)

@@ -36,9 +36,6 @@ export const formatMediaEntries = (entries: string[], pathname: string, properti
             formattedEntries[i].title = `${properties.title} item ${String(i + 1)}`
         }
     }
-    // if (properties.title.indexOf('uturama') > -1) {
-    //     console.log([...formattedEntries])
-    // }
     return formattedEntries
 }
 

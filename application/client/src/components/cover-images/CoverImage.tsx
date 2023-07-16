@@ -14,6 +14,8 @@ export const CoverImage = (props: { assetBundle: MediaAssetBundle })=> {
             className={`${CLASSNAME} ${assetBundle.type[0].toLowerCase()}`} 
             src={get_coverImage(assetBundle._guid).static}
             alt={assetBundle.title}
+            decoding='async'
+            loading='lazy'
         />
     )
 }

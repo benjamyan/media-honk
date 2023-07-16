@@ -1,16 +1,16 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { EventHandler, MouseEventHandler, useCallback, useEffect, useRef, useState } from 'react';
 
 import './_MetaSearchBar.scss';
 import { useAssetLibraryContext } from '../../../../context';
 
 type MetaSearchBarProps = {
 	updateSearchFocus: (focused: boolean)=> void;
-	updateSearchValue: (args:{ action: 'ADD' | 'REMOVE', value: string | null })=> void
+	// updateSearchValue: (args:{ action: 'ADD' | 'REMOVE', value: string | null })=> void
 }
 
-export const MetaSearchBar = ({ updateSearchValue, updateSearchFocus }: MetaSearchBarProps) => {
-	const { metaArtistBucket, metaCategoryBucket, metaSearch } = useAssetLibraryContext();
-	const [ searchValues, setSearchValues ] = useState<string[]>(metaSearch);
+export const MetaSearchBar = ({ updateSearchFocus }: MetaSearchBarProps) => {
+	const { metaArtistBucket, metaCategoryBucket, metaSearch, updateLibraryContext } = useAssetLibraryContext();
+	const [ searchValues, setSearchValues ] = useState<string[]>([...metaSearch]);
 	const [ inputActive, setInputActive ] = useState(false);
 	const searchInputRef = useRef<HTMLInputElement>(null);
 
@@ -41,19 +41,22 @@ export const MetaSearchBar = ({ updateSearchValue, updateSearchFocus }: MetaSear
 		}
 		document.removeEventListener('click', onInputClearEventHandler);
 	};
+	const onMetaSearchValueClickHandler: MouseEventHandler<HTMLParagraphElement> = (event)=> {
+		updateLibraryContext({
+			action: 'UPDATE',
+			payload: {
+				metaSearch: event.currentTarget.textContent!
+			}
+		});
+		onInputClearEventHandler();
+	};
 
 	const MetaSearchDropdown = useCallback(()=> {
 		if (searchValues.length == 0) return null;
 		return (
 			<div className='meta__search--dropdown'>
 				{ searchValues.map((value)=> (
-					<p onClick={ (event)=> {
-						updateSearchValue({ 
-							action: 'ADD', 
-							value: event.currentTarget.textContent 
-						});
-						onInputClearEventHandler();
-					} }>{ value }</p>
+					<p onClick={onMetaSearchValueClickHandler}>{ value }</p>
 				)) }
 			</div>
 		)

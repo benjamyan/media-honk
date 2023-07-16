@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useState } from 'react';
 import { MediaPlayerContextState } from './MediaPlayerContext.types';
 import { useAssetLibraryContext } from '../asset-library-context/AssetLibraryContext';
 
@@ -10,12 +10,20 @@ const MediaPlayerContextProvider = ({ children }: {children: React.ReactNode}) =
     const [ selectedMedia, setSelectedMedia ] = useState<MediaPlayerContextState['selectedMedia']>(null);
     const [ mediaPlaying, setMediaPlaying ] = useState<boolean>(false);
     const [ currentMediaId, setCurrentMediaId ] = useState<number | null>(null);
+    const [ mediaQueue, setMediaQueue ] = useState<string[]>([]);
 
     const updateMediaPlayerContext: MediaPlayerContextState['updateMediaPlayerContext'] = (params)=> {
-        const { payload } = params;
+
         switch (params.action) {
+            case 'RESET': {
+                setSelectedMedia(null);
+                setMediaPlaying(false);
+                setCurrentMediaId(null);
+                break;
+            }
             case 'UPDATE': {
-                console.log(payload)
+                const { payload } = params;
+                
                 if (payload.selectedMediaId !== undefined) {
                     if (!assetBucket) {
                         console.error(`No asset bucket to draw from`);
@@ -29,10 +37,18 @@ const MediaPlayerContextProvider = ({ children }: {children: React.ReactNode}) =
                 if (payload.currentMediaId !== undefined) {
                     setCurrentMediaId(payload.currentMediaId);
                 }
+                if (payload.mediaQueue) {
+                    if (mediaQueue.includes(payload.mediaQueue)) {
+                        console.warn('TODO')
+                    } else {
+                        setMediaQueue([...mediaQueue, payload.mediaQueue])
+                    }
+                }
                 break;
             }
             default: {
-                console.warn(`MediaPlayerContext unknown action passed: ${params.action}`);
+                console.warn(`MediaPlayerContext unknown action passed`);
+                // console.warn({...params});
             }
         }
     };
@@ -42,6 +58,7 @@ const MediaPlayerContextProvider = ({ children }: {children: React.ReactNode}) =
             selectedMedia,
             currentMediaId,
             mediaPlaying,
+            mediaQueue,
             updateMediaPlayerContext
         }}>
             { children }

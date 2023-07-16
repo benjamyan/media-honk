@@ -343,7 +343,10 @@ export class MetaModel extends BaseHonkModel implements MetaModelColumns {
 
 		metaInsertBlock:
 		try {
-			if (!Array.isArray(artists) || !Array.isArray(categories)) break metaInsertBlock;
+			
+			if (!Array.isArray(artists) || !Array.isArray(categories)) {
+				break metaInsertBlock;
+			}
 			const longValueKey = artists.length >= categories.length ? 'artists' : 'categories';
 			await metaEntries[longValueKey].reduce(async (initialPromise, value)=> {
 				await initialPromise;

@@ -3,6 +3,17 @@ import { MediaAssetBundle } from "../../types";
 export type LibraryView = 'GRID' | 'ROW';
 export type MediaView = Honk.Media.StoredMediaTypes[];
 
+type UpdateLibraryContextProps = {
+    action: 'UPDATE';
+    payload: Partial<Omit<AssetLibrarySettings, 'updateLibraryContext' | 'assetBucket' | 'mediaView' | 'metaSearch'>> & {
+        assetBucket?: Array<MediaAssetBundle>;
+        mediaView?: MediaView | 'NULL';
+        metaSearch?: string | string[];
+    }
+} | {
+    action: 'RESET'
+}
+
 export type AssetLibrarySettings = {
     /** All asset passed from the API
      * - `null` if the API call hasnt been made/completed yet
@@ -16,11 +27,5 @@ export type AssetLibrarySettings = {
     libraryView: LibraryView;
     mediaView: MediaView;
     metaSearch: Array<string>;
-    updateLibraryContext: (args0: {
-            action: 'UPDATE';
-            payload: Partial<Omit<AssetLibrarySettings, 'updateLibraryContext' | 'assetBucket' | 'mediaView'>> & {
-                assetBucket?: Array<MediaAssetBundle>;
-                mediaView?: MediaView | 'NULL';
-            }
-        })=> void;
+    updateLibraryContext: (args0: UpdateLibraryContextProps)=> void;
 }

@@ -34,7 +34,11 @@ export class AssetPropertiesConfig implements AssetPropertyConfigPublicEntity {
 
     public async init() {
         try {
-            await this.getDirFileList()
+            await this.getDirFileList();
+            if (process.env.DEPRECATED_DEFS === 'true') {
+                this.useDeprecatedKeyList();
+            }
+            this.standardizeAssetProperties();
             this.getMediaEntryList();
             this.getMediaType();
             this.getCoverImageUrl();
@@ -43,6 +47,16 @@ export class AssetPropertiesConfig implements AssetPropertyConfigPublicEntity {
                 error: err,
                 severity: 2
             })
+        }
+    }
+
+    private useDeprecatedKeyList() {
+        if (this.properties['actors' as keyof ResolvedMediaAssetProperties]) {
+            const actors = this.properties['actors' as keyof ResolvedMediaAssetProperties] as ResolvedMediaAssetProperties['artists'];
+            if (Array.isArray(actors)) {
+                this.properties.artists = [...actors]
+            }
+            delete this.properties['actors' as keyof ResolvedMediaAssetProperties];
         }
     }
 
@@ -88,4 +102,35 @@ export class AssetPropertiesConfig implements AssetPropertyConfigPublicEntity {
         }
         return this.properties.entries
     }
+
+    private standardizeAssetProperties() {
+        const convertMalformedMetaListString = (metaList: string)=> {
+            const convertedList: string[] = [];
+            if (metaList.includes('-')) {
+                metaList.split('-').forEach((metaValue)=> {
+                    if (metaValue.trim().length == 0) return;
+                    convertedList.push(metaValue.trim())
+                });
+            }
+            return convertedList
+        };
+        ([ 'artists', 'categories' ] as (keyof Pick<typeof this.properties, 'artists' | 'categories'>)[]).forEach((metaKey)=> {
+            if (this.properties[metaKey] === undefined) return;
+            if (typeof this.properties[metaKey] == 'string') {
+                this.properties[metaKey] = convertMalformedMetaListString(this.properties[metaKey] as unknown as string);
+            }
+            if (Array.isArray(this.properties[metaKey])) {
+                this.properties[metaKey]?.flatMap((metaValue)=> {
+                    if (metaValue) convertMalformedMetaListString(metaValue);
+                })
+            }
+        })
+        // if (typeof this.properties.artists == 'string') {
+        //     this.properties.artists = convertMalformedMetaListString(this.properties.artists);
+        // }
+        // if (typeof this.properties.categories == 'string') {
+        //     this.properties.categories = convertMalformedMetaListString(this.properties.categories);
+        // }
+    }
+
 }

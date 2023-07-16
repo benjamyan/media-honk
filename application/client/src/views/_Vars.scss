@@ -1,4 +1,8 @@
 :root {
-    --header-height: 50px;
+    --header-nav-height: 50px;
+    --header-meta-height: 20px;
     --header-z-index: 2;
+}
+:root {
+    --header-height: calc(var(--header-nav-height) + var(--header-meta-height));
 }

@@ -15,10 +15,17 @@ const AssetLibraryContextProvider = ({ children }: {children: React.ReactNode}) 
     const [ libraryView, setLibraryView ] = useState<LibraryView>('ROW');
     const [ mediaView, setMediaView ] = useState<MediaView>([]);
     
-    const updateLibraryContext: AssetLibrarySettings['updateLibraryContext'] = ({ action, payload })=> {
-        switch (action) {
+    const updateLibraryContext: AssetLibrarySettings['updateLibraryContext'] = (params)=> {
+        switch (params.action) {
+            case 'RESET': {
+                setMediaView([]);
+                setLibraryView('ROW');
+                if (metaSearch.length > 0) setMetaSearch([]);
+                break;
+            }
             default:
             case 'UPDATE': {
+                const { payload } = params;
                 if (payload.assetBucket) {
                     setAssetBucket({
                         ...assetBucket,
@@ -41,18 +48,18 @@ const AssetLibraryContextProvider = ({ children }: {children: React.ReactNode}) 
                     setLibraryView(payload.libraryView);
                 }
                 if (payload.metaSearch) {
-                    get_assetBundles({
-                        artist: metaArtistBucket.map((artist)=>payload.metaSearch?.includes(artist) ? artist : undefined).filter(Boolean) as string[],
-                        category: metaCategoryBucket.map((category)=>payload.metaSearch?.includes(category) ? category : undefined).filter(Boolean) as string[]
-                    }).axios().then((res)=>{
-                        updateLibraryContext({
-                            action: 'UPDATE',
-                            payload: { assetBucket: res }
-                        })
-                        setMetaSearch(payload.metaSearch as string[]);
-                        /// @ts-expect-error
-                        if (payload.metaSearch.length > 0 && libraryView == 'ROW') setLibraryView('GRID');
-                    })
+                    if (typeof(payload.metaSearch) == 'string') {
+                        if (metaSearch.includes(payload.metaSearch)) {
+                            metaSearch.splice(metaSearch.findIndex((searchValue)=> searchValue == payload.metaSearch), 1);
+                            setMetaSearch([...metaSearch]);
+                        } else {
+                            setMetaSearch([...metaSearch, payload.metaSearch]);
+                        }
+                    } else if (payload.metaSearch.length > 0) {
+                        setMetaSearch([...payload.metaSearch] as string[]);
+                    } else {
+                        setMetaSearch([] as string[]);
+                    }
                 }
             }
         }
@@ -79,6 +86,38 @@ const AssetLibraryContextProvider = ({ children }: {children: React.ReactNode}) 
             })
             .catch((err)=>console.error(err));
     }, []);
+    
+    useEffect(()=>{
+        if (metaSearch.length == 0) {
+            updateLibraryContext({ action: 'RESET' })
+            return;
+        }
+        const bundleRequest: Partial<Record<'artist' | 'category', string[]>> = {};
+        for (const metaValue of metaSearch) {
+            if (metaArtistBucket.includes(metaValue)) {
+                if (bundleRequest.artist == undefined) {
+                    bundleRequest.artist = [];
+                }
+                bundleRequest.artist.push(metaValue);
+            } else if (metaCategoryBucket.includes(metaValue)) {
+                if (bundleRequest.category == undefined) {
+                    bundleRequest.category = [];
+                }
+                bundleRequest.category.push(metaValue);
+            }
+        }
+        if (bundleRequest.category && bundleRequest.artist) {
+            console.warn('TODO cant accept multi param');
+            return;
+        }
+        get_assetBundles(bundleRequest).axios().then((res)=>{
+            updateLibraryContext({
+                action: 'UPDATE',
+                payload: { assetBucket: res }
+            })
+            if (metaSearch.length > 0 && libraryView == 'ROW') setLibraryView('GRID');
+        })
+    }, [metaSearch])
 
     return (
         <AssetLibraryContext.Provider value={{

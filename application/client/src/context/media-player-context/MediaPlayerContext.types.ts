@@ -1,18 +1,21 @@
 import { MediaAssetBundle } from "../../types";
 
+export type UpdateMediaPlayerContextParams = {
+    action: 'UPDATE'
+    payload: {
+        selectedMediaId?: string | null;
+        mediaPlaying?: boolean;
+        currentMediaId?: number | null;
+        mediaQueue?: string | null;
+    }
+} | {
+    action: 'RESET'
+}
+
 export type MediaPlayerContextState = {
     selectedMedia: MediaAssetBundle | null;
-    // playerType: MediaPlayerType | null;
-    // bundleId: string | null;
     currentMediaId: number | null;
     mediaPlaying: boolean;
-    updateMediaPlayerContext: (args0: {
-            action: 'UPDATE',
-            payload: {
-                selectedMediaId?: string | null;
-                mediaPlaying?: boolean;
-                currentMediaId?: number | null;
-                // [Key in keyof Omit<MediaPlayerContextState, 'updateMediaPlayerContext'>]?: MediaPlayerContextState[Key]
-            }
-        })=> void;
+    mediaQueue: string[];
+    updateMediaPlayerContext: (args0: UpdateMediaPlayerContextParams)=> void;
 }
