@@ -1,10 +1,10 @@
 import { Model } from 'objection';
-import { MediaHonkServerBase } from '../_Base';
-import {BaseHonkModel} from './_ModelBase';
+// import { MediaHonkServerBase } from '../_Base';
+import {ModelBase} from './_ModelBase';
 import { CoversModelColumns } from './_ModelDefinitions';
 import { $ModelCache } from '../services/cache/ModelCacheService';
 
-export class CoversModel extends BaseHonkModel implements CoversModelColumns {
+export class CoversModel extends ModelBase implements CoversModelColumns {
 	static tableName = 'covers';
 	
 	/** Declarative column  names for type guard */
@@ -89,11 +89,11 @@ export class CoversModel extends BaseHonkModel implements CoversModelColumns {
 					)
 				})
 				.catch(err=> {
-					MediaHonkServerBase.emitter(
-						'error', 
-						err instanceof Error 
-							? err 
-							: new Error('Unhandled exception. CoversModel.insertCoverEntry'));
+					// MediaHonkServerBase.emitter(
+					// 	'error', 
+					// 	err instanceof Error 
+					// 		? err 
+					// 		: new Error('Unhandled exception. CoversModel.insertCoverEntry'));
 					return undefined;
 				})
 		);

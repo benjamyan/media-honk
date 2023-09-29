@@ -1,11 +1,11 @@
 import { Model } from 'objection';
 import { MediaModel } from './MediaModel';
 // import { MetaModel } from './MetaModel';
-import { BaseHonkModel } from './_ModelBase';
+import { ModelBase } from './_ModelBase';
 import { BundlesModel } from './BundlesModel';
 import { BundlesMediaModelColumns } from './_ModelDefinitions';
 
-export class BundleMediaModel extends BaseHonkModel implements BundlesMediaModelColumns {
+export class BundleMediaModel extends ModelBase implements BundlesMediaModelColumns {
 
 	/** Table name is the only required property. */
 	static get tableName() {

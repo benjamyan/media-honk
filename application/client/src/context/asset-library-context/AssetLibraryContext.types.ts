@@ -27,5 +27,6 @@ export type AssetLibrarySettings = {
     libraryView: LibraryView;
     mediaView: MediaView;
     metaSearch: Array<string>;
+    // updateLibraryContext: (args0: Omit<AssetLibrarySettings, 'updateLibraryContext'>, args1: UpdateLibraryContextProps)=> Omit<AssetLibrarySettings, 'updateLibraryContext'>;
     updateLibraryContext: (args0: UpdateLibraryContextProps)=> void;
 }

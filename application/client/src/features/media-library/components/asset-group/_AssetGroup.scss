@@ -101,3 +101,15 @@
         }
     }
 }
+@media (orientation: landscape) {
+    .asset_group-grid {
+        &.v > div {
+            width: 47%;
+            img {
+                height: 165px;
+                min-height: 165px;
+                max-height: 165px;
+            }
+        }
+    }
+  }

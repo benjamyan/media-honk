@@ -14,23 +14,23 @@ import { get_bundlesByMediaType } from '../../api/get_bundlesByType';
 let isMediaSelected: boolean = false;
 
 const AssetBundlesByMediaType = ()=> {
-    const { assetBucket, mediaView, libraryView, metaSearch, updateLibraryContext } = useAssetLibraryContext();
+    const { assetBucket, mediaView, libraryView, metaSearch } = useAssetLibraryContext();
 
-    const onViewMoreButtonClick = async (_event: MouseEvent, mediaType: Honk.Media.StoredMediaTypes)=> {
-        try {
-            const bundles = await get_bundlesByMediaType(mediaType);
-            updateLibraryContext({
-                action: 'UPDATE',
-                payload: {
-                    mediaView: [mediaType],
-                    libraryView: 'GRID',
-                    assetBucket: bundles
-                }
-            });
-        } catch (err) {
-            console.warn(err);
-        }
-    }
+    // const onViewMoreButtonClick = async (_event: MouseEvent, mediaType: Honk.Media.StoredMediaTypes)=> {
+    //     try {
+    //         // const bundles = await get_bundlesByMediaType(mediaType);
+    //         updateLibraryContext({
+    //             action: 'UPDATE',
+    //             payload: {
+    //                 mediaView: [mediaType],
+    //                 // libraryView: 'GRID',
+    //                 // assetBucket: bundles
+    //             }
+    //         });
+    //     } catch (err) {
+    //         console.warn(err);
+    //     }
+    // }
     
     const sortedAssets = useMemo(()=>{
         return Object.values(assetBucket).reduce((bundleAccumulator, bundle)=> {
@@ -55,7 +55,7 @@ const AssetBundlesByMediaType = ()=> {
                     }
                 } else if (mediaView.length > 0 && mediaView.includes(bundle.type)) {
                     assetRow.push(bundle);
-                } else {
+                } else if (mediaView.length == 0 && metaSearch.length == 0) {
                     assetRow.push(bundle);
                 }
             } else {
@@ -70,14 +70,17 @@ const AssetBundlesByMediaType = ()=> {
     } else if (Object.keys(sortedAssets).length == 0) {
         return <h2>No bundles found!</h2>
     }
-    return Object.entries(sortedAssets).flatMap((bundle, i)=> (
-        <AssetGroup 
-            key={`AssetGroup-${Date.parse(new Date().toUTCString())}-${i}`} 
-            rowTitle={ bundle[0] } 
-            bundleAssets={ bundle[1].sort((_a, _b) => 0.5 - Math.random())} 
-            onViewMoreEvent={onViewMoreButtonClick}
-        />
-    ));
+    return Object.entries(sortedAssets).flatMap((bundle, i)=> {
+
+        return (
+            <AssetGroup 
+                key={`AssetGroup-${Date.parse(new Date().toUTCString())}-${i}`} 
+                rowTitle={ bundle[0] } 
+                bundleAssets={ bundle[1].sort((_a, _b) => 0.5 - Math.random())} 
+                // onViewMoreEvent={onViewMoreButtonClick}
+            />
+        )
+    });
 };
 
 const ContextMutationHandler = ()=> {
@@ -96,7 +99,7 @@ const ContextMutationHandler = ()=> {
     }, [ selectedMedia ]);
 
     return null
-}
+};
 
 export const MediaLibrary = ()=> {
     

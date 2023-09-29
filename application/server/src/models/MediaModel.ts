@@ -1,14 +1,14 @@
 import { Model } from 'objection';
 import { Constants } from '../config';
-import { MediaHonkServerBase } from '../_Base';
+// import { MediaHonkServerBase } from '../_Base';
 import { CoversModel } from './CoversModel';
 import { MediaMetaModel } from './MediaMetaModel';
 import { MetaModel } from './MetaModel';
-import {BaseHonkModel} from './_ModelBase';
+import {ModelBase} from './_ModelBase';
 import { MediaModelColumns } from './_ModelDefinitions';
 import { StoredMediaTypes, ResolvedMediaAssetProperties } from '../types/MediaProperties';
 
-export class MediaModel extends BaseHonkModel implements MediaModelColumns {
+export class MediaModel extends ModelBase implements MediaModelColumns {
 
 	/** Table name is the only required property. */
 	static tableName = 'media';
@@ -107,10 +107,10 @@ export class MediaModel extends BaseHonkModel implements MediaModelColumns {
 					})
 			)
 		} catch (err) {
-			MediaHonkServerBase.emitter(
-				'error', 
-				err instanceof Error ? err : new Error('Unhandled exception. MediaModel.insertSingleMediaEntryRow()')
-			);
+			// MediaHonkServerBase.emitter(
+			// 	'error', 
+			// 	err instanceof Error ? err : new Error('Unhandled exception. MediaModel.insertSingleMediaEntryRow()')
+			// );
 		}
 		return mediaEntryId
 	}

@@ -1,10 +1,10 @@
 import { Model } from 'objection';
 import { MediaModel } from './MediaModel';
 import { MetaModel } from './MetaModel';
-import { BaseHonkModel } from './_ModelBase';
+import { ModelBase } from './_ModelBase';
 import { MediaMetaModelColumns, MetaModelColumns } from './_ModelDefinitions';
 
-export class MediaMetaModel  extends BaseHonkModel implements MediaMetaModelColumns {
+export class MediaMetaModel  extends ModelBase implements MediaMetaModelColumns {
 
 	/** Table name is the only required property. */
 	static get tableName() {

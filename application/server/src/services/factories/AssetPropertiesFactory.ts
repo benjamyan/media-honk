@@ -1,10 +1,13 @@
 import { default as Yaml } from 'yaml';
 import { default as Fs } from 'fs';
-import {convertToStoredMediaType, formatMediaEntries} from '../../utils/assetEntries'
-import { deteremineStoredMediaType, naturalCompare, shakeDirectoryFileTree } from '../../utils/fileSystem';
 import { Constants } from '../../config';
 import { ResolvedMediaAssetProperties, ConfiguredMediaAssetProperties } from '../../types/MediaProperties';
-import { MediaHonkServerBase } from '../../_Base';
+import { naturalSort } from '../../utils/naturalSort';
+import { deteremineStoredMediaType } from '../fs/deteremineMediaType';
+import { shakeDirectoryFileTree } from '../fs/shakeDirectoryTree';
+import { convertToStoredMediaType } from '../helpers/convertMediaType';
+import { formatMediaEntries } from '../helpers/parseMediaBundleEntries';
+// import { MediaHonkServerBase } from '../../_Base';
 
 export interface AssetPropertyConfigPublicEntity {
     _dirFileList: string[] | undefined;
@@ -33,7 +36,15 @@ export class AssetPropertiesConfig implements AssetPropertyConfigPublicEntity {
     }
 
     public async init() {
-        try {
+        // try {
+            if (!Object.keys(this.configuration).includes('title')) {
+                throw new Error(`Invalid configuration found: ${this._configFilePath}`);
+                // this.configuration = {
+                //     ...this.configuration,
+                //     title: 'TITLE_NOT_FOUND'
+                // };
+                // this.properties.title = 'TITLE_NOT_FOUND'
+            }
             await this.getDirFileList();
             if (process.env.DEPRECATED_DEFS === 'true') {
                 this.useDeprecatedKeyList();
@@ -42,12 +53,12 @@ export class AssetPropertiesConfig implements AssetPropertyConfigPublicEntity {
             this.getMediaEntryList();
             this.getMediaType();
             this.getCoverImageUrl();
-        } catch (err) {
-            MediaHonkServerBase.emitter('error', {
-                error: err,
-                severity: 2
-            })
-        }
+        // } catch (err) {
+        //     MediaHonkServerBase.emitter('error', {
+        //         error: err,
+        //         severity: 2
+        //     })
+        // }
     }
 
     private useDeprecatedKeyList() {
@@ -93,7 +104,7 @@ export class AssetPropertiesConfig implements AssetPropertyConfigPublicEntity {
     private getMediaEntryList() {
         if (this.properties.entries === null) {
             this.properties.entries = formatMediaEntries(
-                this._dirFileList.sort(naturalCompare).filter((currProperty)=> (
+                this._dirFileList.sort(naturalSort).filter((currProperty)=> (
                     currProperty !== this.properties.coverUrl && currProperty !== this._configFilePath
                 )),
                 this._mediaDir,

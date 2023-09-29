@@ -2,8 +2,8 @@ import { default as knex } from 'knex';
 import { Model, QueryBuilder, raw, ref } from 'objection';
 import { MediaMetaModel, MetaModelColumns } from '.';
 import { AtleastOneOf } from '../types/utils';
-import { MediaHonkServerBase } from '../_Base';
-import {BaseHonkModel} from "./_ModelBase";
+// import { MediaHonkServerBase } from '../_Base';
+import {ModelBase} from "./_ModelBase";
 import { $ModelCache } from '../services/cache/ModelCacheService';
 /**
 	 * 
@@ -35,7 +35,7 @@ type AssociatedColumn<C extends keyof Omit<MetaModelColumns, 'id'>> = (
     C extends `${'artist'|'category'}_name` ? `${'artist'|'category'}_id` : `${'artist'|'category'}_name`
 )
 
-export class MetaModel extends BaseHonkModel implements MetaModelColumns {
+export class MetaModel extends ModelBase implements MetaModelColumns {
 
 	/** Table name is the only required property. */
 	static tableName = 'meta';
@@ -308,10 +308,10 @@ export class MetaModel extends BaseHonkModel implements MetaModelColumns {
 		} catch (err) {
 			if (!(err instanceof Error) || (err as Error).name !== 'UniqueViolationError') {
 				/** Expect UniqueViolations since were using .ignore() above. Ignore them and move on */
-				MediaHonkServerBase.emitter('error', {
-					error: err instanceof Error ? err : new Error('Unhandled exception. MetaModel.insertSingleRow()'),
-					severity: 2
-				});
+				// MediaHonkServerBase.emitter('error', {
+				// 	error: err instanceof Error ? err : new Error('Unhandled exception. MetaModel.insertSingleRow()'),
+				// 	severity: 2
+				// });
 			}
 		}
 		// return metaRowId
@@ -365,10 +365,10 @@ export class MetaModel extends BaseHonkModel implements MetaModelColumns {
 			
 		} catch (err) {
 			// console.log(err)
-			MediaHonkServerBase.emitter('error', {
-				error: err instanceof Error ? err :new Error('Unhandled exception. MetaModel.insertManyMetaRows()'),
-				severity: 2
-			})
+			// MediaHonkServerBase.emitter('error', {
+			// 	error: err instanceof Error ? err :new Error('Unhandled exception. MetaModel.insertManyMetaRows()'),
+			// 	severity: 2
+			// })
 		}
 		return {
 			artists: newMetaRowIds.artists,

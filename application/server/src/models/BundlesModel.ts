@@ -1,17 +1,17 @@
 import Objection, { Model } from 'objection';
 import { default as Express } from 'express';
 import { Constants } from '../config';
-import { MediaHonkServerBase } from '../_Base';
+// import { MediaHonkServerBase } from '../_Base';
 import { BundleMediaModel } from './BundleMediaModel';
 import { CoversModel } from './CoversModel';
 import { MediaModel } from './MediaModel';
 import { MetaModel } from './MetaModel';
-import {BaseHonkModel} from './_ModelBase';
+import {ModelBase} from './_ModelBase';
 import { MediaMetaModel } from './MediaMetaModel';
 import { BundlesModelColumns } from './_ModelDefinitions';
 import { ResolvedMediaAssetProperties, StoredMediaTypes } from '../types/MediaProperties';
 
-export class BundlesModel extends BaseHonkModel implements BundlesModelColumns {
+export class BundlesModel extends ModelBase implements BundlesModelColumns {
 	static tableName = 'bundles';
 
 	id: number = null!;
@@ -124,44 +124,7 @@ export class BundlesModel extends BaseHonkModel implements BundlesModelColumns {
 		
 		return json;
 	}
-
-	// static async getBundlesByMeta(params: Pick<Express.Request['query'], 'artist' | 'category'>) {
-	// 	try {
-	// 		const metaParamId = ()=> (
-	// 			MetaModel
-	// 				.query()
-	// 				.select('id')
-	// 				.where('artist_name', '=', params.artist as string)
-	// 		);
-	// 		const metaId = ()=> (
-	// 			MetaModel.query()
-	// 				.select('id')
-	// 				.where('artist_name', '=', params.artist as string)
-	// 				.orWhere('artist_id', '=', metaParamId())
-	// 		);
-	// 		const mediaMetaId = async ()=> (
-	// 			MediaMetaModel
-	// 				.query()
-	// 				.select('media_id')
-	// 				.where('meta_artist_id', '=', metaId())
-	// 		);
-	// 		const mediaIdList = await (
-	// 			mediaMetaId()
-	// 				.then((res)=>res.map(row=>row.media_id))
-	// 		)
-	// 		const bundleMediaId = ()=> (
-	// 			BundleMediaModel
-	// 				.query()
-	// 				.select()
-	// 				.whereRaw("media_id = " + mediaIdList.map(_ => '?').join(' OR media_id = '), [...mediaIdList])
-	// 				.then((res)=>res.map((row)=>row.bundle_id))
-	// 		);
-	// 		return await BundlesModel.query().findByIds(await bundleMediaId())
-	// 	} catch (err) {
-	// 		console.log(err)
-	// 	}
-	// }
-
+	
 	static async insertSingleBundleRow(bundleRowContent: Pick<ResolvedMediaAssetProperties, 'title' | 'subtitle' | 'type'>): Promise<number | null> {
 		let newBundleRowId: number | null = null!;
 		try {
@@ -210,7 +173,6 @@ export class BundlesModel extends BaseHonkModel implements BundlesModelColumns {
 	}
 	
 	static async handleBundleEntryWithRelatedFields(mediaEntry: ResolvedMediaAssetProperties) {
-		// MediaHonkServerBase.logger(`- PROCESSING bundle for ${mediaEntry.title} ${mediaEntry.subtitle || ''}`)
 		let { coverUrl, artists, categories } = mediaEntry;
 		let coverRowId: number = -1,
 			bundleRowId: number = -1,
@@ -272,6 +234,7 @@ export class BundlesModel extends BaseHonkModel implements BundlesModelColumns {
 						mediaEntryRowIds = insertedMediaEntries;
 					}
 				});
+
 			for await (const mediaId of mediaEntryRowIds) {
 				await BundleMediaModel.insertBundleMediaRelationRow({
 					bundleId: bundleRowId,
@@ -287,7 +250,6 @@ export class BundlesModel extends BaseHonkModel implements BundlesModelColumns {
 				console.log(err);
 			}
         }
-		// console.log(' - DONE 2')
 		return;
 	}
 

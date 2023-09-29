@@ -3,6 +3,7 @@ import { ENDPOINTS } from '../api/_endpoints';
 import { mockBundles, mockMeta } from './data';
 
 export const workerConfig = setupWorker(
+    // rest.all('*', async ()=> console.log('MS Intercepting request')),
     rest.get(ENDPOINTS.healthCheck, async (_req, res, ctx)=> res(ctx.status(200))),
     rest.get(ENDPOINTS.getMeta, async(req, res, ctx)=> {
         let metaRes: Record<'artist' | 'category', string[] | undefined> = mockMeta;

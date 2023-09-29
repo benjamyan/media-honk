@@ -3,13 +3,13 @@ export const HONK_URL = {
     staging: 'http://192.168.0.11:8080'
 }
 export const ENDPOINTS = {
-    healthCheck: '/health',
-    getMeta: `/media/meta`,
-    getMediaTypes: `/media/types`,
-    getBundles: `/media/bundles`,
-    getCoverImage: `/resource/cover`,
-    streamVideo: `/stream/video`,
-    streamImage: `/stream/image`
+    healthCheck: '/ping',
+    getMeta: `/content.meta`,
+    getMediaTypes: `/content.type`,
+    getBundles: `/content.bundles`,
+    getCoverImage: `/resource.cover`,
+    streamVideo: `/stream.video`,
+    streamImage: `/stream.image`
 }
 export const QUERY_PARAMS = {
     getBundles: { 

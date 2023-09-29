@@ -67,20 +67,20 @@ declare global {
         }
         
         /** Customized events and emitters */
-        export type InternalEvents = {
-            [key: string]: (...args0: any) => void;
-            error: (args0: {
-                error: Error | unknown;
-                /** severity rating 
-                 * - `1` _severe_ will exit the program
-                 * - `2` _warning_ most likely a server error
-                 * - `3` acts as internal/small
-                 */
-                severity: number;
-                /** optionally provided response; if defined, will send a response as statusCode(500) */
-                response?: Express.Response;
-            } | Error | string)=> void;
-        }
+        // export type InternalEvents = {
+        //     [key: string]: (...args0: any) => void;
+        //     error: (args0: {
+        //         error: Error | unknown;
+        //         /** severity rating 
+        //          * - `1` _severe_ will exit the program
+        //          * - `2` _warning_ most likely a server error
+        //          * - `3` acts as internal/small
+        //          */
+        //         severity: number;
+        //         /** optionally provided response; if defined, will send a response as statusCode(500) */
+        //         response?: Express.Response;
+        //     } | Error | string)=> void;
+        // }
 
         export type ServerStateBucket = {
             standing: null | 'init' | 'server.start' | 'server.listening' | 'server.error';

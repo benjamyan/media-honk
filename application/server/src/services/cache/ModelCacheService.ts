@@ -1,5 +1,5 @@
 import { MetaModel, MediaMetaModel, MediaModel, BundlesModel, BundleMediaModel, CoversModel, ModelTables } from "../../models";
-import { MediaHonkServerBase } from "../../_Base";
+// import { MediaHonkServerBase } from "../../_Base";
 
 
 type ModelCacheServiceEntites = {
@@ -48,11 +48,11 @@ class ModelCacheService implements ModelCacheServiceModule {
                 break;
             }
             default: {
-                MediaHonkServerBase.emitter('error', {
-                    name: `ERR_CACHE_SERVICE`,
-                    message: ``,
-                    severity: 2
-                })
+                // MediaHonkServerBase.emitter('error', {
+                //     name: `ERR_CACHE_SERVICE`,
+                //     message: ``,
+                //     severity: 2
+                // })
                 return false
             }
         }

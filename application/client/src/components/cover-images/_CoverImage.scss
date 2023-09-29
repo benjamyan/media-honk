@@ -10,4 +10,32 @@
     &_missing {
         background-color: var(--background-color);
     }
+    &.error {
+        &[alt]:after {  
+            display: block;
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: calc(100% - 40px);
+            height: calc(100% - 40px);
+            background-color: #fff;
+            font-family: 'Helvetica';
+            font-weight: 700;
+            font-size: 1.25rem;
+            padding: 20px;
+            line-height: 1.1;  
+            text-align: left;
+            content: attr(alt);
+        }
+        background-color: #222;
+    }
+    // &:before {
+    //     content: ' ';
+    //     display: block;
+    //     position: absolute;
+    //     height: 50px;
+    //     width: 50px;
+    //     background-image: unset;
+    //     // background-image: url(ishere.jpg);
+    // }
 }

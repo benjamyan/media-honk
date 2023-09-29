@@ -6,6 +6,9 @@ export const get_bundlesByMediaType = async (mediaType: Honk.Media.StoredMediaTy
     const queryEndpoint = `${ENDPOINTS.getBundles}?${QUERY_PARAMS.getBundles.type}=${mediaType}`
     const abortController = new AbortController();
     let bundlesByPage: Honk.Media.AssetBundle[] = [];
+    if (!mediaType) {
+        return bundlesByPage
+    }
     await wrapPromise(
         axios(queryEndpoint, {
             method: 'GET',
@@ -22,8 +25,8 @@ export const get_bundlesByMediaType = async (mediaType: Honk.Media.StoredMediaTy
             // return res.data as Honk.Media.AssetBundle[];
         })
         .catch((err: any)=> {
-            console.error(err)
-            abortController.abort()
+            console.warn(err);
+            abortController.abort();
         })
 
     return bundlesByPage

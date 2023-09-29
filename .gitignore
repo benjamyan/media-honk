@@ -17,7 +17,7 @@ media/
 **/**/dist/
 **/**/cert/
 **/**/package-lock.json
-
+fastify_startup-master/
 docker-dump/
 
 *.code-workspace

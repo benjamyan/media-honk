@@ -6,7 +6,7 @@ export const get_healthCheck = async (): Promise<boolean | AxiosError> => {
     
     const initialConnection = (
         await wrapPromise(
-            axios('/health', {
+            axios('/ping', {
                 method: 'GET',
                 signal: abortController.signal
             }), 

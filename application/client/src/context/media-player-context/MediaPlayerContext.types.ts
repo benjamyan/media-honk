@@ -4,6 +4,7 @@ export type UpdateMediaPlayerContextParams = {
     action: 'UPDATE'
     payload: {
         selectedMediaId?: string | null;
+        selectedMedia?: any | null;
         mediaPlaying?: boolean;
         currentMediaId?: number | null;
         mediaQueue?: string | null;

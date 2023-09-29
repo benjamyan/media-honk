@@ -4,6 +4,7 @@ import { get_bundlesByPage } from '../../api/get_bundlesByPage';
 import { ENDPOINTS } from '../../api/_endpoints';
 import { get_metaValues } from '../../api/get_metaValues';
 import { get_assetBundles } from '../../api/get_assetBundles';
+import { get_bundlesByMediaType } from '../../api/get_bundlesByType';
 
 const AssetLibraryContext = createContext<AssetLibrarySettings>(undefined!);
 
@@ -26,7 +27,7 @@ const AssetLibraryContextProvider = ({ children }: {children: React.ReactNode}) 
             default:
             case 'UPDATE': {
                 const { payload } = params;
-                if (payload.assetBucket) {
+                if (payload.assetBucket !== undefined) {
                     setAssetBucket({
                         ...assetBucket,
                         ...Object.fromEntries(
@@ -37,17 +38,19 @@ const AssetLibraryContextProvider = ({ children }: {children: React.ReactNode}) 
                         )
                     });
                 }
-                if (payload.mediaView) {
+                if (payload.mediaView !== undefined) {
                     if (payload.mediaView === 'NULL') {
                         setMediaView([])
+                        if (libraryView == 'GRID' && metaSearch.length == 0) setLibraryView('ROW');
                     } else {
                         setMediaView([ ...payload.mediaView ] as MediaView);
+                        if (libraryView == 'ROW') setLibraryView('GRID');
                     }
                 }
-                if (payload.libraryView) {
+                if (payload.libraryView !== undefined) {
                     setLibraryView(payload.libraryView);
                 }
-                if (payload.metaSearch) {
+                if (payload.metaSearch !== undefined) {
                     if (typeof(payload.metaSearch) == 'string') {
                         if (metaSearch.includes(payload.metaSearch)) {
                             metaSearch.splice(metaSearch.findIndex((searchValue)=> searchValue == payload.metaSearch), 1);
@@ -68,9 +71,9 @@ const AssetLibraryContextProvider = ({ children }: {children: React.ReactNode}) 
     useEffect(()=> {
         get_bundlesByPage()
             .then((bundles)=> {
-                if (!bundles || !Array.isArray(bundles)) {
-                    throw new Error('Mishapen response');
-                }
+                // if (!bundles || !Array.isArray(bundles)) {
+                //     throw new Error('Mishapen response');
+                // }
                 setAssetBucket(Object.fromEntries(
                     bundles.map((bundle)=> [bundle._guid, {
                         ...bundle,
@@ -113,11 +116,33 @@ const AssetLibraryContextProvider = ({ children }: {children: React.ReactNode}) 
         get_assetBundles(bundleRequest).axios().then((res)=>{
             updateLibraryContext({
                 action: 'UPDATE',
-                payload: { assetBucket: res }
+                payload: { 
+                    assetBucket: res,
+                    libraryView: (metaSearch.length > 0 && libraryView == 'ROW') ? 'GRID' : undefined
+                }
             })
-            if (metaSearch.length > 0 && libraryView == 'ROW') setLibraryView('GRID');
+            // if (metaSearch.length > 0 && libraryView == 'ROW') setLibraryView('GRID');
         })
     }, [metaSearch])
+
+    useEffect(()=>{
+        // if (mediaView.length == 0) {
+        //     return;
+        // }
+        get_bundlesByMediaType(mediaView[0])
+            .then((bundles)=> {
+                updateLibraryContext({
+                    action: 'UPDATE',
+                    payload: {
+                        // libraryView: bundles.length > 0 ? 'GRID' : undefined,
+                        assetBucket: bundles
+                    }
+                })
+            })
+            // .catch(err=>{
+            //     console.warn(err)
+            // });
+    }, [ mediaView ])
 
     return (
         <AssetLibraryContext.Provider value={{

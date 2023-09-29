@@ -1,3 +1,5 @@
+https://fastify.dev/docs/latest/Guides/Getting-Started#your-first-server
+
 # Media HONK
 Local media server meant to run over HTTP/S. Provides a client, api, and database to store, browse and use media files.
 
