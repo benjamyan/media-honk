@@ -2,7 +2,7 @@ import { default as Fs } from 'fs';
 import { MetaModel, BundlesModel } from "../../models";
 import { AssetPropertiesConfig } from "../factories/AssetPropertiesFactory";
 import { shakeDirectoryFileTree } from "../fs/shakeDirectoryTree";
-import { $Fastify, $Logger, _Config } from '../../server';
+import { $Logger, _Config } from '../../server';
 
 /**
  * @method handleMediaEntryAggregation Traverses the entries in the local configuration (yaml) and processes the directories inside for media entries
@@ -27,17 +27,7 @@ export const aggregateMediaBundles = async (options?: {
                     if (directoryContent.length == 0) return;
                     
                     /** Determine whether the current path contains any directories */
-                    const hasSubDir = directoryContent.filter((path)=>Fs.statSync(path).isDirectory()); 
-                    // const hasSubDir = (
-                    //     directoryContent
-                    //         .map((path)=> {
-                    //             if (Fs.statSync(path).isDirectory() == true) {
-                    //                 return path
-                    //             }
-                    //             return false
-                    //         })
-                    //         .filter(Boolean)
-                    // ) as Array<string>;
+                    const hasSubDir = directoryContent.filter((path)=>Fs.statSync(path).isDirectory());
 
                     /** 
                      * If the directory has a yaml file, its considered to have been configured. 
@@ -67,7 +57,11 @@ export const aggregateMediaBundles = async (options?: {
             
             for await (const mediaPath of Object.keys(_Config.local.api.media_paths)) {
                 _self.mediaDir = _Config.local.api.media_paths[mediaPath];
-                await attemptMediaAggregate();
+                if (_Config.cli.FAKER_ENV == 'db') {
+                    
+                } else {
+                    await attemptMediaAggregate();
+                }
             }
             
             /* 

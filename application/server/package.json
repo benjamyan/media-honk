@@ -8,6 +8,9 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "HONK_ENV=dev AGGREGATION_TYPE=update DEPRECATED_DEFS=true nodemon",
+    "dev:mock": "FAKER_ENV=db FAKE_TYPES=all HONK_ENV=dev AGGREGATION_TYPE=update DEPRECATED_DEFS=true nodemon",
+    "dev:db": "echo '\n! TODO dev:db'",
+    "dev:server": "echo '\n! TODO dev:server'",
     "stage": "HONK_ENV='stage' nodemon"
   },
   "dependencies": {
@@ -26,6 +29,7 @@
     "zod": "^3.22.2"
   },
   "devDependencies": {
+    "@faker-js/faker": "^8.1.0",
     "@fastify/multipart": "^7.7.3",
     "@fastify/static": "^6.11.2",
     "@types/basic-auth": "^1.1.3",

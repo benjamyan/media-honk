@@ -1,5 +1,5 @@
 import { BundlesModel, BundleMediaModel, MetaModel } from "../../models";
-import { $FactoryCache } from "../cache/FactoryServiceCache";
+import { $FactoryCache } from "../../cache/FactoryServiceCache";
 import { v4 as uuidV4 } from 'uuid';
 
 export const resolveBundle = async (BundleEntry: BundlesModel, mediaIdList?: number[])=> {

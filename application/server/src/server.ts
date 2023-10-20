@@ -1,21 +1,28 @@
 /// <reference path='../server.d.ts' />
+
 import Objection from 'objection';
 import { default as dotenv } from 'dotenv';
 import { default as fastify } from 'fastify';
 import cors from '@fastify/cors';
 import fastifyStatic from '@fastify/static';
-import fastifyMultipart from '@fastify/multipart';
+// import fastifyMultipart from '@fastify/multipart';
 import { fastifyTRPCPlugin } from '@trpc/server/adapters/fastify';
 import { default as Fs } from 'fs';
 import { default as Yaml } from 'yaml';
 import { default as Knex } from 'knex';
 import { default as Path } from 'path';
 import { createContext } from './routes/context';
-import { appRouter } from './routes';
+import { AppRouter, appRoutes } from './routes';
 import { _knexConfig } from './lib/knex';
 import { BundleMediaModel, BundlesModel, CoversModel, MediaMetaModel, MediaModel, MetaModel } from './models';
 import { aggregateMediaBundles } from './services/db/aggregateMediaBundles';
 import { _fastifyStaticConfig } from './lib/fastify-static';
+import { fastifyStream } from './plugin/fastifyStream';
+import { JSONRPC2, TRPCResponse, TRPCResponseMessage, TRPCResult, TRPCSuccessResponse } from '@trpc/server/dist/rpc';
+import { TRPCError, inferProcedureOutput } from '@trpc/server';
+import { InferMediaRouteResult, InferQueryOutput } from './types/trcp-utils';
+import { audioExtensions, imageExtensions, videoExtensions } from './config/constants';
+import { getMediaExtFromFilename } from './utils/parseFileExt';
 
 dotenv.config({ path: Path.resolve(__dirname, '../.env') });
 
@@ -123,10 +130,11 @@ const startServer = async () => {
 		await aggregateMediaBundles({ overwrite: true });
 		$Fastify.register(fastifyTRPCPlugin, {
 			trpcOptions: {
-				router: appRouter,
+				router: appRoutes,
 				createContext
-			},
+			}
 		});
+		
 		// https://www.npmjs.com/package/@fastify/cors
 		$Fastify.register(cors, {
 			origin: 'http://192.168.0.11:8080'
@@ -136,9 +144,9 @@ const startServer = async () => {
 			prefix: '/public/',
 			root: Path.resolve('/')
 		});
-		// https://github.com/fastify/fastify-multipart#usage
-		$Fastify.register(fastifyMultipart);
 
+		$Fastify.register(fastifyStream);
+		
 		await $Fastify.listen({ port: 8081, host: '192.168.0.11' })
 	} catch (err) {
 		$Fastify.log.error(err)

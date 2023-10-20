@@ -1,12 +1,25 @@
 /// <reference path='../global.d.ts' />
 
-import { default as Express } from "express";
+import { FastifyInstance } from "fastify";
+import { FastifyReply } from "fastify/types/reply";
 import { PathLike } from "fs";
 
 declare global {
     declare namespace NodeJS {
         interface ProcessEnv extends HonkServer.ProcessEnv {}
     }
+    // declare namespace fastify {
+    //     // export interface FastifyInstance<
+    //     //   HttpServer = http.Server,
+    //     //   HttpRequest = http.IncomingMessage,
+    //     //   HttpResponse = http.ServerResponse
+    //     // > {
+    //     //   streamMedia: ()=> void;
+    //     // }
+    //     export interface FastifyAugment extends FastifyReply {
+    //         streamMedia: ()=> void;
+    //     }
+    // }
     namespace HonkServer {
 
         export type ApplicationConfig = {
@@ -30,6 +43,10 @@ declare global {
 
         /** CLI arguments the server can accept */
         export type ProcessEnv = {
+            /** Which env to run faker on */
+            FAKER_ENV: "db" | "server";
+            /** Types of data to fake */
+            FAKE_TYPES: "audio" | "video" | 'image' | 'all';
             /** Node env substitute
              * `dev` -
              * `stage` -
@@ -66,25 +83,5 @@ declare global {
             )
         }
         
-        /** Customized events and emitters */
-        // export type InternalEvents = {
-        //     [key: string]: (...args0: any) => void;
-        //     error: (args0: {
-        //         error: Error | unknown;
-        //         /** severity rating 
-        //          * - `1` _severe_ will exit the program
-        //          * - `2` _warning_ most likely a server error
-        //          * - `3` acts as internal/small
-        //          */
-        //         severity: number;
-        //         /** optionally provided response; if defined, will send a response as statusCode(500) */
-        //         response?: Express.Response;
-        //     } | Error | string)=> void;
-        // }
-
-        export type ServerStateBucket = {
-            standing: null | 'init' | 'server.start' | 'server.listening' | 'server.error';
-            // duration: number;
-        }
     }
 }

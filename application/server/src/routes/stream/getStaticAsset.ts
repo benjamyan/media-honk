@@ -1,8 +1,8 @@
 import { z } from 'zod'
 import { $Procedure } from "../trpc";
 import { BundleMediaModel, MediaModel } from '../../models';
-import { $FactoryCache } from '../../services/cache/FactoryServiceCache';
-import { $ModelCache } from '../../services/cache/ModelCacheService';
+import { $FactoryCache } from '../../cache/FactoryServiceCache';
+import { $ModelCache } from '../../cache/ModelCacheService';
 
 /**
  * https://medium.com/@kylelibra/how-to-play-avi-files-in-the-chrome-web-browser-c5cbf8e0098d
@@ -42,6 +42,7 @@ export const getStaticAsset = (
                 return res.code(404);
             }
             // res.header('Content-Length', );
-            return res.download(MediaEntry.abs_url, MediaEntry.abs_url.split('/').at(-1));
+            return MediaEntry.abs_url
+            // return res.download(MediaEntry.abs_url, MediaEntry.abs_url.split('/').at(-1));
         })
 )

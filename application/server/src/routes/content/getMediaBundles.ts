@@ -67,7 +67,11 @@ export const getMediaBundles = (
                     ...Object.values(resolvedBundles.reduce((bundleAccumulator, AssetBundle)=> {
                         if (!bundleAccumulator[AssetBundle.type]) {
                             bundleAccumulator[AssetBundle.type] = [ AssetBundle ];
-                        } else if (bundleAccumulator[AssetBundle.type].length < 10) {
+                        } 
+                        // else if (bundleAccumulator[AssetBundle.type].length < 10) {
+                        //     bundleAccumulator[AssetBundle.type].push(AssetBundle);
+                        // }
+                        else {
                             bundleAccumulator[AssetBundle.type].push(AssetBundle);
                         }
                         return bundleAccumulator

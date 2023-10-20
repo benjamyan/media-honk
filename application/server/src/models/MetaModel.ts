@@ -4,7 +4,7 @@ import { MediaMetaModel, MetaModelColumns } from '.';
 import { AtleastOneOf } from '../types/utils';
 // import { MediaHonkServerBase } from '../_Base';
 import {ModelBase} from "./_ModelBase";
-import { $ModelCache } from '../services/cache/ModelCacheService';
+import { $ModelCache } from '../cache/ModelCacheService';
 /**
 	 * 
 	 * @param param0 

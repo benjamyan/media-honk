@@ -14,7 +14,7 @@ export const CoverImage = (props: { assetBundle: MediaAssetBundle })=> {
             className={coverImgClassName} 
             src={get_coverImage(assetBundle._guid).static}
             alt={assetBundle.title}
-            decoding='async'
+            // decoding='async'
             loading='lazy'
             onError={()=> {
                 setCoverImgClassName(`cover-image ${assetBundle.type[0].toLowerCase()} error`);

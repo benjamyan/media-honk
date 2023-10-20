@@ -12,7 +12,7 @@ declare global {
                 _mediaEntries: Array<number>;
                 _coverId: number | undefined;
                 title: string;
-                subTitle: string | undefined;
+                subTitle: string | null | undefined;
                 category: string[];
                 artist: string[];
                 type: Honk.Media.StoredMediaTypes;

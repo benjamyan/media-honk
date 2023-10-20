@@ -1,7 +1,7 @@
 import { v4 as uuidV4 } from 'uuid';
 import { BundleMediaModel, BundlesModel, BundlesModelColumns, CoversModel, MediaMetaModel, MediaModel, MetaModel, MetaModelColumns, ModelTableColumns, ModelTables } from '../../models';
-import { $FactoryCache } from '../cache/FactoryServiceCache';
-import { $ModelCache } from '../cache/ModelCacheService';
+import { $FactoryCache } from '../../cache/FactoryServiceCache';
+import { $ModelCache } from '../../cache/ModelCacheService';
 
 type AssetResolutionFactoryEntity = {
     readonly asset: Honk.Server.AssetBundle;

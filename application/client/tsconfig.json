@@ -10,7 +10,7 @@
         "skipLibCheck": true,
         "esModuleInterop": true,
         "allowSyntheticDefaultImports": true,
-        "strict": true,
+        "strict": false,
         "forceConsistentCasingInFileNames": true,
         "noFallthroughCasesInSwitch": true,
         "module": "commonjs",
@@ -25,5 +25,8 @@
     ],
     "exclude": [
         "node_modules"
-    ]
+    ],
+    "references": [
+        { "path": "../server" }
+      ]
 }

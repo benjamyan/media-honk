@@ -1,12 +1,11 @@
 import { z } from 'zod'
-import { $Procedure } from "../trpc";
+import { $Middleware, $Procedure } from "../trpc";
 import { TRPCError } from '@trpc/server';
-import { existsSync } from 'fs';
-import { Readable } from 'stream';
+import { PathLike, createReadStream, existsSync } from 'fs';
 import { CoversModel, MediaModel } from '../../models';
-import { $FactoryCache } from '../../services/cache/FactoryServiceCache';
-import { $ModelCache } from '../../services/cache/ModelCacheService';
-import { $Logger } from '../../server';
+import { $FactoryCache } from '../../cache/FactoryServiceCache';
+import { $ModelCache } from '../../cache/ModelCacheService';
+import { $Fastify, $Logger } from '../../server';
 
 /**
  * https://medium.com/@kylelibra/how-to-play-avi-files-in-the-chrome-web-browser-c5cbf8e0098d
@@ -19,11 +18,13 @@ import { $Logger } from '../../server';
 export const getCoverImage = (
     $Procedure
         .input(z.object({ id:z.string() }))
-        .query(async ({ input: { id }, ctx: { res } })=>{
+        .query(async ({ input: { id } })=>{
             const bundleById = $FactoryCache.get(id);
-            console.log($FactoryCache);
             if (!bundleById) {
-                return res.code(409);
+                throw new TRPCError({
+                    code: 'NOT_FOUND',
+                    message: 'NO_BUNDLE'
+                });
             }
             
             let coverImgUrl: string | undefined;
@@ -45,16 +46,18 @@ export const getCoverImage = (
                 });
             }
             
-            if (!coverImgUrl) {
-                return res.code(204);
-            } else if (!existsSync(coverImgUrl)) {
+            if (!coverImgUrl || !existsSync(coverImgUrl)) {
                 throw new TRPCError({
                     code: 'NOT_FOUND',
-                    message: ''
+                    message: 'NO_COVER'
                 });
             }
-            // res.header('Content-Length', );
-            return res.download(coverImgUrl, coverImgUrl.split('/').at(-1));
+            // res.header('Content-Type', 'image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8')
+            // res.type('image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8');
+            // return createReadStream(coverImgUrl)
+            // await res.sendFile(coverImgUrl) 
+            return coverImgUrl
+            // return res.sendFile(coverImgUrl) // .download(coverImgUrl, coverImgUrl.split('/').at(-1));
         })
 )
 

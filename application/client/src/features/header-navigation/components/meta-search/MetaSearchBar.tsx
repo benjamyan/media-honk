@@ -4,11 +4,11 @@ import './_MetaSearchBar.scss';
 import { useAssetLibraryContext } from '../../../../context';
 
 type MetaSearchBarProps = {
-	updateSearchFocus: (focused: boolean)=> void;
+	toggleSearchFocus: ()=> void;
 	// updateSearchValue: (args:{ action: 'ADD' | 'REMOVE', value: string | null })=> void
 }
 
-export const MetaSearchBar = ({ updateSearchFocus }: MetaSearchBarProps) => {
+export const MetaSearchBar = ({ toggleSearchFocus }: MetaSearchBarProps) => {
 	const { metaArtistBucket, metaCategoryBucket, metaSearch, updateLibraryContext } = useAssetLibraryContext();
 	const [ searchValues, setSearchValues ] = useState<string[]>([...metaSearch]);
 	const [ inputActive, setInputActive ] = useState(false);
@@ -67,9 +67,8 @@ export const MetaSearchBar = ({ updateSearchFocus }: MetaSearchBarProps) => {
 			document.addEventListener('click', onInputClearEventHandler);
 		}
 	}, [ searchValues ]);
-	useEffect(()=>{
-		updateSearchFocus(inputActive);
-	}, [ inputActive ]);
+
+	useEffect(toggleSearchFocus, [ inputActive ]);
 
 	return (
 		<div className={`meta__search ${inputActive ? 'active' : ''}`}>

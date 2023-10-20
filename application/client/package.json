@@ -58,5 +58,9 @@
     "plugins": [
       "@babel/plugin-proposal-class-properties"
     ]
+  },
+  "dependencies": {
+    "@trpc/client": "^10.40.0",
+    "@trpc/react-query": "^10.40.0"
   }
 }

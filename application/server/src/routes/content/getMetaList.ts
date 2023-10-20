@@ -1,6 +1,7 @@
 import { z } from 'zod'
 import { $Procedure } from "../trpc";
 import { MetaModel } from '../../models';
+import { TRPCError } from '@trpc/server';
 
 /** 
  * @method getMeta Simple function to get table row entries that are not of type _null_ from `meta` table
@@ -16,12 +17,16 @@ export const getMetaList = (
         .input(
             z.object({
                 meta: z.union([z.literal('artist_name'), z.literal('category_name')])
-            })
+            }).optional()
         )
-        .query(async ({ input }) => {
-            const metaRowContent = await MetaModel.getAllMetaRowContent(input.meta)
+        .query(async ({ input, ctx: { res } }) => {
+            const metaRowContent = await MetaModel.getAllMetaRowContent(input?.meta)
             if (metaRowContent instanceof Error) {
-                throw metaRowContent
+                throw new TRPCError({
+                    code: 'NOT_FOUND',
+                    message: 'ERR',
+                    cause: metaRowContent
+                })
             }
             return metaRowContent
         })

@@ -65,5 +65,7 @@ export class CastVideoButton extends ClickableComponent {
         console.log('CAST');
         // CastMedia({ isOpen: true })
         // return CastMedia
+        /// @ts-expect-error
+        this.player.honkForceVR();
     }
 }

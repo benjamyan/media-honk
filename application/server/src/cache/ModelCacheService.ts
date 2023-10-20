@@ -1,4 +1,4 @@
-import { MetaModel, MediaMetaModel, MediaModel, BundlesModel, BundleMediaModel, CoversModel, ModelTables } from "../../models";
+import { MetaModel, MediaMetaModel, MediaModel, BundlesModel, BundleMediaModel, CoversModel, ModelTables } from "../models";
 // import { MediaHonkServerBase } from "../../_Base";
 
 

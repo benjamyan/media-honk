@@ -2,7 +2,7 @@ import { Model } from 'objection';
 // import { MediaHonkServerBase } from '../_Base';
 import {ModelBase} from './_ModelBase';
 import { CoversModelColumns } from './_ModelDefinitions';
-import { $ModelCache } from '../services/cache/ModelCacheService';
+import { $ModelCache } from '../cache/ModelCacheService';
 
 export class CoversModel extends ModelBase implements CoversModelColumns {
 	static tableName = 'covers';
