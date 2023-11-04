@@ -49,9 +49,8 @@ const AssetBundlesByMediaType = ()=> {
                 }
                 if (metaSearch.length > 0) {
                     for (const meta of metaSearch) {
-                        if ([...bundle.artist, ...bundle.category].includes(meta)) {
-                            assetRow.push(bundle);
-                        }
+                        if (![...bundle.artist, ...bundle.category].includes(meta)) break;
+                        assetRow.push(bundle);
                     }
                 } else if (mediaView.length > 0 && mediaView.includes(bundle.type)) {
                     assetRow.push(bundle);

@@ -1,4 +1,4 @@
-import React, { MouseEvent, MouseEventHandler, useCallback } from 'react';
+import React, { MouseEvent, MouseEventHandler, useCallback, useEffect } from 'react';
 import { AssetCard } from '../../../../components/cards/AssetCard';
 import { useAssetLibraryContext, useMediaPlayerContext } from '../../../../context';
 import { MediaAssetBundle } from '../../../../types';
@@ -72,8 +72,8 @@ export const AssetGroup = (props: AssetGroupProps) => {
         //     .catch(err=>{
         //         console.warn(err)
         //     });
-    }, [ mediaView ])
-
+    }, [ mediaView ]);
+    
     if (!props.bundleAssets[0] || !props.bundleAssets[0].type) {
         return null
     }

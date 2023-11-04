@@ -81,15 +81,30 @@ export const aggregateMediaBundles = async (options?: {
                 }
             }
             
-            for await (const configFile of Object.keys(_self.configCache)) {
-                try {
-                    $Logger.info(`-- ${_self.configCache[configFile]['_configFilePath']}`);
-                    await BundlesModel.handleBundleEntryWithRelatedFields(_self.configCache[configFile].properties);
-                } catch (err) {
-                    console.warn(err);
-                    delete _self.configCache[configFile];
-                }
-            }
+            // for await (const configFile of Object.keys(_self.configCache)) {
+            //     try {
+            //         $Logger.info(`-- ${_self.configCache[configFile]['_configFilePath']}`);
+            //         await BundlesModel.handleBundleEntryWithRelatedFields(_self.configCache[configFile].properties);
+            //     } catch (err) {
+            //         console.warn(err);
+            //         delete _self.configCache[configFile];
+            //     }
+            // }
+            await Promise.all([
+                ...Object.keys(_self.configCache).map((configFile)=> {
+                    return (
+                        BundlesModel.handleBundleEntryWithRelatedFields(_self.configCache[configFile].properties)
+                            .then(()=> {
+                                $Logger.info(`-- ${_self.configCache[configFile]['_configFilePath']}`);
+                            })
+                            .catch((err)=> {
+                                $Logger.warn(`-- ERR: ${_self.configCache[configFile]['_configFilePath']}`);
+                                $Logger.warn(err);
+                                delete _self.configCache[configFile];
+                            })
+                    )
+                })
+            ]);
             $Logger.info('- END AGGREGATE');
             return true;
         } catch (err) {

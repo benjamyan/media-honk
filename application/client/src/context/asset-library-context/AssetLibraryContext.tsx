@@ -28,6 +28,7 @@ const AssetLibraryContextProvider = ({ children }: {children: React.ReactNode}) 
             case 'UPDATE': {
                 const { payload } = params;
                 if (payload.assetBucket !== undefined) {
+                    console.log(payload.assetBucket);
                     setAssetBucket({
                         ...assetBucket,
                         ...Object.fromEntries(
@@ -90,59 +91,59 @@ const AssetLibraryContextProvider = ({ children }: {children: React.ReactNode}) 
             .catch((err)=>console.error(err));
     }, []);
     
-    useEffect(()=>{
-        if (metaSearch.length == 0) {
-            updateLibraryContext({ action: 'RESET' })
-            return;
-        }
-        const bundleRequest: Partial<Record<'artist' | 'category', string[]>> = {};
-        for (const metaValue of metaSearch) {
-            if (metaArtistBucket.includes(metaValue)) {
-                if (bundleRequest.artist == undefined) {
-                    bundleRequest.artist = [];
-                }
-                bundleRequest.artist.push(metaValue);
-            } else if (metaCategoryBucket.includes(metaValue)) {
-                if (bundleRequest.category == undefined) {
-                    bundleRequest.category = [];
-                }
-                bundleRequest.category.push(metaValue);
-            }
-        }
-        if (bundleRequest.category && bundleRequest.artist) {
-            console.warn('TODO cant accept multi param');
-            return;
-        }
-        get_assetBundles(bundleRequest).axios().then((res)=>{
-            updateLibraryContext({
-                action: 'UPDATE',
-                payload: { 
-                    assetBucket: res,
-                    libraryView: (metaSearch.length > 0 && libraryView == 'ROW') ? 'GRID' : undefined
-                }
-            })
-            // if (metaSearch.length > 0 && libraryView == 'ROW') setLibraryView('GRID');
-        })
-    }, [metaSearch])
+    // useEffect(()=>{
+    //     if (metaSearch.length == 0) {
+    //         updateLibraryContext({ action: 'RESET' })
+    //         return;
+    //     }
+    //     const bundleRequest: Partial<Record<'artist' | 'category', string[]>> = {};
+    //     for (const metaValue of metaSearch) {
+    //         if (metaArtistBucket.includes(metaValue)) {
+    //             if (bundleRequest.artist == undefined) {
+    //                 bundleRequest.artist = [];
+    //             }
+    //             bundleRequest.artist.push(metaValue);
+    //         } else if (metaCategoryBucket.includes(metaValue)) {
+    //             if (bundleRequest.category == undefined) {
+    //                 bundleRequest.category = [];
+    //             }
+    //             bundleRequest.category.push(metaValue);
+    //         }
+    //     }
+    //     if (bundleRequest.category && bundleRequest.artist) {
+    //         console.warn('TODO cant accept multi param');
+    //         return;
+    //     }
+    //     get_assetBundles(bundleRequest).axios().then((res)=>{
+    //         updateLibraryContext({
+    //             action: 'UPDATE',
+    //             payload: { 
+    //                 assetBucket: res,
+    //                 libraryView: (metaSearch.length > 0 && libraryView == 'ROW') ? 'GRID' : undefined
+    //             }
+    //         })
+    //         // if (metaSearch.length > 0 && libraryView == 'ROW') setLibraryView('GRID');
+    //     })
+    // }, [metaSearch])
 
-    useEffect(()=>{
-        // if (mediaView.length == 0) {
-        //     return;
-        // }
-        get_bundlesByMediaType(mediaView[0])
-            .then((bundles)=> {
-                updateLibraryContext({
-                    action: 'UPDATE',
-                    payload: {
-                        // libraryView: bundles.length > 0 ? 'GRID' : undefined,
-                        assetBucket: bundles
-                    }
-                })
-            })
-            // .catch(err=>{
-            //     console.warn(err)
-            // });
-    }, [ mediaView ])
+    // useEffect(()=>{
+    //     // if (mediaView.length == 0) {
+    //     //     return;
+    //     // }
+    //     get_bundlesByMediaType(mediaView[0])
+    //         .then((bundles)=> {
+    //             updateLibraryContext({
+    //                 action: 'UPDATE',
+    //                 payload: {
+    //                     // libraryView: bundles.length > 0 ? 'GRID' : undefined,
+    //                     assetBucket: bundles
+    //                 }
+    //             })
+    //         })
+    //         // .catch(err=>{
+    //         //     console.warn(err)
+    //         // });
+    // }, [ mediaView ])
 
     return (
         <AssetLibraryContext.Provider value={{

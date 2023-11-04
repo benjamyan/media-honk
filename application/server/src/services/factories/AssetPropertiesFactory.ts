@@ -7,6 +7,7 @@ import { deteremineStoredMediaType } from '../fs/deteremineMediaType';
 import { shakeDirectoryFileTree } from '../fs/shakeDirectoryTree';
 import { convertToStoredMediaType } from '../helpers/convertMediaType';
 import { formatMediaEntries } from '../helpers/parseMediaBundleEntries';
+import { $Logger } from '../../server';
 // import { MediaHonkServerBase } from '../../_Base';
 
 export interface AssetPropertyConfigPublicEntity {
@@ -115,27 +116,32 @@ export class AssetPropertiesConfig implements AssetPropertyConfigPublicEntity {
     }
 
     private standardizeAssetProperties() {
-        const convertMalformedMetaListString = (metaList: string)=> {
-            const convertedList: string[] = [];
-            if (metaList.includes('-')) {
-                metaList.split('-').forEach((metaValue)=> {
-                    if (metaValue.trim().length == 0) return;
-                    convertedList.push(metaValue.trim())
-                });
-            }
-            return convertedList
-        };
-        ([ 'artists', 'categories' ] as (keyof Pick<typeof this.properties, 'artists' | 'categories'>)[]).forEach((metaKey)=> {
-            if (this.properties[metaKey] === undefined) return;
-            if (typeof this.properties[metaKey] == 'string') {
-                this.properties[metaKey] = convertMalformedMetaListString(this.properties[metaKey] as unknown as string);
-            }
-            if (Array.isArray(this.properties[metaKey])) {
-                this.properties[metaKey]?.flatMap((metaValue)=> {
-                    if (metaValue) convertMalformedMetaListString(metaValue);
-                })
-            }
-        })
+        try {
+            const convertMalformedMetaListString = (metaList: string)=> {
+                const convertedList: string[] = [];
+                if (metaList.includes('-')) {
+                    metaList.split('-').forEach((metaValue)=> {
+                        if (metaValue.trim().length == 0) return;
+                        convertedList.push(metaValue.trim())
+                    });
+                }
+                return convertedList
+            };
+            ([ 'artists', 'categories' ] as (keyof Pick<typeof this.properties, 'artists' | 'categories'>)[]).forEach((metaKey)=> {
+                if (this.properties[metaKey] === undefined) return;
+                if (typeof this.properties[metaKey] == 'string') {
+                    this.properties[metaKey] = convertMalformedMetaListString(this.properties[metaKey] as unknown as string);
+                }
+                if (Array.isArray(this.properties[metaKey])) {
+                    this.properties[metaKey]?.flatMap((metaValue)=> {
+                        if (metaValue) convertMalformedMetaListString(metaValue);
+                    })
+                }
+            })
+        } catch (err) {
+            $Logger.warn(`ERR: ${this._configFilePath}`);
+            $Logger.warn(err);
+        }
         // if (typeof this.properties.artists == 'string') {
         //     this.properties.artists = convertMalformedMetaListString(this.properties.artists);
         // }

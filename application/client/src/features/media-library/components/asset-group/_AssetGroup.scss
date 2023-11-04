@@ -24,8 +24,8 @@
         scrollbar-width: 10px;
         &.v > div {
             width: 325px;
+            // min-height: 210px;
             img {
-                height: 180px;
                 min-height: 180px;
                 max-height: 180px;
                 aspect-ratio: 16 / 9;
@@ -33,8 +33,8 @@
         }
         &.a > div {
             width: 210px;
+            // min-height: 240px;
             img {
-                height: 210px;
                 min-height: 210px;
                 max-height: 210px;
                 aspect-ratio: 1 / 1;
@@ -42,8 +42,8 @@
         }
         &.i > div {
             width: 215px;
+            // min-height: 325px;
             img {
-                height: 300px;
                 min-height: 300px;
                 max-height: 300px;
                 object-fit: scale-down;
@@ -58,6 +58,7 @@
         overflow-y: hidden;
         > div {
             max-width: 100%;
+            // min-height: 200px;
             flex: 0 0 auto;
             margin: 0 25px 25px 0;
             white-space: normal;
@@ -79,6 +80,7 @@
             margin-bottom: 25px;
             > div {
                 width: 100%;
+                min-height: 250px;
                 // width: 325px;
                 img {
                     height: 215px;
@@ -92,6 +94,7 @@
         &.i > div {
             // display: flex;
             width: 200px;
+            min-height: 325px;
             img {
                 height: 300px;
                 min-height: 300px;
@@ -105,11 +108,11 @@
     .asset_group-grid {
         &.v > div {
             width: 47%;
+            min-height: 165px;
             img {
-                height: 165px;
                 min-height: 165px;
                 max-height: 165px;
             }
         }
     }
-  }
+}

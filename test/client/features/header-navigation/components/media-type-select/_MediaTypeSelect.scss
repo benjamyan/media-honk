@@ -1,0 +1,16 @@
+.mediatype__select {
+    border-top: none;
+    border-right: none;
+    border-left: none;
+    border-bottom: 1px solid var(--border-color);
+    background-color: unset;
+    color: var(--text-color);
+    &:focus-visible {
+        outline: none;
+    }
+    &:focus,
+    &:focus-within,
+    &:active {
+        background-color: var(--background-color);
+    }
+}

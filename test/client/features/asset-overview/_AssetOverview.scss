@@ -1,0 +1,36 @@
+.asset-overview {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: calc(100% - 40px);
+    height: auto;
+    min-height: calc(100vh - 40px);
+    padding: 20px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    z-index: calc(var(--header-z-index) + 1);
+    background-color: var(--background-color);
+    .cover-image {
+        object-fit: cover;
+        height: auto;
+    }
+    .button__close {
+        text-align: right;
+        margin-bottom: 10px;
+    }
+    &_meta {
+        > * {
+            display: inline-block;
+            margin-right: 10px;
+        }
+        &-name {
+
+        }
+        &-value {
+            font-size: 0.8rem;
+            padding: 5px 10px;
+            margin-top: -5px;
+            background: var(--button-color);
+        }
+    }
+}

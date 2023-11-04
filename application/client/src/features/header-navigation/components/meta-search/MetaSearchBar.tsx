@@ -4,7 +4,7 @@ import './_MetaSearchBar.scss';
 import { useAssetLibraryContext } from '../../../../context';
 
 type MetaSearchBarProps = {
-	toggleSearchFocus: ()=> void;
+	toggleSearchFocus: (isActive: boolean)=> void;
 	// updateSearchValue: (args:{ action: 'ADD' | 'REMOVE', value: string | null })=> void
 }
 
@@ -68,7 +68,7 @@ export const MetaSearchBar = ({ toggleSearchFocus }: MetaSearchBarProps) => {
 		}
 	}, [ searchValues ]);
 
-	useEffect(toggleSearchFocus, [ inputActive ]);
+	useEffect(()=> toggleSearchFocus(inputActive), [ inputActive ]);
 
 	return (
 		<div className={`meta__search ${inputActive ? 'active' : ''}`}>

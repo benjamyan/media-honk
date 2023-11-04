@@ -3,8 +3,8 @@ import { default as VideoJS } from 'video.js';
 // import { CastMedia } from '../../features';
 // import { CastOptionsModal } from '../../features/CastMedia/components/CastOptionsModal';
 
-const Component = window.videojs.getComponent('Component');
-const ClickableComponent = window.videojs.getComponent('ClickableComponent');
+const Component = VideoJS.getComponent('Component');
+const ClickableComponent = VideoJS.getComponent('ClickableComponent');
 
 export class CustomMenu extends Component {
     constructor(player: VideoJS.Player, options: VideoJS.PlayerOptions = {}) {
@@ -26,7 +26,7 @@ export class CustomMenu extends Component {
         player.on('userinactive', toggleActiveClass.bind(null, false));
     }
     createEl() {
-        return window.videojs.dom.createEl('div', {
+        return VideoJS.dom.createEl('div', {
             className: `vjs-custom-menu video__player--control`
         })
     }
@@ -40,7 +40,7 @@ export class CustomCloseButton extends ClickableComponent {
         this.playerInstance = player;
     }
     createEl() {
-        return window.videojs.dom.createEl('div', {
+        return VideoJS.dom.createEl('div', {
             className: `vjs-custom-clickable-component button__close video__player--control-close`
         })
     }
@@ -57,7 +57,7 @@ export class CastVideoButton extends ClickableComponent {
         super(player, options)
     }
     createEl() {
-        return window.videojs.dom.createEl('div', {
+        return VideoJS.dom.createEl('div', {
             className: `vjs-custom-clickable-component cast__button video__player--control-cast`
         })
     }

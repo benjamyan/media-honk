@@ -1,6 +1,6 @@
 import { default as VideoJS } from 'video.js';
 
-const Plugin = window.videojs.getPlugin('plugin');
+const Plugin = VideoJS.getPlugin('plugin');
 export class VrZoom extends Plugin {
     readonly player: VideoJS.Player
     readonly options: {
@@ -191,7 +191,7 @@ export class VrZoom extends Plugin {
 
     private setup() {
         const $video = this.player.el();
-        if (!window.videojs.browser.TOUCH_ENABLED) {
+        if (!VideoJS.browser.TOUCH_ENABLED) {
             $video.addEventListener('wheel', this.zoomHandlerWeb.bind(this), {
                 passive: true
             });

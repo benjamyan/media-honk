@@ -134,11 +134,6 @@ const startServer = async () => {
 				createContext
 			}
 		});
-		
-		// https://www.npmjs.com/package/@fastify/cors
-		$Fastify.register(cors, {
-			origin: 'http://192.168.0.11:8080'
-		});
 		// https://www.npmjs.com/package/@fastify/static
 		$Fastify.register(fastifyStatic, {
 			prefix: '/public/',
@@ -147,6 +142,13 @@ const startServer = async () => {
 
 		$Fastify.register(fastifyStream);
 		
+		
+		// https://www.npmjs.com/package/@fastify/cors
+		$Fastify.register(cors, {
+			origin: ['http://192.168.0.11:8080', 'http://192.168.0.11:8081'],
+			preflightContinue: true,
+			methods: ['GET', 'POST', 'OPTIONS']
+		});
 		await $Fastify.listen({ port: 8081, host: '192.168.0.11' })
 	} catch (err) {
 		$Fastify.log.error(err)

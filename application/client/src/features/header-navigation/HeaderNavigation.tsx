@@ -73,7 +73,7 @@ export const HeaderNavigation = ()=> {
     return (
         <nav className='header__nav'>
             <div className='header__nav--interact'>
-                <MetaSearchBar toggleSearchFocus={()=>setSearchBarFocused(!searchBarFocused)} />
+                <MetaSearchBar toggleSearchFocus={setSearchBarFocused} />
                 { !searchBarFocused &&
                     <>
                         <div className='header__nav--directions'>
@@ -84,7 +84,7 @@ export const HeaderNavigation = ()=> {
                     </>
                 }
             </div>
-            <MetaSearchValueList />
+            { searchBarFocused && <MetaSearchValueList /> }
         </nav>
     )
 }

@@ -31,7 +31,7 @@ export const AssetCard = (props: AssetCardProps)=> {
     // ), [ mediaQueue ])
 
     return (
-        <div key={`AssetCard_${props.assetBundle._guid}`} className={CLASSNAME} onClick={()=> props.onCardClick()}>
+        <div key={`AssetCard_${props.assetBundle._guid}`} className={CLASSNAME + ' lazy'} onClick={()=> props.onCardClick()}>
             {/* <AddToMediaQueueButton /> */}
             <button className={`${CLASSNAME}_queue ${mediaQueue.includes(props.assetBundle._guid) ? 'remove' : ''}`} onClick={(e)=> {
             e.stopPropagation();

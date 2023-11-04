@@ -17,16 +17,18 @@ export const get_metaValues = async (pageNumber?: number)=> {
         5000,
         false
     )
-        .then((res: AxiosResponse)=> {
+        .then((res)=> {
+            // console.log(res.data.result.data);
             if (res.status !== 200) {
                 throw new Error(`Unhandled expcetion of returned endpoint call.`);
             }
-            if (res.data.artist_name) {
-                metaValues.artist_name = res.data.artist_name;
-            }
-            if (res.data.category_name) {
-                metaValues.category_name = res.data.category_name;
-            }
+            metaValues = { ...res.data.result.data };
+            // if (res.data.result.data.artist_name) {
+            //     metaValues.artist_name = res.data.artist_name;
+            // }
+            // if (res.data.result.data.category_name) {
+            //     metaValues.category_name = res.data.category_name;
+            // }
             // metaValues = res.data;
             // return res.data as Honk.Media.AssetBundle[];
         })
