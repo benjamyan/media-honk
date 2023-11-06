@@ -9,7 +9,7 @@ export const ImageGallary = ()=> {
     const { selectedMedia, updateMediaPlayerContext } = useMediaPlayerContext();
 
     const [isFullscreen, setFullscreen] = React.useState<boolean>(false);
-    const [currentImage, setCurrentImage] = React.useState<number>(-1);
+    const [currentImage, setCurrentImage] = React.useState<number>(0);
     const viewerRef = React.useRef<HTMLDivElement>(null);
     const imageRef = React.useRef<HTMLDivElement>(null);
     
@@ -33,12 +33,12 @@ export const ImageGallary = ()=> {
                     }
                     onClick={(e)=>{
                         if (window.innerWidth / 2 > e.clientX) {
-                            if (currentImage > -1) {
+                            if (currentImage >= -1) {
                                 setCurrentImage(currentImage - 1);
                                 imageRef.current?.scrollTo(0,0);
                             }
                         } else {
-                            if (currentImage < selectedMedia.length - 1) {
+                            if (currentImage <= selectedMedia.length - 1) {
                                 setCurrentImage(currentImage + 1);
                                 imageRef.current?.scrollTo(0,0);
                             }

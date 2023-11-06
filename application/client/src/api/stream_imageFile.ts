@@ -2,12 +2,17 @@ import axios, { AxiosResponse } from "axios";
 import { wrapPromise } from "./_utils";
 import { ENDPOINTS, HONK_URL, QUERY_PARAMS } from "./_endpoints";
 
-export const stream_imageFile = (bundleId: string, mediaId: number | null)=> {
-    let query = `${ENDPOINTS.streamImage}?${QUERY_PARAMS.streamImage.id}=${bundleId}`;
+export const stream_imageFile = (bundleId: string, mediaId: number)=> {
+    // let query = `${ENDPOINTS.streamImage}?${QUERY_PARAMS.streamImage.id}=${bundleId}`;
 
-    if (mediaId !== null) {
-        query = query + `&${QUERY_PARAMS.streamImage.entry}=${mediaId}`;
-    }
+    let query = `${ENDPOINTS.streamImage}?input=${encodeURIComponent(JSON.stringify({
+        [QUERY_PARAMS.streamImage.id]: bundleId,
+        [QUERY_PARAMS.streamImage.entry]: mediaId
+    }))}`;
+
+    // if (mediaId !== null) {
+    //     query = query + `&${QUERY_PARAMS.streamImage.entry}=${mediaId}`;
+    // }
 
     return {
         static: HONK_URL[Client.honkConfig.ENV] + query,

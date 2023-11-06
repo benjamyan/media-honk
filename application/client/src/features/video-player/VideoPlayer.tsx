@@ -57,27 +57,25 @@ export const VideoPlayer = () => {
 						src: stream_videoFile(selectedMedia._guid, currentMediaId).static, 
 						type: 'video/mp4' 
 					}],
-					// techOrder: ['java'],
-					preload: 'metadata',
+					preload: 'auto',
+					// preload: 'none',
+					// preload: 'metadata',
 					autoplay: false,
+					
 					muted: selectedMedia.category.includes('VR')
 				}).ready(function(this) {
-					if (selectedMedia.category.includes('VR')) {
-						console.log('vr')// 
-						console.log(this)							
+					if (selectedMedia.category.includes('VR')) {						
 						try {
-							// /// @ts-expect-error
-							// if (!this.vr) this.vr = new VideoJsVr(this);
 							/// @ts-expect-error
-						this.vr({
-							projection: '180',
-							debug: true,
-							forceCardboard: true,
-							motionControls: true,
-							disableTogglePlay: false
-						});
-						/// @ts-expect-error
-						this.vrZoom();
+							this.vr({
+								projection: '180',
+								debug: true,
+								forceCardboard: true,
+								motionControls: true,
+								disableTogglePlay: false
+							});
+							/// @ts-expect-error
+							this.vrZoom();
 						} catch (err) {
 							console.log(err)
 						}

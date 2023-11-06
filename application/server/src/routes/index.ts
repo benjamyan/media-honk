@@ -35,7 +35,7 @@ export const appRoutes = $Router({
     }),
     // stream: streamRouter
     stream: $Router({
-        static: getStaticAsset,
+        image: getStaticAsset,
         video: streamVideo
     })
 });

@@ -78,7 +78,11 @@ export class AssetPropertiesConfig implements AssetPropertyConfigPublicEntity {
             console.error(`Could not shake files for configFile Entries.`)
             this._dirFileList = [];
         } else {
-            this._dirFileList = directoryFiles;
+            this._dirFileList = directoryFiles.filter((file)=> {
+                return !(file.endsWith('/image') || file.endsWith('/gallery'))
+            });
+            // this._dirFileList = directoryFiles;
+            // $Logger.info(this._dirFileList);
         }
     }
 
@@ -112,6 +116,10 @@ export class AssetPropertiesConfig implements AssetPropertyConfigPublicEntity {
                 this.configuration
             );
         }
+        this.properties.entries = this.properties.entries.filter(({title})=> {
+            return title !== 'Image' && title !== 'Gallery' 
+        });
+        // $Logger.info(this.properties.entries);
         return this.properties.entries
     }
 

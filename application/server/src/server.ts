@@ -23,6 +23,7 @@ import { TRPCError, inferProcedureOutput } from '@trpc/server';
 import { InferMediaRouteResult, InferQueryOutput } from './types/trcp-utils';
 import { audioExtensions, imageExtensions, videoExtensions } from './config/constants';
 import { getMediaExtFromFilename } from './utils/parseFileExt';
+import send, { SendStream } from '@fastify/send';
 
 dotenv.config({ path: Path.resolve(__dirname, '../.env') });
 
@@ -141,7 +142,6 @@ const startServer = async () => {
 		});
 
 		$Fastify.register(fastifyStream);
-		
 		
 		// https://www.npmjs.com/package/@fastify/cors
 		$Fastify.register(cors, {

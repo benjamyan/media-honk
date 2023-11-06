@@ -24,6 +24,7 @@ export class CustomMenu extends Component {
         player.on('seeked', toggleActiveClass.bind(null, true));
         player.on('useractive', toggleActiveClass.bind(null, true));
         player.on('userinactive', toggleActiveClass.bind(null, false));
+        player.on('error', toggleActiveClass.bind(null, true));
     }
     createEl() {
         return VideoJS.dom.createEl('div', {

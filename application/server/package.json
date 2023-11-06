@@ -15,6 +15,7 @@
   },
   "dependencies": {
     "@fastify/cors": "^8.4.0",
+    "@fastify/send": "^2.1.0",
     "@trpc/server": "^10.38.3",
     "@types/dotenv": "^8.2.0",
     "basic-auth": "^2.0.1",
