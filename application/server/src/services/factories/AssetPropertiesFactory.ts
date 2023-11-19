@@ -21,7 +21,7 @@ export class AssetPropertiesConfig implements AssetPropertyConfigPublicEntity {
     public _configFilePath: string;
     public _mediaDir: string;
     public _dirFileList!: string[];
-    readonly properties: ResolvedMediaAssetProperties;
+    public properties: ResolvedMediaAssetProperties;
     private configuration: ConfiguredMediaAssetProperties;
     
     constructor(mediaConfigArgs: Pick<AssetPropertyConfigPublicEntity, '_configFilePath' | '_mediaDir'>) {
@@ -38,14 +38,6 @@ export class AssetPropertiesConfig implements AssetPropertyConfigPublicEntity {
 
     public async init() {
         // try {
-            if (!Object.keys(this.configuration).includes('title')) {
-                throw new Error(`Invalid configuration found: ${this._configFilePath}`);
-                // this.configuration = {
-                //     ...this.configuration,
-                //     title: 'TITLE_NOT_FOUND'
-                // };
-                // this.properties.title = 'TITLE_NOT_FOUND'
-            }
             await this.getDirFileList();
             if (process.env.DEPRECATED_DEFS === 'true') {
                 this.useDeprecatedKeyList();
@@ -53,6 +45,7 @@ export class AssetPropertiesConfig implements AssetPropertyConfigPublicEntity {
             this.standardizeAssetProperties();
             this.getMediaEntryList();
             this.getMediaType();
+            this.assertMediaProperties();
             this.getCoverImageUrl();
         // } catch (err) {
         //     MediaHonkServerBase.emitter('error', {
@@ -60,6 +53,34 @@ export class AssetPropertiesConfig implements AssetPropertyConfigPublicEntity {
         //         severity: 2
         //     })
         // }
+    }
+
+    private assertMediaProperties() {
+        try {
+            if (!Object.keys(this.configuration).includes('title')) {
+                throw new Error(`Invalid configuration found: ${this._mediaDir}`);
+            }
+            switch (typeof this.configuration.title) {
+                case 'number': {
+                    this.properties.title = '' + this.configuration.title; // this.properties.title.toString();
+                    break;
+                }
+                default: {
+                    if (typeof this.properties.title != 'string') {
+                        throw new Error(`Invalid title property: ${this._mediaDir}`)
+                    }
+                    
+                }
+            }
+            this.properties.title = this.properties.title.replace(/('|\"|~|`)/g, '');
+            if (!this._configFilePath.includes(this._mediaDir)) {
+                /** A sub-directory found in a configured media directory */
+                this.properties.title += ` ${this._mediaDir.split('/').at(-1)}`;
+            }
+            $Logger.info(this.properties.title)
+        } catch (err) {
+            $Logger.error(err);
+        }
     }
 
     private useDeprecatedKeyList() {
@@ -78,9 +99,7 @@ export class AssetPropertiesConfig implements AssetPropertyConfigPublicEntity {
             console.error(`Could not shake files for configFile Entries.`)
             this._dirFileList = [];
         } else {
-            this._dirFileList = directoryFiles.filter((file)=> {
-                return !(file.endsWith('/image') || file.endsWith('/gallery'))
-            });
+            this._dirFileList = directoryFiles.filter((file)=> !Fs.statSync(file).isDirectory());
             // this._dirFileList = directoryFiles;
             // $Logger.info(this._dirFileList);
         }
@@ -107,20 +126,26 @@ export class AssetPropertiesConfig implements AssetPropertyConfigPublicEntity {
     }
 
     private getMediaEntryList() {
-        if (this.properties.entries === null) {
-            this.properties.entries = formatMediaEntries(
-                this._dirFileList.sort(naturalSort).filter((currProperty)=> (
-                    currProperty !== this.properties.coverUrl && currProperty !== this._configFilePath
-                )),
-                this._mediaDir,
-                this.configuration
-            );
+        try {
+            if (this.properties.entries === null) {
+                this.properties.entries = formatMediaEntries(
+                    this._dirFileList.sort(naturalSort).filter((currProperty)=> (
+                        currProperty !== this.properties.coverUrl && currProperty !== this._configFilePath
+                    )),
+                    this._mediaDir,
+                    this.configuration
+                );
+            }
+            this.properties.entries = this.properties.entries.filter(({title})=> {
+                return title !== 'Image' && title !== 'Gallery' 
+            });
+            // $Logger.info(this.properties.entries);
+            return this.properties.entries
+        } catch (err) {
+            $Logger.warn(`ERR: ${this._mediaDir}`);
+            $Logger.warn(typeof this.properties.title);
+            $Logger.warn(err);
         }
-        this.properties.entries = this.properties.entries.filter(({title})=> {
-            return title !== 'Image' && title !== 'Gallery' 
-        });
-        // $Logger.info(this.properties.entries);
-        return this.properties.entries
     }
 
     private standardizeAssetProperties() {
@@ -139,16 +164,16 @@ export class AssetPropertiesConfig implements AssetPropertyConfigPublicEntity {
                 if (this.properties[metaKey] === undefined) return;
                 if (typeof this.properties[metaKey] == 'string') {
                     this.properties[metaKey] = convertMalformedMetaListString(this.properties[metaKey] as unknown as string);
-                }
-                if (Array.isArray(this.properties[metaKey])) {
+                } else if (Array.isArray(this.properties[metaKey])) {
                     this.properties[metaKey]?.flatMap((metaValue)=> {
                         if (metaValue) convertMalformedMetaListString(metaValue);
                     })
+                } else {
+                    $Logger.warn(`Invalid meta ${metaKey} list: ${this._mediaDir}`);
                 }
             })
         } catch (err) {
-            $Logger.warn(`ERR: ${this._configFilePath}`);
-            $Logger.warn(err);
+            $Logger.error(err);
         }
         // if (typeof this.properties.artists == 'string') {
         //     this.properties.artists = convertMalformedMetaListString(this.properties.artists);

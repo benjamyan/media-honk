@@ -5,30 +5,10 @@ import { ENDPOINTS, HONK_URL, QUERY_PARAMS } from '../../api/_endpoints';
 import './_CoverImage.scss';
 import { get_coverImage } from '../../api/get_coverImage';
 
-function elementInViewport2(el) {
-    if (!el) return;
-    var top = el.offsetTop;
-    var left = el.offsetLeft;
-    var width = el.offsetWidth;
-    var height = el.offsetHeight;
-  
-    while(el.offsetParent) {
-      el = el.offsetParent;
-      top += el.offsetTop;
-      left += el.offsetLeft;
-    }
-  
-    return (
-      top < (window.pageYOffset + window.innerHeight) &&
-      left < (window.pageXOffset + window.innerWidth) &&
-      (top + height) > window.pageYOffset &&
-      (left + width) > window.pageXOffset
-    );
-}
-
 export const CoverImage = (props: { assetBundle: MediaAssetBundle })=> {
     const { assetBundle } = props;
     const imgRef = useRef<HTMLImageElement>(undefined);
+    const bgRef = useRef<HTMLDivElement>(undefined);
     const [ coverImgClassName, setCoverImgClassName ] = useState(`cover-image ${assetBundle.type[0].toLowerCase()}`);
 
     useEffect(()=> {
@@ -39,6 +19,7 @@ export const CoverImage = (props: { assetBundle: MediaAssetBundle })=> {
                 if (!imgRef.current) return;
                 if (!imgRef.current.src) {
                     imgRef.current.src = imgRef.current.dataset.src;
+                    bgRef.current.style.backgroundImage = `url(${imgRef.current.dataset.src})`
                 }
                 observer.unobserve(imgRef.current);
             });
@@ -46,15 +27,17 @@ export const CoverImage = (props: { assetBundle: MediaAssetBundle })=> {
     }, []);
 
     return (
-        <img 
-            ref={imgRef}
-            className={coverImgClassName} 
-            alt={assetBundle.title}
-            data-src={get_coverImage(assetBundle._guid).static}
-            onError={()=> {
-                setCoverImgClassName(`cover-image ${assetBundle.type[0].toLowerCase()} error`);
-                // coverImgClassName = coverImgClassName + ' error'
-            }}
-        />
+        <div style={{position:'relative', overflow:'hidden'}}>
+            <img 
+                ref={imgRef}
+                className={coverImgClassName} 
+                alt={assetBundle.title}
+                data-src={get_coverImage(assetBundle._guid).static}
+                onError={()=> {
+                    setCoverImgClassName(`cover-image ${assetBundle.type[0].toLowerCase()} error`);
+                }}
+            />
+            <div ref={bgRef} className={`cover-image_bg`}></div>
+        </div>
     )
 }

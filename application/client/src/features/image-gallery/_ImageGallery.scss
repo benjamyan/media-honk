@@ -69,6 +69,14 @@
             touch-action: none;
         }
     }
+    &--count {
+        position: absolute;
+        z-index: 999;
+        bottom: 0;
+        left: 0;
+        margin: 0;
+        padding: 0 0 15px 15px;
+    }
 }
 
 @media screen and (orientation: landscape) {

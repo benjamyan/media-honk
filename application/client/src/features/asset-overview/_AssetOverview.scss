@@ -2,7 +2,7 @@
     position: fixed;
     top: 0;
     left: 0;
-    width: calc(100% - 40px);
+    width: 100%;
     height: auto;
     min-height: calc(100vh - 40px);
     padding: 20px;
@@ -10,9 +10,40 @@
     overflow-x: hidden;
     z-index: calc(var(--header-z-index) + 1);
     background-color: var(--background-color);
-    .cover-image {
-        object-fit: cover;
+    &-content {
+        width: 85%;
         height: auto;
+        min-height: 100vh;
+        position: absolute;
+        top: 25px;
+        left: 0;
+        right: 0;
+        margin: 0 auto;
+        padding-bottom: 25px;
+        z-index: calc(var(--header-z-index) + 1);
+    }
+    .cover-image {
+        object-fit: contain;
+        height: auto;
+        max-height: 85vh;
+        background-size: 175%;
+        background-repeat: no-repeat;
+        background-position: center;
+        background-position-x: left;
+        background-position-y: center;
+        // &::before {
+        //     content: ' ';
+        //     display: block;
+        //     position: absolute;
+        //     left: 0;
+        //     top: 0;
+        //     width: 100%;
+        //     height: 100%;
+        //     opacity: 0.6;
+        //     background-repeat: no-repeat;
+        //     background-position: 50% 0;
+        //     background-size: cover;
+        // }
     }
     .button__close {
         text-align: right;

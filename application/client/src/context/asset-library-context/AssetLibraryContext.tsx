@@ -64,6 +64,7 @@ const AssetLibraryContextProvider = ({ children }: {children: React.ReactNode}) 
                     } else {
                         setMetaSearch([] as string[]);
                     }
+                    setLibraryView('GRID');
                 }
             }
         }

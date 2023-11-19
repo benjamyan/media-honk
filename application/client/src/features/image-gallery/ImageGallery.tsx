@@ -27,7 +27,7 @@ export const ImageGallary = ()=> {
                     className={`image__viewer--media-content`}
                     loading='eager'
                     src={
-                        currentImage == -1
+                        currentImage == 0
                             ? get_coverImage(selectedMedia._guid).static
                             : stream_imageFile(selectedMedia._guid, currentImage).static
                     }
@@ -54,6 +54,9 @@ export const ImageGallary = ()=> {
                 }
                 
             </div>
+            <p className={`image__viewer--count ${isFullscreen ? 'fullscreen' : ''}`} >
+                {currentImage + 1}/{selectedMedia.length + 1}
+            </p>
             <button 
                 className={`button__fullscreen ${isFullscreen ? 'expand' : ''}`} 
                 onClick={()=>{

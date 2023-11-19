@@ -37,6 +37,7 @@
         background: rgba(0,0,0,0.5);
         color: white;
         border: 1px solid white;
+        z-index: 1;
         &.remove {
             rotate: 45deg;
         }

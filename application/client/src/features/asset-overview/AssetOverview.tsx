@@ -47,20 +47,22 @@ export const AssetOverview = (props: { mediaAsset: MediaAssetBundle }) => {
     
     return (
         <div className={ CLASSNAME }>
-            <CloseButton onClickFn={ closeAssetOverview } />
-            <div onClick={ playAssetMedia }>
-                <CoverImage assetBundle={mediaAsset} />
+            <div className={`${CLASSNAME}-content`}>
+                <CloseButton onClickFn={ closeAssetOverview } />
+                <div onClick={ playAssetMedia }>
+                    <CoverImage assetBundle={mediaAsset} />
+                </div>
+                <h3>{ mediaAsset.title }</h3>
+                { mediaAsset.subTitle && <h4>{mediaAsset.subTitle}</h4> }
+                { mediaAsset.artist && (
+                    <MediaMetaList name='Artists' entries={mediaAsset.artist} />
+                    // <p><strong>Artists: </strong>{mediaAsset.artist.join(', ')}</p>
+                )}
+                { mediaAsset.category && (
+                    <MediaMetaList name='Categories' entries={mediaAsset.category} />
+                    // <p><strong>Categories: </strong>{mediaAsset.category.join(', ')}</p>
+                )}
             </div>
-            <h3>{ mediaAsset.title }</h3>
-            { mediaAsset.subTitle && <h4>{mediaAsset.subTitle}</h4> }
-            { mediaAsset.artist && (
-                <MediaMetaList name='Artists' entries={mediaAsset.artist} />
-                // <p><strong>Artists: </strong>{mediaAsset.artist.join(', ')}</p>
-            )}
-            { mediaAsset.category && (
-                <MediaMetaList name='Categories' entries={mediaAsset.category} />
-                // <p><strong>Categories: </strong>{mediaAsset.category.join(', ')}</p>
-            )}
         </div>
     )
 }

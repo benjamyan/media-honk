@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useReducer, useState } from 'react';
+import React, { createContext, useContext, useEffect, useReducer, useRef, useState } from 'react';
 import { MediaPlayerContextState } from './MediaPlayerContext.types';
 // import { useAssetLibraryContext } from '../';
 
@@ -63,6 +63,7 @@ const MediaPlayerContextProvider = ({ children }: {children: React.ReactNode}) =
     const [ currentMediaId, setCurrentMediaId ] = useState<number | null>(null);
     const [ mediaQueue, setMediaQueue ] = useState<string[]>([]);
 
+
     const updateMediaPlayerContext: MediaPlayerContextState['updateMediaPlayerContext'] = (params)=> {
 
         switch (params.action) {
@@ -110,6 +111,15 @@ const MediaPlayerContextProvider = ({ children }: {children: React.ReactNode}) =
             }
         }
     };
+
+    // const mediaPlayingRef = useRef<boolean>(false);
+    // useEffect(()=> {
+    //     if (mediaPlayingRef.current === true) {
+    //         updateMediaPlayerContext({ action: 'RESET' });
+    //     } else {
+    //         mediaPlayingRef.current = true;
+    //     }
+    // }, [ mediaPlaying ])
 
     return (
         <MediaPlayerContext.Provider value={{

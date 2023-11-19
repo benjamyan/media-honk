@@ -18,7 +18,7 @@ export const excludeName: string[] = [];
 
 export const audioExtensions: string[] = ['mp3', 'wma'];
 export const imageExtensions: string[] = ['jpg','png','jpeg','bmp'];
-export const videoExtensions: string[] = ['mov','avi','mp4'];
+export const videoExtensions: string[] = ['mov','avi','mp4','mkv'];
 export const subtitleExtensions: string[] = ['srt'];
 
 export const excludeExtensions: string[] = ['txt', 'nfo','DS_Store','ini'];

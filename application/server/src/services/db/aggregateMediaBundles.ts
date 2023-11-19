@@ -20,14 +20,24 @@ export const aggregateMediaBundles = async (options?: {
         
         $Logger.info('- START AGGREGATE');
         try {
-            const attemptMediaAggregate = async (_omitConfigCheck?: boolean)=> {
+            const attemptMediaAggregate = async (parentConfigFile?: string)=> {
                 try {
-                    const directoryContent = await shakeDirectoryFileTree(_self.mediaDir);
+                    const directoryContent = (
+                        parentConfigFile
+                            ? null
+                            : await shakeDirectoryFileTree(_self.mediaDir)
+                    );
                     if (directoryContent instanceof Error) throw directoryContent;
-                    if (directoryContent.length == 0) return;
+                    let hasSubDir: string[] | undefined,
+                        isMediaDir: string | undefined;
+                    if (Array.isArray(directoryContent)) {
+                        if (directoryContent.length == 0) return;
+                        /** Determine whether the current path contains any directories */
+                        hasSubDir = directoryContent.filter((path)=>Fs.statSync(path).isDirectory());
+                        /** If the directory has a configuration file */
+                        isMediaDir = directoryContent.find((file)=>file.endsWith('yaml'));
+                    }
                     
-                    /** Determine whether the current path contains any directories */
-                    const hasSubDir = directoryContent.filter((path)=>Fs.statSync(path).isDirectory());
 
                     /** 
                      * If the directory has a yaml file, its considered to have been configured. 
@@ -35,18 +45,26 @@ export const aggregateMediaBundles = async (options?: {
                      * - `string` direct path to the config yaml file
                      * - `undefined` no yaml file found, directory not pre-configured
                      * */
-                    let isMediaDir = directoryContent.find((file)=>file.endsWith('yaml'));
                     if (!!isMediaDir/* && omitConfigCheck*/) {
-                        _self.configCache[isMediaDir] = new AssetPropertiesConfig({
+                        _self.configCache[_self.mediaDir] = new AssetPropertiesConfig({
                             _mediaDir: _self.mediaDir,
                             _configFilePath: isMediaDir
                         });
+                        if (hasSubDir) {
+                            for (const dir of hasSubDir) {
+                                _self.configCache[dir] = new AssetPropertiesConfig({
+                                    _mediaDir: dir,
+                                    _configFilePath: isMediaDir
+                                });
+                            }
+                        }
                     }
 
-                    if (hasSubDir.length > 0) {
-                        for await (const subDir of hasSubDir) {
+                    if (hasSubDir!.length > 0 && !isMediaDir) {
+                        for await (const subDir of hasSubDir!) {
                             _self.mediaDir = subDir;
-                            await attemptMediaAggregate(!!isMediaDir ? true : undefined);
+                            await attemptMediaAggregate(undefined);
+                            // await attemptMediaAggregate(!!isMediaDir ? true : undefined);
                         }
                     }
                 } catch (err) {
@@ -81,21 +99,12 @@ export const aggregateMediaBundles = async (options?: {
                 }
             }
             
-            // for await (const configFile of Object.keys(_self.configCache)) {
-            //     try {
-            //         $Logger.info(`-- ${_self.configCache[configFile]['_configFilePath']}`);
-            //         await BundlesModel.handleBundleEntryWithRelatedFields(_self.configCache[configFile].properties);
-            //     } catch (err) {
-            //         console.warn(err);
-            //         delete _self.configCache[configFile];
-            //     }
-            // }
             await Promise.all([
                 ...Object.keys(_self.configCache).map((configFile)=> {
                     return (
                         BundlesModel.handleBundleEntryWithRelatedFields(_self.configCache[configFile].properties)
                             .then(()=> {
-                                $Logger.info(`-- ${_self.configCache[configFile]['_configFilePath']}`);
+                                $Logger.info(`-- ${_self.configCache[configFile]['_mediaDir']}`);
                             })
                             .catch((err)=> {
                                 $Logger.warn(`-- ERR: ${_self.configCache[configFile]['_configFilePath']}`);

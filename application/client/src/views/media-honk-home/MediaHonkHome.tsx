@@ -19,10 +19,11 @@ const MediaPlayer = ()=> {
 
 const MediaOverview = ()=> {
     const { assetBucket } = useAssetLibraryContext();
-    const { selectedMedia } = useMediaPlayerContext();
-    
+    const { selectedMedia, mediaPlaying } = useMediaPlayerContext();
+
     if (assetBucket == null) return <></>;
     if (selectedMedia == null) return <></>;
+    if (mediaPlaying) return <></>;
     return <AssetOverview mediaAsset={selectedMedia} />
 }
 

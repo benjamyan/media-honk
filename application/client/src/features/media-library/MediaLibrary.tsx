@@ -50,8 +50,12 @@ const AssetBundlesByMediaType = ()=> {
                 if (metaSearch.length > 0) {
                     for (const meta of metaSearch) {
                         if (![...bundle.artist, ...bundle.category].includes(meta)) break;
+                        if (!mediaView.includes(bundle.type)) break;
                         assetRow.push(bundle);
                     }
+                    assetRow.filter(({artist, category })=> {
+                        metaSearch.every((meta)=>[...artist, ...category].includes(meta))
+                    })
                 } else if (mediaView.length > 0 && mediaView.includes(bundle.type)) {
                     assetRow.push(bundle);
                 } else if (mediaView.length == 0 && metaSearch.length == 0) {
@@ -63,7 +67,7 @@ const AssetBundlesByMediaType = ()=> {
             return bundleAccumulator
         }, {} as Record<string, MediaAssetBundle[]>);
     }, [ assetBucket, mediaView, metaSearch, libraryView ]);
-    
+    console.log(sortedAssets)
     if (assetBucket === null) {
         return <LoaderingIndicator />
     } else if (Object.keys(sortedAssets).length == 0) {
