@@ -1,16 +1,14 @@
 const webpack = require('webpack')
 const path = require("path");
 const HtmlWebpackPlugin = require("html-webpack-plugin");
-// const msw = require('./src/__mock__/mockService.ts');
-// const ExtractTextPlugin = require("extract-text-webpack-plugin")
-// const InlineChunkHtmlPlugin = require('react-dev-utils/InlineChunkHtmlPlugin');
 
 module.exports = (env)=> {
     return {
         entry: "./src/index.ts",
         mode: env !== 'production' ? 'development' : 'production',
         output: {
-            path: path.resolve(__dirname, 'dist')
+            path: path.resolve(__dirname, 'dist'),
+            filename: 'main.js'
         },
         resolve: { 
             extensions: ['.js', '.ts', '.tsx'],
@@ -42,24 +40,20 @@ module.exports = (env)=> {
                     loader: 'file-loader', 
                     options: { name: '[name].[ext]?[hash]' } 
                 }
-
             ],
         },
         plugins: [
             new webpack.DefinePlugin({
                 Client: {
                     honkConfig: {
-                        ENV: JSON.stringify(env.build)
+                        ENV: JSON.stringify(env.build || 'development')
                     }
                 }
             }),
             new HtmlWebpackPlugin({
                 template: path.join(__dirname, "public", "index.html"),
-                // inject: 'body',
-                // minify: {
-                //     collapseWhitespace: false
-                // }
-            })
+                inject: 'body',
+            }),
         ],
     }
 };

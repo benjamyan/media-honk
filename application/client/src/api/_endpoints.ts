@@ -1,6 +1,7 @@
 export const HONK_URL = {
     development: 'http://192.168.0.11:8081',
-    staging: 'http://192.168.0.11:8080'
+    staging: 'http://192.168.0.11:8080',
+    production: 'http://192.168.0.11:8080'
 }
 export const ENDPOINTS = {
     healthCheck: '/ping',

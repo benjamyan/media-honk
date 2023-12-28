@@ -3,6 +3,7 @@ import { MediaModel } from './MediaModel';
 import { MetaModel } from './MetaModel';
 import { ModelBase } from './_ModelBase';
 import { MediaMetaModelColumns, MetaModelColumns } from './_ModelDefinitions';
+import { $Logger } from '../server';
 
 export class MediaMetaModel  extends ModelBase implements MediaMetaModelColumns {
 
@@ -137,27 +138,13 @@ export class MediaMetaModel  extends ModelBase implements MediaMetaModelColumns 
 							if (foundRows.length > 0) return;
 							this.query()
 								.insert(rowColumns)
-								.catch(err=>console.log(err))
+								.catch(err=>$Logger.error(err))
 						})
 				)
 			}
         } catch (err) {
-            console.log(err)
+			$Logger.error(err);
         }
     }
-    // static async insertNewMediaMetaRelationRow(mediaId: number, metaId: number) {
-    //     try {
-    //         this.query()
-    //             .insert({
-    //                 media_id: mediaId,
-    //                 meta_id: metaId
-    //             })
-    //             .onConflict(['media_id', 'meta_id'])
-    //             .ignore()
-    //             .catch(err=>console.log(err))
-    //     } catch (err) {
-    //         console.log(err)
-    //     }
-    // }
-
+	
 }

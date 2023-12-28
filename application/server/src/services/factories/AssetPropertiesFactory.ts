@@ -5,8 +5,8 @@ import { ResolvedMediaAssetProperties, ConfiguredMediaAssetProperties } from '..
 import { naturalSort } from '../../utils/naturalSort';
 import { deteremineStoredMediaType } from '../fs/deteremineMediaType';
 import { shakeDirectoryFileTree } from '../fs/shakeDirectoryTree';
-import { convertToStoredMediaType } from '../helpers/convertMediaType';
-import { formatMediaEntries } from '../helpers/parseMediaBundleEntries';
+import { convertToStoredMediaType } from '../../utils/asset.utils';
+import { formatMediaEntries } from '../db/parseMediaBundleEntries';
 import { $Logger } from '../../server';
 // import { MediaHonkServerBase } from '../../_Base';
 
@@ -96,12 +96,10 @@ export class AssetPropertiesConfig implements AssetPropertyConfigPublicEntity {
     private async getDirFileList() {
         const directoryFiles = await shakeDirectoryFileTree(this._mediaDir);
         if (directoryFiles instanceof Error) {
-            console.error(`Could not shake files for configFile Entries.`)
+            $Logger.error(directoryFiles);
             this._dirFileList = [];
         } else {
             this._dirFileList = directoryFiles.filter((file)=> !Fs.statSync(file).isDirectory());
-            // this._dirFileList = directoryFiles;
-            // $Logger.info(this._dirFileList);
         }
     }
 

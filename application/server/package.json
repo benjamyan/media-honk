@@ -11,13 +11,11 @@
     "dev:mock": "FAKER_ENV=db FAKE_TYPES=all HONK_ENV=dev AGGREGATION_TYPE=update DEPRECATED_DEFS=true nodemon",
     "dev:db": "echo '\n! TODO dev:db'",
     "dev:server": "echo '\n! TODO dev:server'",
-    "stage": "HONK_ENV='stage' nodemon"
+    "stage": "HONK_ENV='stage' nodemon",
+    "aggregate": "HONK_ENV=aggregate AGGREGATION_TYPE=update DEPRECATED_DEFS=true nodemon",
+    "serve": "HONK_ENV=serve nodemon"
   },
   "dependencies": {
-    "@fastify/cors": "^8.4.0",
-    "@fastify/send": "^2.1.0",
-    "@trpc/server": "^10.38.3",
-    "@types/dotenv": "^8.2.0",
     "basic-auth": "^2.0.1",
     "chromecast-api": "^0.4.0",
     "dotenv": "^16.3.1",
@@ -30,6 +28,11 @@
     "zod": "^3.22.2"
   },
   "devDependencies": {
+    "@fastify/basic-auth": "^5.1.1",
+    "@fastify/cors": "^8.4.0",
+    "@fastify/send": "^2.1.0",
+    "@trpc/server": "^10.38.3",
+    "@types/dotenv": "^8.2.0",
     "@faker-js/faker": "^8.1.0",
     "@fastify/multipart": "^7.7.3",
     "@fastify/static": "^6.11.2",

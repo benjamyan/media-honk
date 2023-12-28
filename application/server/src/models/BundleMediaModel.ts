@@ -4,6 +4,7 @@ import { MediaModel } from './MediaModel';
 import { ModelBase } from './_ModelBase';
 import { BundlesModel } from './BundlesModel';
 import { BundlesMediaModelColumns } from './_ModelDefinitions';
+import { $Logger } from '../server';
 
 export class BundleMediaModel extends ModelBase implements BundlesMediaModelColumns {
 
@@ -111,12 +112,11 @@ export class BundleMediaModel extends ModelBase implements BundlesMediaModelColu
 							media_id: bundleMedia.mediaId,
 							media_index: bundleMedia.mediaIndex
 						})
-						.catch(err=>console.log(err))
+						.catch(err=>$Logger.error(err))
 				)
 			}
         } catch (err) {
-            console.log(err)
-			// console.log({...bundleMedia})
+			$Logger.error(err);
         }
     }
 

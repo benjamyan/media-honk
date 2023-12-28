@@ -1,15 +1,13 @@
-import Objection, { Model } from 'objection';
-import { default as Express } from 'express';
+import Objection from 'objection';
 import { Constants } from '../config';
-// import { MediaHonkServerBase } from '../_Base';
 import { BundleMediaModel } from './BundleMediaModel';
 import { CoversModel } from './CoversModel';
 import { MediaModel } from './MediaModel';
 import { MetaModel } from './MetaModel';
 import {ModelBase} from './_ModelBase';
-import { MediaMetaModel } from './MediaMetaModel';
 import { BundlesModelColumns } from './_ModelDefinitions';
 import { ResolvedMediaAssetProperties, StoredMediaTypes } from '../types/MediaProperties';
+import { $Logger } from '../server';
 
 export class BundlesModel extends ModelBase implements BundlesModelColumns {
 	static tableName = 'bundles';
@@ -156,18 +154,12 @@ export class BundlesModel extends ModelBase implements BundlesModelColumns {
 										return newBundleRowId = bundleInsertResult.id;
 									}
 								})
-								.catch(err=>{
-									console.log(err)
-								})
+								.catch(err=>$Logger.error(err))
 						)
 					})
 			)
 		} catch (err) {
-			if (err instanceof Error) {
-				console.log(err.message)
-			} else {
-				console.log(err)
-			}
+			$Logger.error(err);
 		}
 		return newBundleRowId
 	}
@@ -244,11 +236,7 @@ export class BundlesModel extends ModelBase implements BundlesModelColumns {
 			}
 			
         } catch (err) {
-			if (err instanceof Error) {
-				console.log(err.message);
-			} else {
-				console.log(err);
-			}
+			$Logger.error(err);
         }
 		return;
 	}

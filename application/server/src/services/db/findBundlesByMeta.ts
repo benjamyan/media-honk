@@ -1,4 +1,5 @@
 import { MetaModel, MediaMetaModel, BundleMediaModel, BundlesModel } from "../../models";
+import { $Logger } from "../../server";
 import { resolveBundle } from "./resolveBundle";
 
 export const findBundlesByMetaField = async (metaColumn: 'artist_name' | 'category_name', metaValue: string)=> {
@@ -43,7 +44,7 @@ export const findBundlesByMetaField = async (metaColumn: 'artist_name' | 'catego
         
         return ResolvedBundles
     } catch (err) {
-        console.log(err)
+        $Logger.error(err);
         return err instanceof Error ? err : new Error(`An unknown exception occured.`)
     }
     

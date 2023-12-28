@@ -5,7 +5,7 @@ export function setupAxiousInterceptors() {
     console.log(`Url: ${HONK_URL[Client.honkConfig.ENV]}`)
     Axios.interceptors.request.use(request => {
         if (request.url && request.url.startsWith('/')) {
-            request.url = `${HONK_URL[Client.honkConfig.ENV]}${request.url}`;
+            request.url = `${HONK_URL[Client.honkConfig.ENV || 'development']}${request.url}`;
         }
         return request;
     }, error => {

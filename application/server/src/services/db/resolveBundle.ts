@@ -1,6 +1,7 @@
 import { BundlesModel, BundleMediaModel, MetaModel } from "../../models";
 import { $FactoryCache } from "../../cache/FactoryServiceCache";
 import { v4 as uuidV4 } from 'uuid';
+import { $Logger } from "../../server";
 
 export const resolveBundle = async (BundleEntry: BundlesModel, mediaIdList?: number[])=> {
     try {
@@ -36,7 +37,7 @@ export const resolveBundle = async (BundleEntry: BundlesModel, mediaIdList?: num
             return ResolvedBundle
         }
     } catch (err) {
-        console.log(err)
+        $Logger.error(err);
         return 
     }
 }

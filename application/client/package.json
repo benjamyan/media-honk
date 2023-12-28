@@ -9,7 +9,7 @@
   "scripts": {
     "dev": "webpack serve --env build=development",
     "stage": "webpack serve --env build=staging",
-    "build": "webpack build"
+    "build": "webpack build --env build=production"
   },
   "devDependencies": {
     "@babel/core": "^7.22.1",
@@ -28,6 +28,7 @@
     "css-loader": "^6.8.1",
     "eslint-plugin-react-hooks": "^4.6.0",
     "file-loader": "^6.2.0",
+    "html-webpack-inline-source-plugin": "^0.0.10",
     "html-webpack-plugin": "^5.5.1",
     "msw": "^1.2.2",
     "nodemon": "^2.0.22",
@@ -60,7 +61,6 @@
   "dependencies": {
     "@trpc/client": "^10.40.0",
     "@trpc/react-query": "^10.40.0",
-
     "video.js": "^7.20.2",
     "videojs-vr": "1.7.2"
   }

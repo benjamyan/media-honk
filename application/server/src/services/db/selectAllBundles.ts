@@ -1,4 +1,5 @@
 import { BundlesModel } from "../../models";
+import { $Logger } from "../../server";
 import { resolveBundle } from "./resolveBundle";
 
 export const selectAllBundles = async ()=> {
@@ -12,7 +13,7 @@ export const selectAllBundles = async ()=> {
             ResolvedBundles.push(ResolvedBundle);
         }
     } catch (err) {
-        console.log(err);
+        $Logger.error(err);
     }
     return ResolvedBundles
 }

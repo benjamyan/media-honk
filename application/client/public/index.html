@@ -10,13 +10,8 @@
 <body>
     <main id="root"></main>
     <section id="plugin"></section>
-    <!-- <script src="js/video.js"></script> -->
-    <script>
-        // window.videojs = vidoejs;
-    </script>
-    <!-- <script src="js/videojs-java.js"></script> -->
-    <!-- <script>
-        videojs.options.java.jar = "video-js.jar";
-    </script> -->
+    <script defer="defer">
+        <%= compilation.assets[webpackConfig.output.filename].source() %>
+    </script> 
 </body>
 </html>

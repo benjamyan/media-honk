@@ -94,7 +94,7 @@ export const aggregateMediaBundles = async (options?: {
                         categories: _self.configCache[configFile].properties.categories || []
                     })
                 } catch (err) {
-                    console.warn(err);
+                    $Logger.warn(err);
                     delete _self.configCache[configFile];
                 }
             }

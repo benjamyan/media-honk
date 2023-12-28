@@ -16,13 +16,11 @@ import { default as Fs, promises as Fsp } from 'fs';
  * - If an error has occured: A directory appended with an error indiciating something went wrong
  */
 export const shakeDirectoryFileTree = async (pathname: string, fileType?: string[]/*[string, ...string[]]*/): Promise<Array<string> | Error> => {
-    // console.log('>> shakeDirectoryFileTree()')
     let shakenFiles: string[] = [];
 
     try {
         if (!Fs.existsSync(pathname)) {
             throw new Error(`FS_ERROR_FAILED_FILEPATH: ${pathname}`)
-            // emitter('error', new Error(`FS_ERROR_FAILED_FILEPATH: ${pathname}`))
         } else {
             const shakeResult: string[] | Error = await new Promise(async (resolve, reject)=>{
                 let traversalResult: string[] = [],

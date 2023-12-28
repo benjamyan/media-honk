@@ -5,6 +5,7 @@ import { AtleastOneOf } from '../types/utils';
 // import { MediaHonkServerBase } from '../_Base';
 import {ModelBase} from "./_ModelBase";
 import { $ModelCache } from '../cache/ModelCacheService';
+import { $Logger } from '../server';
 /**
 	 * 
 	 * @param param0 
@@ -223,7 +224,7 @@ export class MetaModel extends ModelBase implements MetaModelColumns {
 					return 
 				})
 				.catch((err)=>{
-					console.log(err)
+					$Logger.error(err);
 					reject(new Error(JSON.stringify(err)))
 					return 
 				})
@@ -364,11 +365,7 @@ export class MetaModel extends ModelBase implements MetaModelColumns {
 			}, Promise.resolve());
 			
 		} catch (err) {
-			// console.log(err)
-			// MediaHonkServerBase.emitter('error', {
-			// 	error: err instanceof Error ? err :new Error('Unhandled exception. MetaModel.insertManyMetaRows()'),
-			// 	severity: 2
-			// })
+			$Logger.error(err);
 		}
 		return {
 			artists: newMetaRowIds.artists,

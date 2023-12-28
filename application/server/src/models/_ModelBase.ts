@@ -6,6 +6,7 @@ import { default as Knex } from 'knex';
 // import { BundleMediaModel, BundlesModel, CoversModel, MediaMetaModel, MediaModel, MetaModel, ModelTables } from '.';
 // import { $Logger } from '../server';
 import { _knexConfig } from '../lib/knex';
+import { $Logger } from '../server';
 
 /** 
  * - https://vincit.github.io/objection.js/api/model/ 
@@ -32,13 +33,7 @@ export class ModelBase extends Model {
 					}
 					return;
 				})
-				.catch((err)=>{
-					console.log(err);
-					// MediaHonkServerBase.emitter('error', {
-					// 	error: `Failure mounting table: ${this.tableName}`,
-					// 	severity: 1
-					// })
-				})
+				.catch((err)=>$Logger.error(err))
 				
 		)
 	}

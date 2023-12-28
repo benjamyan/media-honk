@@ -52,7 +52,7 @@ declare global {
              * `stage` -
              * `prod` -
              */
-            HONK_ENV: 'dev' | 'stage' | 'prod';
+            HONK_ENV: 'dev' | 'aggregate' | 'stage' | 'serve' | 'prod';
             /** The location on your file system that the application is running from */
             BASE_DIRECTORY: string;
             /** Your `config.yaml` file path relative to the `BASE_DIRECTORY` above */
@@ -62,7 +62,7 @@ declare global {
              * @todo`remake` will restart the database from scratch
              * @todo `add` will only add new entries not found in the database
              */
-            AGGREGATION_TYPE: 'remake' | 'update' | 'add';
+            AGGREGATION_TYPE: 'skip' | 'remake' | 'update' | 'add';
             /** Whether to aggregate against directories with media types that do not have a definition file. A found directory is treated as such:
              * `title` = the directories name
              * `media_type` = The majority of media extensions in the directory

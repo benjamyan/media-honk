@@ -239,12 +239,10 @@ export class MediaModel extends ModelBase implements MediaModelColumns {
 							}
 						}
 					})
-					.catch(err=>{
-						// console.log(err)
-					})
+					.catch(err=>$Logger.error(err))
 			}
 		} catch (err) {
-			// console.log(err)
+			$Logger.error(err);
 		}
 		return mediaEntryIds
 	}
